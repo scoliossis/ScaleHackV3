@@ -1,0 +1,30 @@
+{
+  "required": true,
+  "package": "com.github.scoliossis.mixins",
+  "refmap": "mixins.scalehack.refmap.json",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "net.minecraft.entity.EntityLivingBaseMixin",
+    "net.minecraft.entity.EntityMixin",
+    "net.minecraft.entity.player.EntityPlayerMixin",
+    "net.minecraft.network.NetworkManagerMixin",
+    "net.minecraftforge.fml.common.network.handshake.FMLHandshakeMessage$ModListMixin"
+  ],
+  "client": [
+    "net.minecraft.client.MinecraftMixin",
+    "net.minecraft.client.entity.EntityPlayerSPMixin",
+    "net.minecraft.client.gui.FontRendererMixin",
+    "net.minecraft.client.gui.GuiDisconnectedMixin",
+    "net.minecraft.client.gui.GuiMainMenuMixin",
+    "net.minecraft.client.gui.GuiScreenMixin",
+    "net.minecraft.client.gui.GuiSlotMixin",
+    "net.minecraft.client.renderer.EntityRendererMixin",
+    "net.minecraft.client.renderer.ItemRendererMixin",
+    "net.minecraft.client.renderer.RenderGlobalMixin",
+    "net.minecraft.client.renderer.entity.RenderLivingEntityMixin",
+    "net.minecraft.client.settings.KeyBindingMixin",
+    "net.minecraft.util.SessionMixin",
+    "net.minecraft.util.TimerMixin"
+  ]
+}
