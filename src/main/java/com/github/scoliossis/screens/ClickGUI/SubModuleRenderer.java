@@ -31,8 +31,10 @@ public abstract class SubModuleRenderer {
         this.handleMouse(mouseX, mouseY, subModule);
 
         boolean isHovered = ScreenUtil.isMouseOver(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y, ClickGUIScreen.GUI_TAB_WIDTH, SUBMODULE_HEIGHT, mouseX, mouseY);
-        if (ClickGUIScreen.subModuleHovered == null && ClickGUIScreen.moduleHovered == null && isHovered)
+        if (ClickGUIScreen.subModuleHovered == null && ClickGUIScreen.moduleHovered == null && isHovered) {
             ClickGUIScreen.subModuleHovered = subModule;
+            ClickGUIScreen.hoverTime = System.currentTimeMillis();
+        }
         else if (ClickGUIScreen.subModuleHovered == subModule && !isHovered)
             ClickGUIScreen.subModuleHovered = null;
 

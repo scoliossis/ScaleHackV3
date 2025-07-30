@@ -90,7 +90,7 @@ public class ModuleManager {
     }
 
     public static List<Module> getModulesByCategory(Category category) {
-        return getModules().stream().filter(e -> e.getAnnotation().category().equals(category)).collect(Collectors.toList());
+        return getModulesByCategory(category, getModules());
     }
 
     public static List<Module> getModulesByCategory(Category category, List<Module> modules) {

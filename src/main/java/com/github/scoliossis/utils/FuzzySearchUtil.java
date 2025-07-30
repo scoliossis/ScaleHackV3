@@ -32,6 +32,10 @@ public class FuzzySearchUtil {
     }
 
     public static List<Module> getSimilarModules(String moduleToFind) {
-        return FuzzySearch.extractAll(moduleToFind, ModuleManager.getModuleNames(), 40).stream().map(extractedResult -> ModuleManager.getModules().get(extractedResult.getIndex())).collect(Collectors.toList());
+        return getSimilarModules(moduleToFind, 40);
+    }
+
+    public static List<Module> getSimilarModules(String moduleToFind, int limit) {
+        return FuzzySearch.extractAll(moduleToFind, ModuleManager.getModuleNames(), limit).stream().map(extractedResult -> ModuleManager.getModules().get(extractedResult.getIndex())).collect(Collectors.toList());
     }
 }

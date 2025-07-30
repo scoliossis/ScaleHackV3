@@ -11,6 +11,7 @@ import com.github.scoliossis.screens.ClickGUI.SubModuleRenderers.*;
 import com.github.scoliossis.utils.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.MathHelper;
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.input.Keyboard;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// todo: allow binding modules, show desciption on hover, colour setting, maybe animate enums
+// todo: search bar
 public class ClickGUIScreen extends GuiScreen {
     public static final int fontSize = 10;
     public static int GUI_TAB_WIDTH = 125;
@@ -55,6 +56,25 @@ public class ClickGUIScreen extends GuiScreen {
 
     protected static Module moduleHovered;
     protected static SubModule subModuleHovered;
+    protected static long hoverTime;
+
+    private static final long minimumHoverTime = 500;
+    private static final int hoverBoxXindent = 5;
+    private static final int hoverBoxYindent = 2;
+    private static final int hoverBoxTextSize = 7;
+
+    private final GuiTextField searchBar = new GuiTextField(0, C.mc.fontRendererObj, -1, -1, 200, 0);
+    private static final int searchBarXindent = 5;
+    private static final int searchBarYindent = 2;
+    private static final int searchBarTextSize = 10;
+
+    @Override
+    public void initGui() {
+        searchBar.setMaxStringLength(50);
+        searchBar.setCanLoseFocus(false);
+        searchBar.setFocused(true);
+        searchBar.setVisible(false);
+    }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -64,10 +84,14 @@ public class ClickGUIScreen extends GuiScreen {
 
         GL11.glPushMatrix();
 
+        List<Module> modules = searchBar.getText().isEmpty() ? ModuleManager.getModules() : FuzzySearchUtil.getSimilarModules(searchBar.getText(), 60);
+        if (!modules.contains(moduleHovered))
+            moduleHovered = null;
+
         for (Category category : Category.values()) {
             GL11.glPushMatrix();
 
-            List<Module> modulesInCategory = ModuleManager.getModulesByCategory(category);
+            List<Module> modulesInCategory = ModuleManager.getModulesByCategory(category, modules);
 
             // cool dragging animation
             category.renderX += (category.posX - category.renderX) / fpsMultiplier;
@@ -133,7 +157,7 @@ public class ClickGUIScreen extends GuiScreen {
             if (category.shouldShow()) drawBottom(category);
 
             float[] translation = RenderUtil.getCurrentTranslation();
-            float categoryTotalHeight = translation[1] - category.renderY - categoryRenderer.CATEGORY_HEIGHT;
+            float categoryTotalHeight = Math.max(translation[1] - category.renderY - categoryRenderer.CATEGORY_HEIGHT, categoryRenderer.CATEGORY_HEIGHT);
             if (ScreenUtil.isMouseOver(BASE_X, BASE_Y - categoryTotalHeight, GUI_TAB_WIDTH, categoryTotalHeight, mouseX, mouseY)) {
                 category.scroll += scrolledAmount;
                 scrolledAmount = 0;
@@ -155,6 +179,25 @@ public class ClickGUIScreen extends GuiScreen {
         GL11.glPopMatrix();
 
         mouseButton = -1;
+
+        String hoverText = moduleHovered != null ? moduleHovered.getAnnotation().description() : subModuleHovered != null ? subModuleHovered.getAnnotation().description() : "";
+
+        if (!hoverText.isEmpty() && System.currentTimeMillis() - ClickGUIScreen.hoverTime >= minimumHoverTime) {
+            float hoverBoxHeight = FontUtil.getFontHeight(hoverBoxTextSize);
+            int hoverBoxWidth = FontUtil.getStringWidth(hoverText, hoverBoxTextSize) + (hoverBoxXindent * 2);
+
+            RenderUtil.drawRect(mouseX, mouseY - hoverBoxHeight, hoverBoxWidth, hoverBoxHeight + hoverBoxYindent*2, new Color(0, 0, 0, 100));
+            FontUtil.drawString(hoverText, mouseX + hoverBoxXindent, mouseY - hoverBoxHeight + hoverBoxYindent, hoverBoxTextSize, Color.WHITE, true);
+        }
+
+        if (!searchBar.getText().isEmpty()) {
+            int searchBarWidth = FontUtil.getStringWidth(searchBar.getText(), searchBarTextSize) + (searchBarXindent * 2);
+            float searchBarX = C.res().getScaledWidth()/2f-searchBarWidth/2f;
+            float searchBarY = C.res().getScaledHeight()/1.1f;
+
+            RenderUtil.drawRect(searchBarX, searchBarY, searchBarWidth, FontUtil.getFontHeight(searchBarTextSize) + searchBarYindent * 2, new Color(0, 0, 0, 100));
+            FontUtil.drawString(searchBar.getText(), searchBarX + searchBarXindent, searchBarY + searchBarYindent, searchBarTextSize, Color.WHITE, true);
+        }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
@@ -198,6 +241,9 @@ public class ClickGUIScreen extends GuiScreen {
 
             if (keyCode == Keyboard.KEY_RIGHT) subModuleHovered.set(value + increment);
             if (keyCode == Keyboard.KEY_LEFT) subModuleHovered.set(value - increment);
+        }
+        else {
+            searchBar.textboxKeyTyped(typedChar, keyCode);
         }
     }
 

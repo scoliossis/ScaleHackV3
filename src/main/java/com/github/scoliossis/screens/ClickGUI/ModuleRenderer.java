@@ -22,7 +22,10 @@ public class ModuleRenderer extends Module {
         Color backgroundColor = module.isEnabled() ? module.getAnnotation().category().color : MODULE_COLOUR;
         boolean isMouseOver = ScreenUtil.isMouseOver(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y+1, ClickGUIScreen.GUI_TAB_WIDTH, MODULE_HEIGHT-1, mouseX, mouseY);
         if (isMouseOver && ClickGUIScreen.categoryRenderer.currentDraggingCategory == null) {
-            if (ClickGUIScreen.moduleHovered == null) ClickGUIScreen.moduleHovered = module;
+            if (ClickGUIScreen.moduleHovered == null) {
+                ClickGUIScreen.hoverTime = System.currentTimeMillis();
+                ClickGUIScreen.moduleHovered = module;
+            }
             backgroundColor = backgroundColor.darker();
         }
         else if (ClickGUIScreen.moduleHovered == module) {
