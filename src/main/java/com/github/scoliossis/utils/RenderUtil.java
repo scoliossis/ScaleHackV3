@@ -178,9 +178,9 @@ public class RenderUtil {
         finishRender();
     }
 
-    public static void outlinedRect(double x, double y, double w, double h, float lineThickness, Color color) {
+    public static void drawRectOutline(double x, double y, double w, double h, float lineThickness, Color color) {
         beginRender();
-        beginAddingVertex(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
+        beginAddingVertex(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION);
         glColor(color);
         GL11.glLineWidth(lineThickness);
 
@@ -307,7 +307,7 @@ public class RenderUtil {
 
         // setup drawing
         beginRender();
-        beginAddingVertex(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
+        beginAddingVertex(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION);
         GL11.glLineWidth(lineWidth);
         glColor(color);
 
@@ -330,8 +330,6 @@ public class RenderUtil {
 
             addVertex(xN, yN);
         }
-
-        addVertex(x + (topLeft ? radius : 0), y);
 
         // we have finished! draw!
         finishRender();

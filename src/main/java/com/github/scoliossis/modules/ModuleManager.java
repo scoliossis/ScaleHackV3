@@ -215,6 +215,8 @@ public class ModuleManager {
                 KeybindHandler.registerKeybind(module, keybind);
 
             for (SubModule subModule : module.getChildren()) {
+                if (subModule.getField().getType() == SubCategory.class) continue;
+
                 if (!subModules.containsKey(subModule.getAnnotation().name())) {
                     System.out.println("Module has no config: " + subModule.getAnnotation().name() + " submodule of " + module.getAnnotation().name() + " not found, defaulting to " + subModule.get());
                     continue;
@@ -226,6 +228,10 @@ public class ModuleManager {
                     Enum<?>[] enumConstants = (Enum<?>[]) subModule.getField().getType().getEnumConstants();
                     for (Enum<?> enumConstant : enumConstants)
                         if (enumConstant.name().equals(value)) subModule.set(enumConstant);
+                }
+                else if (subModule.getField().getType().equals(Color.class)) {
+                    LinkedTreeMap<String, Object> colorMap = (LinkedTreeMap<String, Object>) value;
+                    subModule.set(new Color((int) Double.parseDouble(colorMap.get("value").toString())));
                 }
                 else {
                     subModule.set(value);

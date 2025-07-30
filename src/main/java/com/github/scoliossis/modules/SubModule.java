@@ -50,11 +50,6 @@ public class SubModule {
                 else if (field.getType() == long.class) field.set(parentModule, (long) clampedValue);
                 else field.set(parentModule, (int) clampedValue);
             }
-            // when saved to file, its saved as {value=colour, falpha=0.0}
-            else if (field.getType() == Color.class && object.toString().contains("value=")) {
-                int colorValue = (int) Double.parseDouble(object.toString().split("value=")[1].split(",")[0]);
-                field.set(parentModule, new Color(colorValue, true));
-            }
             else field.set(parentModule, object);
 
             // save config whenever anything changes!

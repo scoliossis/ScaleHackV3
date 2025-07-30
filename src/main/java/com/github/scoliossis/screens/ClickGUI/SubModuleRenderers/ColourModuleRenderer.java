@@ -139,7 +139,7 @@ public class ColourModuleRenderer extends SubModuleRenderer {
         RenderUtil.drawGradientLR(COLOUR_SQUARE_X, BOTTOM_GAP, COLOUR_TRIANGLE_SIZE, COLOUR_TRIANGLE_SIZE, Color.WHITE, colour);
         RenderUtil.drawGradientTB(COLOUR_SQUARE_X, BOTTOM_GAP, COLOUR_TRIANGLE_SIZE, COLOUR_TRIANGLE_SIZE, new Color(0,0,0,0), Color.BLACK);
 
-        RenderUtil.outlinedRect(COLOUR_SQUARE_X + subModule.colorSettingValues.mX - 3, ClickGUIScreen.BASE_Y + BOTTOM_GAP + subModule.colorSettingValues.mY - 3, 6, 6, 2, Color.WHITE);
+        RenderUtil.drawRectOutline(COLOUR_SQUARE_X + subModule.colorSettingValues.mX - 3, ClickGUIScreen.BASE_Y + BOTTOM_GAP + subModule.colorSettingValues.mY - 3, 6, 6, 2, Color.WHITE);
 
         GL11.glTranslated(0,COLOUR_TRIANGLE_SIZE + BOTTOM_GAP*2,0);
 
@@ -149,18 +149,18 @@ public class ColourModuleRenderer extends SubModuleRenderer {
             float x = COLOUR_SQUARE_X + w*i;
             RenderUtil.drawGradientLR(x, 0, w, SLIDERS_HEIGHT, HSLcolours[i], HSLcolours[i+1]);
         }
-        RenderUtil.outlinedRect(COLOUR_SQUARE_X, 0, COLOUR_TRIANGLE_SIZE, SLIDERS_HEIGHT, 2, Color.WHITE);
+        RenderUtil.drawRectOutline(COLOUR_SQUARE_X, 0, COLOUR_TRIANGLE_SIZE, SLIDERS_HEIGHT, 2, Color.WHITE);
 
         int selectedBrightness = MathHelper.clamp_int((int) (subModule.colorSettingValues.hueValue * COLOUR_TRIANGLE_SIZE)-3, 0, COLOUR_TRIANGLE_SIZE-6);
-        RenderUtil.outlinedRect(COLOUR_SQUARE_X + selectedBrightness, 0, 6, SLIDERS_HEIGHT, 2, Color.WHITE);
+        RenderUtil.drawRectOutline(COLOUR_SQUARE_X + selectedBrightness, 0, 6, SLIDERS_HEIGHT, 2, Color.WHITE);
         GL11.glTranslated(0,SLIDERS_HEIGHT + BOTTOM_GAP,0);
 
         // draw opacity slider
         RenderUtil.drawGradientLR(COLOUR_SQUARE_X, 0, COLOUR_TRIANGLE_SIZE, SLIDERS_HEIGHT, new Color(0,0,0,0), Color.WHITE);
-        RenderUtil.outlinedRect(COLOUR_SQUARE_X, 0, COLOUR_TRIANGLE_SIZE, SLIDERS_HEIGHT, 2, Color.WHITE);
+        RenderUtil.drawRectOutline(COLOUR_SQUARE_X, 0, COLOUR_TRIANGLE_SIZE, SLIDERS_HEIGHT, 2, Color.WHITE);
 
         int selectedOpacity = MathHelper.clamp_int((int) (((currentColour.getAlpha()/255f) * COLOUR_TRIANGLE_SIZE)-3f), 0, COLOUR_TRIANGLE_SIZE-6);
-        RenderUtil.outlinedRect(COLOUR_SQUARE_X + selectedOpacity, 0, 6, SLIDERS_HEIGHT, 2, Color.WHITE);
+        RenderUtil.drawRectOutline(COLOUR_SQUARE_X + selectedOpacity, 0, 6, SLIDERS_HEIGHT, 2, Color.WHITE);
         GL11.glTranslated(0,SLIDERS_HEIGHT + BOTTOM_GAP,0);
 
         if (animationLength != -1) GL11.glScaled(1, 1/animationLength, 1);
