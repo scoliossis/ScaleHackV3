@@ -4,7 +4,6 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ModuleStateChangeEvent;
 import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.modules.SubModules.SubCategory;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.EasingUtil;
 import com.github.scoliossis.utils.FontUtil;

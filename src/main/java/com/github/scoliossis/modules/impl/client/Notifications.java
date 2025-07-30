@@ -119,7 +119,7 @@ public class Notifications extends Module {
             RenderUtil.glScissor(x, y, w, h);
 
             RenderUtil.drawRect(x, y, w, h, backgroundColor);
-            RenderUtil.drawRectFade(x, y, w, 1, colorsFade[0], colorsFade[1]);
+            RenderUtil.drawGradientLR(x, y, w, 1, colorsFade[0], colorsFade[1]);
 
             FontUtil.drawString(notification.title, x + widthPadding, y + gapBetweenLines, titleFontSize, fontColor, false);
             FontUtil.drawString(notification.message, x + widthPadding, y + titleFontHeight + gapBetweenLines*2, messageFontSize, fontColor, false);

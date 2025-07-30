@@ -6,13 +6,12 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.modules.SubModules.ColourSubModule;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.Render3dUtil;
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.*;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -23,7 +22,13 @@ import java.awt.*;
         category = Category.RENDER
 )
 public class ESP extends Module {
-    @RegisterSubModule(name = "Color Mode")
+    @RegisterSubModule(name = "Health Bar")
+    public static boolean healthBar = true;
+
+    @RegisterSubModule(name = "Glow")
+    public static boolean glow = true;
+
+    @RegisterSubModule(name = "Color Mode", parent = "Glow")
     public static ColourMode colourMode = ColourMode.Theme;
     public enum ColourMode {
         Custom,
@@ -31,25 +36,63 @@ public class ESP extends Module {
     }
 
     @RegisterSubModule(name = "Color 1", parent = "Color Mode", modeParentString = "Custom")
-    public static ColourSubModule espCustomColour1 = new ColourSubModule(new Color(250, 80, 180, 150));
+    public static Color espCustomColour1 = new Color(250, 80, 180, 150);
 
     @RegisterSubModule(name = "Color 2", parent = "Color Mode", modeParentString = "Custom")
-    public static ColourSubModule espCustomColour2 = new ColourSubModule(new Color(150, 255, 230, 150));
+    public static Color espCustomColour2 = new Color(150, 255, 230, 150);
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
         for (Entity entity : C.w().loadedEntityList) {
             if (!shouldESP(entity)) continue;
-            GL11.glPushMatrix();
-            RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, event.partialTicks));
-            Render3dUtil.transform2Dto3D(false);
 
-            Color[] colours = colourMode == ColourMode.Theme ? ThemeModule.getThemeColours() : new Color[]{espCustomColour1.colour, espCustomColour2.colour};
-            Color espColor = RenderUtil.getColorsFade((entity.posX+entity.posY+entity.posZ)*100, colours, 1);
-            Render3dUtil.drawRoundedRectGlow(-0.5f, 0, 1, 2, 1, espColor);
+            EntityLivingBase livingEntity = (EntityLivingBase) entity;
 
-            GL11.glPopMatrix();
+            if (glow) renderGlow(livingEntity, event.partialTicks);
+            if (healthBar) renderHealthBar(livingEntity, event.partialTicks);
         }
+    }
+
+    private static void renderGlow(EntityLivingBase entity, float partialTicks) {
+        GL11.glPushMatrix();
+        RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
+        Render3dUtil.transform2Dto3D(false);
+
+        Color[] colours = colourMode == ColourMode.Theme ? ThemeModule.getThemeColours() : new Color[]{espCustomColour1, espCustomColour2};
+        Color espColour = RenderUtil.getColorsFade((entity.posX + entity.posY + entity.posZ) * 100, colours, 1);
+        Render3dUtil.drawRoundedRectGlow(-0.5f, 0, 1, 2, 1, espColour);
+
+        GL11.glPopMatrix();
+    }
+
+    private static void renderHealthBar(EntityLivingBase entity, float partialTicks) {
+        GL11.glPushMatrix();
+        RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
+        Render3dUtil.transform2Dto3D(false);
+
+        float healthPercent = Math.min(entity.getHealth() / entity.getMaxHealth(), 1);
+        float extraHealthPercent = entity.getAbsorptionAmount() / entity.getMaxHealth();
+
+        int healthColour = (int) (255 * MathHelper.clamp_float((float) EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease(healthPercent), 0, 1));
+
+        Color backgroundColour = new Color(22, 22, 22);
+        Color healthBarColour = new Color(255-healthColour, healthColour, 80);
+        Color absorptionColour = new Color(255, 255, 0);
+
+        float backgroundWidth = 0.1f;
+        float backgroundHeight = entity.height;
+
+        float healthBarIndent = 0.01f;
+        float healthBarWidth = backgroundWidth - healthBarIndent * 2;
+        float healthBarHeight = (backgroundHeight - healthBarIndent * 2) * healthPercent;
+
+        float absorptionBarHeight = (backgroundHeight - healthBarIndent * 2) * Math.min(extraHealthPercent, 1);
+        
+        RenderUtil.drawRect(entity.width, 0, backgroundWidth, backgroundHeight, backgroundColour);
+        RenderUtil.drawRect(entity.width+healthBarIndent, healthBarIndent, healthBarWidth, healthBarHeight, healthBarColour);
+        RenderUtil.drawRect(entity.width+healthBarIndent, backgroundHeight-healthBarIndent-absorptionBarHeight, healthBarWidth, absorptionBarHeight, absorptionColour);
+
+        GL11.glPopMatrix();
     }
 
     private static boolean shouldESP(Entity entity) {

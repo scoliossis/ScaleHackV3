@@ -143,7 +143,7 @@ public class RenderUtil {
         worldRenderer.begin(DrawMode, vertexFormat);
     }
 
-    public static void addVertex(float x, float y) {
+    public static void addVertex(double x, double y) {
         addVertex(x,y,0);
     }
 
@@ -165,10 +165,24 @@ public class RenderUtil {
 
     // actually rendering!
 
-    public static void drawRect(float x, float y, float w, float h, Color color) {
+    public static void drawRect(double x, double y, double w, double h, Color color) {
         beginRender();
         beginAddingVertex(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
         glColor(color);
+
+        addVertex(x, y+h);
+        addVertex(x+w, y+h);
+        addVertex(x+w, y);
+        addVertex(x, y);
+
+        finishRender();
+    }
+
+    public static void outlinedRect(double x, double y, double w, double h, float lineThickness, Color color) {
+        beginRender();
+        beginAddingVertex(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
+        glColor(color);
+        GL11.glLineWidth(lineThickness);
 
         addVertex(x, y+h);
         addVertex(x+w, y+h);
@@ -196,40 +210,24 @@ public class RenderUtil {
         finishRender();
     }
 
-    public static void drawRectFade(float x, float y, float w, float h, Color color1, Color color2) {
+    public static void drawGradient(float x, float y, float w, float h, Color bottomLeft, Color topLeft, Color bottomRight, Color topRight) {
         beginRender();
         beginAddingVertex(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
 
-        addVertexColor(x, y+h, color1);
-        addVertexColor(x+w, y+h, color2);
-        addVertexColor(x+w, y, color2);
-        addVertexColor(x, y, color1);
+        addVertexColor(x, y+h, bottomLeft);
+        addVertexColor(x+w, y+h, bottomRight);
+        addVertexColor(x+w, y, topRight);
+        addVertexColor(x, y, topLeft);
 
         finishRender();
     }
 
-    public static void drawRectFadeDown(float x, float y, float w, float h, Color color1, Color color2) {
-        beginRender();
-        beginAddingVertex(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
-
-        addVertexColor(x, y+h, color2);
-        addVertexColor(x+w, y+h, color2);
-        addVertexColor(x+w, y, color1);
-        addVertexColor(x, y, color1);
-
-        finishRender();
+    public static void drawGradientLR(float x, float y, float w, float h, Color leftColor, Color rightColor) {
+        drawGradient(x, y, w, h, leftColor, leftColor, rightColor, rightColor);
     }
 
-    public static void drawRectFadeFourWay(float x, float y, float w, float h, Color color1, Color color2, Color color3, Color color4) {
-        beginRender();
-        beginAddingVertex(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
-
-        addVertexColor(x, y+h, color1);
-        addVertexColor(x+w, y+h, color2);
-        addVertexColor(x+w, y, color3);
-        addVertexColor(x, y, color4);
-
-        finishRender();
+    public static void drawGradientTB(float x, float y, float w, float h, Color topColour, Color bottomColour) {
+        drawGradient(x, y, w, h, bottomColour, topColour, bottomColour, topColour);
     }
 
     public static void drawRectTextured(float x, float y, float w, float h, Color color, DynamicTexture texture) {

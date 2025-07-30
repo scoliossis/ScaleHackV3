@@ -178,7 +178,7 @@ public class AltManagerScreen extends GuiScreen {
             RenderUtil.drawRect(altX, altY, width, height, new Color(22,22,22, 100));
             RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, Color.WHITE, texture);
             Color[] colorsFade = RenderUtil.getColorsFade(translation[0]+altX, width, RenderUtil.ThemeColours.Gay.colours, 1);
-            RenderUtil.drawRectFade(altX, altY, width, 1, colorsFade[0], colorsFade[1]);
+            RenderUtil.drawGradientLR(altX, altY, width, 1, colorsFade[0], colorsFade[1]);
 
             FontUtil.drawString(altName, altX + xOffset, altY, altsFont, stringColor, true);
             FontUtil.drawString(info, altX + xOffset, altY + altFontHeight, altInformationFont, Color.BLACK, true);

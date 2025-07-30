@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// todo: cleanup
 public class FuzzySearchUtil {
     public static Optional<ExtractedResult> fuzzySearch(String find, List<String> list) {
         return FuzzySearch.extractAll(find, list, 40).stream().max(Comparator.comparingInt(ExtractedResult::getScore));
@@ -24,7 +25,7 @@ public class FuzzySearchUtil {
     }
 
     public static SubModule findSubModule(String subModuleToFind, Module parentModule) {
-        ArrayList<SubModule> subModules = parentModule.getChildren().stream().filter(e -> e.shouldShow(false)).collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<SubModule> subModules = parentModule.getChildren().stream().filter(e -> e.shouldRender(true)).collect(Collectors.toCollection(ArrayList::new));
         List<String> subModuleNames = subModules.stream().map(subModule -> subModule.getAnnotation().name()).collect(Collectors.toList());
 
         return fuzzySearch(subModuleToFind, subModuleNames).map(extractedResult -> subModules.get(extractedResult.getIndex())).orElse(null);

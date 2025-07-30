@@ -38,7 +38,7 @@ public class HUD extends Module {
         FontUtil.drawString(hudText, baseX + 5, 9, fontSize, new Color(255,255,255), false);
 
         Color[] colorsFade = RenderUtil.getColorsFade(baseX, width, RenderUtil.ThemeColours.Gay.colours, 3f);
-        RenderUtil.drawRectFade(baseX + 3, baseY+3, width+2, 1, colorsFade[0], colorsFade[1]);
+        RenderUtil.drawGradientLR(baseX + 3, baseY+3, width+2, 1, colorsFade[0], colorsFade[1]);
     }
 
     @Override

@@ -2,11 +2,7 @@ package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.modules.SubModules.SubCategory;
+import com.github.scoliossis.modules.*;
 
 @RegisterModule(
         name = "Kill Aura",

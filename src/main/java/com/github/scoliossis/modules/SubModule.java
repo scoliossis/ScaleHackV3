@@ -1,29 +1,21 @@
 package com.github.scoliossis.modules;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.modules.SubModules.SubCategory;
-import com.github.scoliossis.screens.ClickGUIScreen;
-import com.github.scoliossis.utils.*;
+import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.EasingUtil;
+import com.github.scoliossis.utils.MathUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.util.MathHelper;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-@AllArgsConstructor
 @Getter
-public abstract class SubModule {
-    public static final float HEIGHT = 20;
-    protected final int FONT_SIZE = 10;
-    protected final int TEXT_INDENT_X = 5;
-    protected final float TEXT_Y = HEIGHT/2F - (FontUtil.getFontHeight(FONT_SIZE)/2F);
-    protected final Color TEXT_COLOUR = Color.WHITE;
-    protected final Color BACKGROUND_COLOUR = new Color(22,22,22, 200);
-
+// todo: add unique key
+public class SubModule {
     private final Module parentModule;
 
     private final Field field;
@@ -32,7 +24,14 @@ public abstract class SubModule {
     @Setter
     private SubModule parent;
 
-    private RegisterSubModule annotation;
+    public final RegisterSubModule annotation;
+
+    public SubModule(Module parentModule, Field field) {
+        this.parentModule = parentModule;
+        this.field = field;
+        this.children = new ArrayList<>();
+        this.annotation = field.getAnnotation(RegisterSubModule.class);
+    }
 
     public void set(Object object) {
         try {
@@ -51,7 +50,11 @@ public abstract class SubModule {
                 else if (field.getType() == long.class) field.set(parentModule, (long) clampedValue);
                 else field.set(parentModule, (int) clampedValue);
             }
-
+            // when saved to file, its saved as {value=colour, falpha=0.0}
+            else if (field.getType() == Color.class && object.toString().contains("value=")) {
+                int colorValue = (int) Double.parseDouble(object.toString().split("value=")[1].split(",")[0]);
+                field.set(parentModule, new Color(colorValue, true));
+            }
             else field.set(parentModule, object);
 
             // save config whenever anything changes!
@@ -70,86 +73,86 @@ public abstract class SubModule {
         }
     }
 
-    public boolean shouldShow(boolean includeSubcategories) {
-        if (parent == null) return true;
-        else if (parent.getField().getType().equals(boolean.class))
-            return ((boolean) parent.get() || EasingUtil.getAnimation(parent.getUniqueKey()) != -1) && parent.shouldShow(includeSubcategories);
-        else if (parent.getField().getType().isEnum()) {
-            for (String parentEnum : this.annotation.modeParentString()) {
-                if (parentEnum.equals(((Enum<?>) parent.get()).name()) || EasingUtil.getAnimation(parent.getUniqueKey()+parentEnum) != -1)
-                    return parent.shouldShow(includeSubcategories);
+    public boolean isSlider() {
+        return this.getField().getType() == double.class
+                || this.getField().getType() == float.class
+                || this.getField().getType() == long.class
+                || this.getField().getType() == int.class;
+    }
+
+    public boolean shouldRender() {
+        return shouldRender(false);
+    }
+
+    public boolean shouldRender(boolean ignoreSubCategory) {
+        if (!ignoreSubCategory && !this.parentModule.isOpen() && EasingUtil.getAnimation(this.parentModule.getUniqueKey("")) == -1)
+            return false;
+
+        if (this.parent == null) return true;
+        if (!this.parent.shouldRender()) return false;
+        if (EasingUtil.getAnimation(this.parent.getUniqueKey()) != -1) return true;
+
+        if (this.parent.getField().getType() == boolean.class)
+            return (boolean) this.parent.get();
+        else if (this.parent.getField().getType() == SubCategory.class) {
+            if (ignoreSubCategory) return true;
+            return ((SubCategory) this.parent.get()).open;
+        }
+        else if (this.parent.getField().getType().isEnum()) {
+            Enum<?> parentValue = (Enum<?>) this.parent.get();
+
+            for (String string : this.getAnnotation().modeParentString()) {
+                if (
+                        parentValue.name().equalsIgnoreCase(string)
+                        || EasingUtil.getAnimation((this.parent.getUniqueKey() + string).toLowerCase()) != -1
+                )
+                    return this.parent.shouldRender();
             }
+
             return false;
         }
-        else if (parent.getField().getType() == SubCategory.class && includeSubcategories)
-            return (((SubCategory) parent.get()).open || EasingUtil.getAnimation(parent.getUniqueKey()) != -1) && parent.shouldShow(true);
-        return parent.shouldShow(includeSubcategories);
+
+        return this.parent.shouldRender();
     }
 
-    public String getUniqueKey() {
-        return annotation.name() + parentModule.getAnnotation().name() + annotation.parent() + annotation.description();
-    }
-
-    public void handle(int mouseX, int mouseY, Category category, Module module) {
-        double subModuleAnimationProgress = this.getScale();
-
-        // dont draw anything if its scale is 0 for obvious reasons.
-        if (subModuleAnimationProgress == 0) return;
-
-        if (subModuleAnimationProgress != -1) GL11.glScaled(1, subModuleAnimationProgress, 1);
-
-        RenderUtil.drawRect(ClickGUIScreen.X_OFFSET, 0, ClickGUIScreen.WIDTH, HEIGHT, BACKGROUND_COLOUR);
-
-        // if submodule is hovered it will need its description rendered.
-        if (isHovered(mouseX, mouseY, category)) {
-            if (ClickGUIScreen.submoduleHovered == null) {
-                ClickGUIScreen.submoduleHovered = this;
-                ClickGUIScreen.moduleHoveredTime = System.currentTimeMillis();
-            }
-        } else if (ClickGUIScreen.submoduleHovered == this) ClickGUIScreen.submoduleHovered = null;
-
-        this.handleMouseInput(mouseX, mouseY, category);
-        this.render();
-
-        GL11.glTranslated(0, HEIGHT, 0);
-        if (subModuleAnimationProgress != -1) GL11.glScaled(1, 1/subModuleAnimationProgress, 1);
-    }
-
-    private double getScale() {
-        double subModuleAnimationProgress = EasingUtil.getAnimation(this.getParentModule().getUniqueKey("clickgui"));
-        if (EasingUtil.getAnimation(this.getParentModule().getUniqueKey("clickgui")) == -1) {
-            if (!this.shouldShow(true)) return 0;
-            subModuleAnimationProgress = 1;
-        }
-
-
+    // messy, but being smart is hard.
+    public double getAnimationProgress() {
+        double parentAnimationProgress = -1;
         SubModule parent = this.getParent();
-        SubModule prev = this;
-
+        SubModule child = this;
         while (parent != null) {
-            double animationProgressParent = EasingUtil.getAnimation(parent.getUniqueKey());
+            double parentAnimation = EasingUtil.getAnimation(parent.getUniqueKey());
+
+            // handle enums differently todo: enums with multiple parents flicker a little, iykyk
             if (parent.getField().getType().isEnum()) {
-                for (String parentEnum : prev.getAnnotation().modeParentString()) {
-                    animationProgressParent = EasingUtil.getAnimation(parent.getUniqueKey()+parentEnum);
-                    break;
+                for (String mode : child.getAnnotation().modeParentString()) {
+                    parentAnimation = Math.max(parentAnimation, EasingUtil.getAnimation((parent.getUniqueKey() + mode).toLowerCase()));
                 }
             }
-            if (animationProgressParent != -1) subModuleAnimationProgress *= animationProgressParent;
-            prev = parent;
+
+            if (parentAnimation != -1) {
+                if (parentAnimationProgress == -1) parentAnimationProgress = parentAnimation;
+                else parentAnimationProgress *= parentAnimation;
+            }
+
+            child = parent;
             parent = parent.getParent();
         }
 
-        return subModuleAnimationProgress;
+        return parentAnimationProgress;
     }
 
-    protected boolean isMouseCulled(int mouseX, int mouseY, Category category) {
-        return mouseY / RenderUtil.getCurrentTranslation()[4] <= category.renderPos[1] + category.HEIGHT;
+    public String getUniqueKey() {
+        return this.parentModule.getUniqueKey(this.getAnnotation().name() + this.getAnnotation().description());
     }
 
-    protected boolean isHovered(int mouseX, int mouseY, Category category) {
-        return ScreenUtil.isMouseOver(ClickGUIScreen.X_OFFSET, 0, ClickGUIScreen.WIDTH, HEIGHT, mouseX, mouseY) && !isMouseCulled(mouseX, mouseY, category);
-    }
+    // todo: this is dumb
+    public ColorSettingValues colorSettingValues = new ColorSettingValues(false, 0, 0, 0);
 
-    public abstract void render();
-    public abstract void handleMouseInput(int mouseX, int mouseY, Category category);
+    @AllArgsConstructor
+    public static class ColorSettingValues {
+        public boolean open;
+        public int mX, mY;
+        public float hueValue;
+    }
 }

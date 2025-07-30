@@ -21,7 +21,7 @@ public class KeybindHandler {
     public static void onKeyPressed(KeyPressedEvent event) {
         if (event.pressed) {
             if (listeningModule != null) {
-                addKeybind(listeningModule, event.keyCode);
+                registerKeybind(listeningModule, event.keyCode);
 
                 Notifications.addNotification("Keybind", "&cSuccessfully bound &f" + listeningModule.getAnnotation().name() + " &cto &f" + getCharacter(event.keyCode));
 
@@ -37,7 +37,7 @@ public class KeybindHandler {
         }
     }
 
-    public static void addKeybind(Module module, int keyCode) {
+    public static void registerKeybind(Module module, int keyCode) {
         removeKeybind(module);
 
         if (!keybindsMap.containsKey(keyCode))

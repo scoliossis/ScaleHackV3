@@ -114,7 +114,12 @@ public class EasingUtil {
             return -1;
         }
 
-        return animation.up ? animation.easingFunction.ease(progress) : 1 - animation.easingFunction.ease(progress);
+        double returnValue = animation.up ? animation.easingFunction.ease(progress) : 1 - animation.easingFunction.ease(progress);
+        // math.signNum returns 0, which we do NOT want.
+        double minValue = 0.001;
+        if (returnValue < minValue && returnValue > -minValue) returnValue = minValue * (returnValue < 0 ? -1 : 1);
+
+        return returnValue;
     }
 
     public static void removeAnimation(String key) {

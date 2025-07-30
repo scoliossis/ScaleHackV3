@@ -1,7 +1,6 @@
 package com.github.scoliossis.modules;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.modules.SubModules.*;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.KeybindHandler;
@@ -34,7 +33,7 @@ public class ModuleManager {
                     RegisterSubModule registerSubModule = field.getAnnotation(RegisterSubModule.class);
 
                     if (registerSubModule != null) {
-                        SubModule subModule = getSubModule(field, m, registerSubModule);
+                        SubModule subModule = new SubModule(m, field);
 
                         if (!registerSubModule.parent().isEmpty()) {
                             // todo: children have to be below parents in the file, fix later if needed <3
@@ -59,18 +58,9 @@ public class ModuleManager {
                 System.err.println("Failed to register module: " + clazz.getSimpleName());
                 e.printStackTrace();
             }
-
         }
-    }
 
-    private static SubModule getSubModule(Field field, Module m, RegisterSubModule registerSubModule) throws IllegalAccessException {
-        SubModule subModule;
-        if (field.getType() == SubCategory.class) subModule = new SubCategory(m, field, new ArrayList<>(), null, registerSubModule);
-        else if (field.getType() == ColourSubModule.class) subModule = new ColourSubModule(m, field, new ArrayList<>(), null, registerSubModule);
-        else if (field.getType() == boolean.class) subModule = new BooleanSubModule(m, field, new ArrayList<>(), null, registerSubModule);
-        else if (field.getType().isEnum()) subModule = new EnumSubModule(m, field, new ArrayList<>(), null, registerSubModule);
-        else subModule = new SliderSubModule(m, field, new ArrayList<>(), null, registerSubModule);
-        return subModule;
+        loadConfig(Main.baseConfig);
     }
 
     public static boolean isEnabled(Class<? extends Module> clazz) {
@@ -89,6 +79,12 @@ public class ModuleManager {
         return getModules().stream().map(module -> module.getAnnotation().name()).collect(Collectors.toList());
     }
 
+    public static List<Module> getEnabledModules() {
+        return getModules().stream()
+                .filter(Module::isEnabled)
+                .collect(Collectors.toList());
+    }
+
     public static List<Module> getModules() {
         return new ArrayList<>(modules.values());
     }
@@ -101,6 +97,12 @@ public class ModuleManager {
         return modules.stream().filter(e -> e.getAnnotation().category().equals(category)).collect(Collectors.toList());
     }
 
+    public static String getModuleName(Class<? extends Module> clazz) {
+        Module module = getModule(clazz);
+        return module != null ? module.getAnnotation().name() : null;
+    }
+
+
     public static void openConfigFolder() {
         try {
             Files.createDirectories(Paths.get(Main.configPath));
@@ -110,6 +112,11 @@ public class ModuleManager {
         }
     }
 
+    public static List<File> getConfigFiles(String folderPath) {
+        return Arrays.asList(Objects.requireNonNull(Paths.get(Main.configPath + folderPath).toFile().listFiles()));
+    }
+
+
     // god bless https://github.com/google/gson/blob/main/UserGuide.md
     public static void saveConfig(String configName) {
         if (!C.isInGame()) return;
@@ -118,9 +125,7 @@ public class ModuleManager {
 
         List<Module> modules = getModules();
 
-        for (Module m : modules) {
-            saveModule(moduleJSON, m);
-        }
+        for (Module m : modules) saveModule(moduleJSON, m);
 
         saveConfig(Main.configPath, configName, C.gson.toJson(moduleJSON));
     }
@@ -132,8 +137,7 @@ public class ModuleManager {
         subModules.put("keybind", module.getKeybind());
 
         for (SubModule sm : module.getChildren()) {
-            if (sm.getField().getType() != SubCategory.class)
-                subModules.put(sm.getAnnotation().name(), sm.get());
+            subModules.put(sm.getAnnotation().name(), sm.get());
         }
 
         moduleJSON.put(module.getAnnotation().name(), subModules);
@@ -156,14 +160,23 @@ public class ModuleManager {
             Files.createDirectories(Paths.get(filePath));
             Files.write(Paths.get(filePath + fileName + Main.configExtension), JSON.getBytes());
         } catch (IOException e) {
-            ChatUtil.prefixMessage("Failed to save config: " + e.getMessage());
+            System.err.println("Failed to save config: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
+    public static boolean loadConfig(String configName) {
+        String configFileText = readConfig(configName);
+        if (configFileText == null) return false;
+
+        for (Module m : modules.values()) loadModule(m, configFileText);
+
+        return true;
+    }
+
+
     public static boolean loadKeybinds(String configName) {
         String configFileText = readConfig(configName);
-
         if (configFileText == null) return false;
 
         KeybindHandler.keybindsMap.clear();
@@ -174,38 +187,34 @@ public class ModuleManager {
             if (modulesJSON.containsKey(m.getAnnotation().name())) {
                 int keybind = getKeybindValue(modulesJSON.get(m.getAnnotation().name()));
                 if (keybind != -1)
-                    KeybindHandler.addKeybind(m, keybind);
+                    KeybindHandler.registerKeybind(m, keybind);
             }
         }
 
         return true;
     }
-    public static boolean loadConfig(String configName) {
-        String configFileText = readConfig(configName);
 
-        if (configFileText == null) return false;
-
-        for (Module m : modules.values()) loadModule(m, configFileText);
-
-        return true;
+    private static int getKeybindValue(LinkedTreeMap<String, Object> subModules) {
+        // it thinks -1 is a double :(
+        return (int) Double.parseDouble(subModules.get("keybind").toString());
     }
+
 
     public static void loadModule(Module module, String configFileText) {
         HashMap<String, LinkedTreeMap<String, Object>> modulesJSON = C.gson.fromJson(configFileText, HashMap.class);
 
         if (!modulesJSON.containsKey(module.getAnnotation().name())) {
-            ChatUtil.prefixMessage("&cWarning: &f" + module.getAnnotation().name() + " module not found, defaulting to &c" + module.getAnnotation().enabledByDefault());
+            System.out.println("Warning: " + module.getAnnotation().name() + " module not found, defaulting to " + module.getAnnotation().enabledByDefault());
         }
         else {
             LinkedTreeMap<String, Object> subModules = modulesJSON.get(module.getAnnotation().name());
             module.setEnabled(subModules.get("enabled").equals(true));
-            int keybind = getKeybindValue(subModules);
+            // it thinks -1 is a double :(
+            int keybind = (int) Double.parseDouble(subModules.get("keybind").toString());
             if (keybind != -1)
-                KeybindHandler.addKeybind(module, keybind);
+                KeybindHandler.registerKeybind(module, keybind);
 
             for (SubModule subModule : module.getChildren()) {
-                if (subModule.getField().getType() == SubCategory.class) continue;
-
                 if (!subModules.containsKey(subModule.getAnnotation().name())) {
                     System.out.println("Module has no config: " + subModule.getAnnotation().name() + " submodule of " + module.getAnnotation().name() + " not found, defaulting to " + subModule.get());
                     continue;
@@ -218,21 +227,6 @@ public class ModuleManager {
                     for (Enum<?> enumConstant : enumConstants)
                         if (enumConstant.name().equals(value)) subModule.set(enumConstant);
                 }
-                // todo: this probably should be cleaned up... bad impl.
-                else if (subModule.getField().getType() == ColourSubModule.class) {
-                    LinkedTreeMap<String, Object> colourSubModule = (LinkedTreeMap<String, Object>) value;
-
-                    // i could use math to work these out im sure, but i dont want to :yawn:
-                    ArrayList<Double> m = (ArrayList<Double>) colourSubModule.get("lastColourPickerMousePos");
-                    int[] lastColourPickerMousePos = new int[] {m.get(0).intValue(), m.get(1).intValue()};
-                    int lastHslMouseY = ((Double) colourSubModule.get("lastHslMouseY")).intValue();
-                    int lastOpacityMouseY = ((Double) colourSubModule.get("lastOpacityMouseY")).intValue();
-
-                    LinkedTreeMap<String, Object> colourMap = (LinkedTreeMap<String, Object>) colourSubModule.get("colour");
-                    Color colour = new Color(((Double) colourMap.get("value")).intValue(), true);
-
-                    subModule.set(new ColourSubModule(lastColourPickerMousePos, lastHslMouseY, lastOpacityMouseY, false, colour));
-                }
                 else {
                     subModule.set(value);
                 }
@@ -240,10 +234,6 @@ public class ModuleManager {
         }
     }
 
-    private static int getKeybindValue(LinkedTreeMap<String, Object> subModules) {
-        // it thinks -1 is a double :(
-        return (int) Double.parseDouble(subModules.get("keybind").toString());
-    }
 
     public static String readConfig(String configName) {
         try {
@@ -259,7 +249,4 @@ public class ModuleManager {
         }
     }
 
-    public static List<File> getConfigFiles(String folderPath) {
-        return Arrays.asList(Objects.requireNonNull(Paths.get(Main.configPath + folderPath).toFile().listFiles()));
-    }
 }

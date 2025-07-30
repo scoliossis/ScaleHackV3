@@ -18,10 +18,9 @@ import java.awt.*;
 public abstract class FontRendererMixin {
     @Shadow public abstract int getStringWidth(final String p0);
 
-   @Unique
-   private boolean FontRenderer$shouldUseCustomFont() {
-       return ThemeModule.globalFont;
-   }
+    @Unique private boolean FontRenderer$shouldUseCustomFont() {
+        return ThemeModule.globalFont;
+    }
 
     @Shadow public abstract int drawString(String text, int x, int y, int color);
 
@@ -45,8 +44,7 @@ public abstract class FontRendererMixin {
             // minecraft uses red, blue, green colouring btw.
             Color colour = new Color((float)(color >> 16 & 255) / 255.0F,
                     (float)(color >> 8 & 255) / 255.0F,
-                    (float)(color & 255) / 255.0F,
-                    (float)(color >> 24 & 255) / 255.0F
+                    (float)(color & 255) / 255.0F
             );
 
             FontUtil.drawString(text2, x, y - (ThemeModule.minecraftFontSize - 7), ThemeModule.minecraftFontSize, colour, dropShadow);

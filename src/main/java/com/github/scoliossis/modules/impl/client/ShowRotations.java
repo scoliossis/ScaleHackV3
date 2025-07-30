@@ -1,7 +1,6 @@
 package com.github.scoliossis.modules.impl.client;
 
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.modules.SubModules.SubCategory;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import net.minecraft.entity.EntityLivingBase;
@@ -31,24 +30,26 @@ public class ShowRotations extends Module {
     @RegisterSubModule(name = "No Smooth Others", parent = "Other", description = "Removes the rotation smoothing done by minecraft for other players")
     public static boolean otherNoSmooth = false;
 
+    // eriojoghbe8i4g9u80w09ijgb
     public static float getRotation(EntityLivingBase instance, RotationPart rotationPart, boolean current) {
-        current |= ((instance == C.p() && selfNoSmooth) || (instance != C.p() && otherNoSmooth));
+        boolean isSelf = instance == C.p();
+        current |= ModuleManager.isEnabled(ShowRotations.class) && ((isSelf && selfNoSmooth) || (!isSelf && otherNoSmooth));
 
-        if (instance == C.p() && PlayerUtil.prevPlayerUpdateEvent != null && ModuleManager.isEnabled(ShowRotations.class)) {
+        if (isSelf && PlayerUtil.prevPlayerUpdateEvent != null && ModuleManager.isEnabled(ShowRotations.class)) {
             if (rotationPart == RotationPart.PITCH && pitchRotations && PlayerUtil.playerUpdateEvent.rotation.pitch != PlayerUtil.currentTickClientRotation.pitch)
                 return current ? PlayerUtil.playerUpdateEvent.rotation.pitch : PlayerUtil.prevPlayerUpdateEvent.rotation.pitch;
             else if (PlayerUtil.playerUpdateEvent.rotation.yaw != PlayerUtil.currentTickClientRotation.yaw && (rotationPart == RotationPart.HEAD_YAW && headRotations) || (rotationPart == RotationPart.BODY_YAW && bodyRotations))
                     return current ? PlayerUtil.playerUpdateEvent.rotation.yaw : PlayerUtil.prevPlayerUpdateEvent.rotation.yaw;
         }
 
-        float rotationPitch = PlayerUtil.realRotation != null ? PlayerUtil.realRotation.pitch : current  ? instance.rotationPitch : instance.prevRotationPitch;
-        float rotationYaw = PlayerUtil.realRotation != null ? PlayerUtil.realRotation.yaw : current ? instance.rotationYaw : instance.prevRotationYaw;
-        float rotationYawHead = PlayerUtil.realRotation != null ? PlayerUtil.realRotation.yaw : current ? instance.rotationYawHead : instance.prevRotationYawHead;
+        float rotationPitch = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.pitch : current  ? instance.rotationPitch : instance.prevRotationPitch;
+        float rotationYaw = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.yaw : current ? instance.renderYawOffset : instance.prevRenderYawOffset;
+        float rotationYawHead = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.yaw : current ? instance.rotationYawHead : instance.prevRotationYawHead;
 
         switch (rotationPart) {
             case PITCH: return rotationPitch;
-            case HEAD_YAW: return rotationYaw;
-            default: return rotationYawHead;
+            case HEAD_YAW: return rotationYawHead;
+            default: return rotationYaw;
         }
     }
 

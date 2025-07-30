@@ -1,10 +1,6 @@
 package com.github.scoliossis.modules.impl.render;
 
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.modules.SubModules.SubCategory;
+import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.EasingUtil;
 import net.minecraft.potion.Potion;

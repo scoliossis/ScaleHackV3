@@ -173,8 +173,8 @@ public class FontUtil {
             // draw letter!
             RenderUtil.drawRectTexturedColor(x, y, width, height, colours[0], colours[1], texture.dynamicTexture);
 
-            if (strikethrough) RenderUtil.drawRectFade(x, y + (height/1.7f), width, height/20f, colours[0], colours[1]);
-            if (underline) RenderUtil.drawRectFade(x, y + (height / 1.2f), width, height/20f, colours[0], colours[1]);
+            if (strikethrough) RenderUtil.drawGradientLR(x, y + (height/1.7f), width, height/20f, colours[0], colours[1]);
+            if (underline) RenderUtil.drawGradientLR(x, y + (height / 1.2f), width, height/20f, colours[0], colours[1]);
 
             x += width;
         }

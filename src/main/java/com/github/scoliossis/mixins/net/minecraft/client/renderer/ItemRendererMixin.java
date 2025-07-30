@@ -28,9 +28,11 @@ public abstract class ItemRendererMixin {
 
     @Inject(method = "renderItem", at = @At("HEAD"), cancellable = true)
     public void onRenderItem(EntityLivingBase entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform, CallbackInfo ci) {
+        if (entityIn != C.p()) return;
+
         if (ModuleManager.isEnabled(Freecam.class)) ci.cancel();
 
-        if (this.itemToRender != null && ModuleManager.isEnabled(Animations.class)) {
+        if (this.itemToRender != null && C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Animations.class)) {
             Vec3 itemScale = Animations.getScaleVec();
             GL11.glScaled(itemScale.xCoord, itemScale.yCoord, itemScale.zCoord);
         }

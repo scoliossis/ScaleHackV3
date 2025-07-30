@@ -1,11 +1,7 @@
 package com.github.scoliossis.commands.impl;
 
 import com.github.scoliossis.commands.Command;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.modules.SubModule;
-import com.github.scoliossis.modules.SubModules.SubCategory;
+import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.FuzzySearchUtil;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
@@ -118,7 +114,7 @@ public class ListCommand extends Command {
                                 "\n&6" + subModule.getAnnotation().name()
                                 :
                                 // only show subsetting if it would be shown in gui, or if its parent is a subcategory
-                                subModule.shouldShow(false)
+                                subModule.shouldRender(true)
                                         ?
                                         (subModule.getAnnotation().dangerous() ? "&4" : "&c") + subModule.getAnnotation().name() + "&f: " +
                                                 subModule.get() +

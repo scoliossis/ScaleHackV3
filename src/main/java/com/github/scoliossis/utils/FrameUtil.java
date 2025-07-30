@@ -17,8 +17,8 @@ import java.util.List;
 
 // todo bugs:
 //  there is 2 windows when your fullscreened, lwk kinda need because u cant drag into the fullscreen.
-//  when unfullscreening the screen has little issues until rescaled.
-//  when launched with optifine it has a ugly border.
+//  when unfullscreening the screen needs to be rescaled, who cares ig, you dont often swap from full to not
+//  optifine causes ugly border, fuck optifine anyway
 //  probably has plenty more compatability issues
 public class FrameUtil {
     public static JFrame frame;
@@ -38,7 +38,7 @@ public class FrameUtil {
         try {
             Canvas canvas = new Canvas();
 
-            frame = new JFrame(Main.MOD_NAME + " | " + Main.MOD_VERSION);
+            frame = new JFrame(Main.MOD_NAME + " " + Main.MOD_VERSION);
             frame.setSize(Display.getWidth(), Display.getHeight());
             frame.setLocation(Display.getX(), Display.getY());
             frame.setResizable(false);

@@ -3,8 +3,8 @@ package com.github.scoliossis;
 import com.github.scoliossis.commands.CommandManager;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.FontUtil;
 import com.github.scoliossis.utils.FrameUtil;
@@ -41,9 +41,7 @@ public class Main {
 
         ModuleManager.init();
         CommandManager.init();
-
-        ModuleManager.loadConfig(baseConfig);
-        Category.loadCategoryPositions();
+        ClickGUIScreen.loadCategoryPositions();
 
         new AuthServer();
     }
