@@ -22,6 +22,7 @@ import java.util.Iterator;
         category = Category.MOVEMENT,
         dangerous = true
 )
+// todo: duplicaterotplace on grim, just move yaw a lil sometimes.
 public class Scaffold extends Module {
     @RegisterSubModule(name = "Block Place Reach", min = 1, max = 6)
     public static float blockReach = 5f;
@@ -29,7 +30,7 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Show Previous Blocks")
     public static boolean showPreviousBlocks = true;
 
-    @RegisterSubModule(name = "Previous Blocks Time", parent = "Show Previous Blocks", min = 50, max = 10000)
+    @RegisterSubModule(name = "Previous Blocks Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
     public static long showPreviousBlocksTime = 3000;
 
     private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();

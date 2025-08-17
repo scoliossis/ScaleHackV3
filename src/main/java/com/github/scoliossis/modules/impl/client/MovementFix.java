@@ -5,6 +5,8 @@ import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.MathUtil;
 import com.github.scoliossis.utils.PlayerUtil;
 import lombok.AllArgsConstructor;
 import net.minecraft.entity.Entity;
@@ -24,9 +26,15 @@ public class MovementFix extends Module {
     @RegisterSubModule(name = "Fix Rotation", description = "Makes sure your hovering the correct block/entity that you are server side")
     public static boolean rotationFix = true;
 
+    private static float yawDeficit = 0;
 
     public static boolean shouldMoveFix(Entity instance) {
-        return (movementFix && instance == C.p() && PlayerUtil.playerUpdateEvent != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class));
+        return movementFix
+                && instance == C.p()
+                && PlayerUtil.playerUpdateEvent != null
+                && ModuleManager.isEnabled(MovementFix.class)
+                && !ModuleManager.isEnabled(Freecam.class) &&
+                C.p().rotationYaw != PlayerUtil.playerUpdateEvent.rotation.yaw;
     }
     public static boolean shouldRotationFix() {
         return (rotationFix && PlayerUtil.getPrevPlayerUpdateEvent() != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class) && PlayerUtil.currentTickClientRotation != PlayerUtil.playerUpdateEvent.rotation);
@@ -40,29 +48,36 @@ public class MovementFix extends Module {
         // make sure ur moving
         if (speed == 0) return;
 
-        Movement_Direction fixedMovementDirection = getMovementDirection(event);
+        MovementDirection fixedMovementDirection = getMovementDirection(event);
 
         // fix movement direction to one closest to rotation
         event.movementInput.moveForward = fixedMovementDirection.forward ? speed : (fixedMovementDirection.back ? -speed : 0);
         event.movementInput.moveStrafe = fixedMovementDirection.left ? speed : (fixedMovementDirection.right ? -speed : 0);
     }
 
-    private static Movement_Direction getMovementDirection(MovementInputEvent event) {
+    private static MovementDirection getMovementDirection(MovementInputEvent event) {
         float yawDifference = C.p().rotationYaw - PlayerUtil.playerUpdateEvent.rotation.yaw;
-        yawDifference += yawDifference < 0 ? -22.5f : 22.5f;
 
-        int yawOrdinal = Math.floorMod((int) (yawDifference / 45), Movement_Direction.values().length);
+        float yawDeficitAdded = MathUtil.toNearest(yawDifference + yawDeficit, 45) - yawDifference;
+
+        yawDifference += yawDeficitAdded;
+        yawDeficit -= yawDeficitAdded;
+
+        // calculate how much yaw precision we have lost.
+        yawDeficit += MathUtil.toNearest(yawDifference, 45) - yawDifference;
+
+        int yawOrdinal = Math.floorMod((int) (yawDifference / 45), MovementDirection.values().length);
 
         // get move direction
-        Movement_Direction inputMoveDirection = event.movementInput.moveStrafe < 0 ? Movement_Direction.EAST : Movement_Direction.WEST;
-        if (event.movementInput.moveForward > 0) inputMoveDirection = event.movementInput.moveStrafe < 0 ? Movement_Direction.NORTH_EAST : (event.movementInput.moveStrafe > 0 ? Movement_Direction.NORTH_WEST : Movement_Direction.NORTH);
-        if (event.movementInput.moveForward < 0) inputMoveDirection = event.movementInput.moveStrafe < 0 ? Movement_Direction.SOUTH_EAST : (event.movementInput.moveStrafe > 0 ? Movement_Direction.SOUTH_WEST : Movement_Direction.SOUTH);
+        MovementDirection inputMoveDirection = event.movementInput.moveStrafe < 0 ? MovementDirection.EAST : MovementDirection.WEST;
+        if (event.movementInput.moveForward > 0) inputMoveDirection = event.movementInput.moveStrafe < 0 ? MovementDirection.NORTH_EAST : (event.movementInput.moveStrafe > 0 ? MovementDirection.NORTH_WEST : MovementDirection.NORTH);
+        if (event.movementInput.moveForward < 0) inputMoveDirection = event.movementInput.moveStrafe < 0 ? MovementDirection.SOUTH_EAST : (event.movementInput.moveStrafe > 0 ? MovementDirection.SOUTH_WEST : MovementDirection.SOUTH);
 
-        return Movement_Direction.values()[Math.floorMod(inputMoveDirection.ordinal() + yawOrdinal, Movement_Direction.values().length)];
+        return MovementDirection.values()[Math.floorMod(inputMoveDirection.ordinal() + yawOrdinal, MovementDirection.values().length)];
     }
 
     @AllArgsConstructor
-    private enum Movement_Direction {
+    private enum MovementDirection {
         NORTH       (   true,    false,  false,  false  ),
         NORTH_EAST  (   true,    true,   false,  false  ),
         EAST        (   false,   true,   false,  false  ),
@@ -77,7 +92,8 @@ public class MovementFix extends Module {
 
     @Override
     protected void onEnable() {
-
+        yawDeficit = 0;
+        ChatUtil.chat("reset");
     }
 
     @Override
