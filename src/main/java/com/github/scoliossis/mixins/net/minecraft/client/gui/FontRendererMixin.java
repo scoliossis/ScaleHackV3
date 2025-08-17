@@ -2,6 +2,7 @@ package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
+import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.FontUtil;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,6 +46,7 @@ public abstract class FontRendererMixin {
             Color colour = new Color((float)(color >> 16 & 255) / 255.0F,
                     (float)(color >> 8 & 255) / 255.0F,
                     (float)(color & 255) / 255.0F
+                    //(float)(color >> 24 & 255) / 255.0F
             );
 
             FontUtil.drawString(text2, x, y - (ThemeModule.minecraftFontSize - 7), ThemeModule.minecraftFontSize, colour, dropShadow);

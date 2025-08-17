@@ -29,7 +29,7 @@ public class MovementFix extends Module {
         return (movementFix && instance == C.p() && PlayerUtil.playerUpdateEvent != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class));
     }
     public static boolean shouldRotationFix() {
-        return (rotationFix && PlayerUtil.prevPlayerUpdateEvent != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class) && PlayerUtil.currentTickClientRotation != PlayerUtil.playerUpdateEvent.rotation);
+        return (rotationFix && PlayerUtil.getPrevPlayerUpdateEvent() != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class) && PlayerUtil.currentTickClientRotation != PlayerUtil.playerUpdateEvent.rotation);
     }
 
     @SubscribeEvent

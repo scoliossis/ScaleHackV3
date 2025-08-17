@@ -4,10 +4,7 @@ import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.modules.impl.client.MovementFix;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.RenderUtil;
-import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.*;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.Entity;
@@ -48,7 +45,7 @@ public abstract class EntityRendererMixin {
 
     @Redirect(method = "getMouseOver", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLook(F)Lnet/minecraft/util/Vec3;"))
     public Vec3 redirectGetLook(Entity instance, float partialTicks) {
-        RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.prevPlayerUpdateEvent.rotation : RotationUtil.getPreviousClientRotation();
+        RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.getPrevPlayerUpdateEvent().rotation : RotationUtil.getPreviousClientRotation();
         RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix() ? PlayerUtil.playerUpdateEvent.rotation : RotationUtil.getCurrentClientRotation();
 
         if (PlayerUtil.shouldFixPlayerFakeLook()) {
@@ -60,7 +57,7 @@ public abstract class EntityRendererMixin {
 
         float f = prevRot.pitch + (currentRot.pitch - prevRot.pitch) * partialTicks;
         float f1 = prevRot.yaw + (currentRot.yaw - prevRot.yaw) * partialTicks;
-        return PlayerUtil.getVectorForRotation(f, f1);
+        return WorldUtil.getVectorForRotation(f, f1);
     }
 
     @Inject(method = "getMouseOver", at = @At(value = "HEAD"))

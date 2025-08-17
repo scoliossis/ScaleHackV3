@@ -32,15 +32,10 @@ public class Freecam extends Module {
     public static void onRenderWorld(RenderWorldEvent event) {
         if (PlayerUtil.realPos == null) return;
 
-        GL11.glPushMatrix();
-        RenderUtil.glTranslate(Render3dUtil.getRelativeCoordinatePos(PlayerUtil.realPos, event.partialTicks));
-
         float playerWidth = C.p().width;
         float playerHeight = C.p().height;
 
-        Render3dUtil.draw3dBox(-playerWidth/2, 0, -playerWidth/2, playerWidth, playerHeight, playerWidth, new Color(255,100,200, 100));
-
-        GL11.glPopMatrix();
+        Render3dUtil.draw3dBox(PlayerUtil.realPos.xCoord-playerWidth/2, PlayerUtil.realPos.yCoord, PlayerUtil.realPos.zCoord-playerWidth/2, playerWidth, playerHeight, playerWidth, new Color(255,100,200, 100), event.partialTicks);
     }
 
     @SubscribeEvent

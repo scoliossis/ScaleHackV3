@@ -12,6 +12,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.util.List;
 
@@ -41,14 +42,12 @@ public class FrameUtil {
             frame = new JFrame(Main.MOD_NAME + " " + Main.MOD_VERSION);
             frame.setSize(Display.getWidth(), Display.getHeight());
             frame.setLocation(Display.getX(), Display.getY());
-            frame.setResizable(false);
-
-            canvas.setBackground(Color.BLACK);
-            canvas.setSize(frame.getWidth(), frame.getHeight());
-            canvas.setBounds(0, 0, frame.getWidth(), frame.getHeight());
-            canvas.setIgnoreRepaint(true);
-
-            frame.add(canvas);
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    C.mc.shutdown();
+                }
+            });
 
             addFileDropListener();
 
@@ -57,6 +56,8 @@ public class FrameUtil {
 
             frame.setVisible(true);
 
+            canvas.setBackground(Color.BLACK);
+            frame.add(canvas);
             Display.setParent(canvas);
 
             System.out.println(Main.MOD_NAME + " has successfully created a JFrame.");

@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft;
 
 @RegisterModule(
         name = "Nick Hider",
-        description = "Hides your name from other players",
+        description = "i am scale",
         category = Category.RENDER
 )
 public class NickHider extends Module {

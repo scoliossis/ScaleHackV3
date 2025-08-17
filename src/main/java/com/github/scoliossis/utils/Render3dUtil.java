@@ -2,6 +2,7 @@ package com.github.scoliossis.utils;
 
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;
 
@@ -17,9 +18,25 @@ public class Render3dUtil {
         RenderUtil.worldRenderer.pos(x, y, 0).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
     }
 
-    public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color) {
+    public static void drawCentered3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean cull) {
+        draw3dBox(x-w/2, y-h/2, z-d/2, w, h, d, color, partialTicks, cull);
+    }
+
+    public static void drawCentered3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks) {
+        draw3dBox(x-w/2, y-h/2, z-d/2, w, h, d, color, partialTicks, false);
+    }
+
+    public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks) {
+        draw3dBox(x, y, z, w, h, d, color, partialTicks, false);
+    }
+
+    public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean cull) {
         // setup drawing
+        Vec3 relativeCoordinatePos = getRelativeCoordinatePos(new Vec3(x, y, z), partialTicks);
+        x = relativeCoordinatePos.xCoord; y = relativeCoordinatePos.yCoord; z = relativeCoordinatePos.zCoord;
+
         RenderUtil.beginRender();
+        if (cull) GL11.glEnable(GL11.GL_DEPTH_TEST);
         RenderUtil.glColor(color);
         RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
 
@@ -113,6 +130,15 @@ public class Render3dUtil {
                 vec3.xCoord - playerLerped.xCoord,
                 vec3.yCoord - playerLerped.yCoord,
                 vec3.zCoord - playerLerped.zCoord
+        );
+    }
+
+    public static Vec3 getRelativePos(BlockPos blockPos, float partialTicks) {
+        Vec3 playerLerped = lerpVec(new Vec3(C.p().lastTickPosX, C.p().lastTickPosY, C.p().lastTickPosZ), C.p().getPositionVector(), partialTicks);
+        return new Vec3(
+                blockPos.getX() - playerLerped.xCoord,
+                blockPos.getY() - playerLerped.yCoord,
+                blockPos.getZ() - playerLerped.zCoord
         );
     }
 

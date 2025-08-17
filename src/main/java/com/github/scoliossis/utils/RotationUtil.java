@@ -1,5 +1,7 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -12,22 +14,34 @@ public class RotationUtil {
         return new Rotation(C.p().rotationPitch, C.p().rotationYaw);
     }
 
-    public static Rotation applyGcd(Rotation currentRotation, Rotation targetRotation) {
-        float f = C.mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
-        float f1 = f * f * f * 8.0F;
+    private static Rotation applyGcd(Rotation currentRotation, Rotation targetRotation) {
+        double f = C.mc.gameSettings.mouseSensitivity * (double) 0.6F + (double) 0.2F;
+        double sens = (f * f * f) * (double) 8.0F;
 
         Rotation difference = targetRotation.difference(currentRotation);
 
-        difference.yaw = MathUtil.toNearest(difference.yaw, f1);
-        difference.pitch = MathUtil.toNearest(difference.yaw, f1);
+        float yawDelta = (float) MathUtil.toNearest(difference.yaw / 0.15d, sens) * 0.15F;
+        float pitchDelta = (float) MathUtil.toNearest(difference.pitch / 0.15d, sens) * 0.15F;
 
         return new Rotation(
-                MathHelper.clamp_float(currentRotation.pitch - difference.pitch, -90, 90),
-                currentRotation.yaw - difference.yaw
+                MathHelper.clamp_float(currentRotation.pitch - pitchDelta, -90, 90),
+                currentRotation.yaw - yawDelta
         );
     }
 
+    public static Rotation getRotation(Vec3 to) {
+        return getRotation(PlayerUtil.getPrevPlayerUpdateEvent().rotation, C.p().getPositionEyes(1), to);
+    }
+
+    public static Rotation getRotation(Vec3 from, Vec3 to) {
+        return getRotation(PlayerUtil.getPrevPlayerUpdateEvent().rotation, from, to);
+    }
+
     public static Rotation getRotation(Rotation currentRotation, Vec3 from, Vec3 to) {
+        return applyGcd(currentRotation, getRotationNoGcd(currentRotation, from, to));
+    };
+
+    private static Rotation getRotationNoGcd(Rotation currentRotation, Vec3 from, Vec3 to) {
         Vec3 diff = to.subtract(from);
         double dist = Math.sqrt(diff.xCoord * diff.xCoord + diff.zCoord * diff.zCoord);
 
@@ -44,8 +58,17 @@ public class RotationUtil {
                 : neededYawChange;
 
         return new Rotation(
-                currentRotation.pitch + neededPitchChange,
-                currentRotation.yaw + neededYawChange
+                currentRotation.pitch - neededPitchChange,
+                currentRotation.yaw - neededYawChange
+        );
+    }
+
+    // always goes last, applies gcd to rotations from disabling modules or just setting rotation
+    //@SubscribeEvent(priority = 9999)
+    public static void onPlayerUpdate(PlayerUpdateEvent event) {
+        event.rotation = RotationUtil.applyGcd(
+                PlayerUtil.getPrevPlayerUpdateEvent().rotation,
+                PlayerUtil.playerUpdateEvent.rotation
         );
     }
 

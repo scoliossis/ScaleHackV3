@@ -8,9 +8,11 @@ import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.WorldUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,7 +44,7 @@ public abstract class EntityMixin {
     public void redirectRayTrace(double blockReachDistance, float partialTicks, CallbackInfoReturnable<MovingObjectPosition> cir) {
         if (this.entityId == C.p().getEntityId()) {
             Vec3 pos = C.p().getPositionEyes(partialTicks);
-            RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.prevPlayerUpdateEvent.rotation : RotationUtil.getPreviousClientRotation();
+            RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.getPrevPlayerUpdateEvent().rotation : RotationUtil.getPreviousClientRotation();
             RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix() ? PlayerUtil.playerUpdateEvent.rotation : RotationUtil.getCurrentClientRotation();
 
             if (PlayerUtil.shouldFixPlayerFakeLook()) {
@@ -53,7 +55,7 @@ public abstract class EntityMixin {
                 if (PlayerUtil.realPos != null) pos = PlayerUtil.realPos.addVector(0, C.p().getEyeHeight(), 0);
             }
 
-            cir.setReturnValue(PlayerUtil.rayTrace(blockReachDistance, partialTicks, pos, prevRot, currentRot));
+            cir.setReturnValue(WorldUtil.rayTrace(blockReachDistance, partialTicks, pos, prevRot, currentRot));
         }
     }
 

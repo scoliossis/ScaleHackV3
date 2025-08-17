@@ -11,8 +11,12 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
-    public static PlayerUpdateEvent prevPlayerUpdateEvent;
+    private static PlayerUpdateEvent prevPlayerUpdateEvent;
     public static PlayerUpdateEvent playerUpdateEvent;
+
+    public static PlayerUpdateEvent getPrevPlayerUpdateEvent() {
+        return prevPlayerUpdateEvent != null ? prevPlayerUpdateEvent : playerUpdateEvent;
+    }
 
     public static MotionEvent motionEvent;
 
@@ -44,7 +48,7 @@ public class PlayerUtil {
 
     public static void setLastPlayerUpdateEvent(PlayerUpdateEvent event) {
         if (playerUpdateEvent != null)
-            prevPlayerUpdateEvent = new PlayerUpdateEvent(playerUpdateEvent.rotation);
+            prevPlayerUpdateEvent = new PlayerUpdateEvent(new RotationUtil.Rotation(playerUpdateEvent.rotation.pitch, playerUpdateEvent.rotation.yaw));
 
         playerUpdateEvent = event;
         currentTickClientRotation = event.rotation;
@@ -92,29 +96,5 @@ public class PlayerUtil {
     // shut up intellij, this shouldn't be inverted, because the name would be longer and its alr too long!
     public static boolean shouldInteractFromFakePos() {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
-    }
-
-    // from net.minecraft.entity.Entity
-    public static MovingObjectPosition rayTrace(double blockReachDistance, float partialTicks, RotationUtil.Rotation rotationPrev, RotationUtil.Rotation rotationCurrent) {
-        return rayTrace(blockReachDistance, partialTicks, C.p().getPositionEyes(partialTicks), rotationPrev, rotationCurrent);
-    }
-
-    public static MovingObjectPosition rayTrace(double blockReachDistance, float partialTicks, Vec3 position, RotationUtil.Rotation rotationPrev, RotationUtil.Rotation rotationCurrent) {
-        float f = rotationPrev.pitch + (rotationCurrent.pitch - rotationPrev.pitch) * partialTicks;
-        float f1 = rotationPrev.yaw + (rotationCurrent.yaw - rotationPrev.yaw) * partialTicks;
-        Vec3 vec31 = getVectorForRotation(f, f1);
-
-        Vec3 vec32 = position.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
-
-        return C.p().worldObj.rayTraceBlocks(position, vec32, false, false, true);
-    }
-
-    // from net.minecraft.entity.Entity
-    public static Vec3 getVectorForRotation(float pitch, float yaw) {
-        float f = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI);
-        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI);
-        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
-        float f3 = MathHelper.sin(-pitch * 0.017453292F);
-        return new Vec3(f1 * f2, f3, f * f2);
     }
 }

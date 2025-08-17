@@ -35,11 +35,11 @@ public class ShowRotations extends Module {
         boolean isSelf = instance == C.p();
         current |= ModuleManager.isEnabled(ShowRotations.class) && ((isSelf && selfNoSmooth) || (!isSelf && otherNoSmooth));
 
-        if (isSelf && PlayerUtil.prevPlayerUpdateEvent != null && ModuleManager.isEnabled(ShowRotations.class)) {
+        if (isSelf && PlayerUtil.getPrevPlayerUpdateEvent() != null && ModuleManager.isEnabled(ShowRotations.class)) {
             if (rotationPart == RotationPart.PITCH && pitchRotations && PlayerUtil.playerUpdateEvent.rotation.pitch != PlayerUtil.currentTickClientRotation.pitch)
-                return current ? PlayerUtil.playerUpdateEvent.rotation.pitch : PlayerUtil.prevPlayerUpdateEvent.rotation.pitch;
+                return current ? PlayerUtil.playerUpdateEvent.rotation.pitch : PlayerUtil.getPrevPlayerUpdateEvent().rotation.pitch;
             else if (PlayerUtil.playerUpdateEvent.rotation.yaw != PlayerUtil.currentTickClientRotation.yaw && (rotationPart == RotationPart.HEAD_YAW && headRotations) || (rotationPart == RotationPart.BODY_YAW && bodyRotations))
-                    return current ? PlayerUtil.playerUpdateEvent.rotation.yaw : PlayerUtil.prevPlayerUpdateEvent.rotation.yaw;
+                    return current ? PlayerUtil.playerUpdateEvent.rotation.yaw : PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw;
         }
 
         float rotationPitch = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.pitch : current  ? instance.rotationPitch : instance.prevRotationPitch;

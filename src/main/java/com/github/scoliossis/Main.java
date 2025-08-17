@@ -45,15 +45,4 @@ public class Main {
 
         new AuthServer();
     }
-
-    @SubscribeEvent
-    public static void onClientTickEvent(ClientTickEvent event) {
-        if (!FrameUtil.initialized) return;
-
-        // no resizing frame during start up, because I think it looks ugly, minecraft issue sadly.
-        if (!FrameUtil.frame.isResizable()) FrameUtil.frame.setResizable(true);
-
-        // if window is closed, this becomes true.
-        if (!FrameUtil.frame.isVisible()) C.mc.shutdown();
-    }
 }

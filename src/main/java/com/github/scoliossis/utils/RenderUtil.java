@@ -582,6 +582,7 @@ public class RenderUtil {
     }
 
     public static Color getColorsFade(double startNumber, Color[] colors, double fadeSpeed) {
+        // idk why the 0.001s are here. i wrote this LONG ago.
         double number = (System.currentTimeMillis() * fadeSpeed * 0.001 + startNumber * 0.001 * colors.length);
 
         // finding which color we are fading from and into
@@ -606,5 +607,9 @@ public class RenderUtil {
 
     public static Color getOppositeColour(Color colour) {
         return new Color(255-colour.getRed(), 255-colour.getGreen(), 255-colour.getBlue(), colour.getAlpha());
+    }
+
+    public static Color setOpacity(Color color, double opacity) {
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), (int) (opacity * 255));
     }
 }
