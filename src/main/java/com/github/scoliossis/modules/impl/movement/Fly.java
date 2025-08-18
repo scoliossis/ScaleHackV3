@@ -9,7 +9,7 @@ import org.lwjgl.input.Keyboard;
 
 @RegisterModule(
         name = "Fly",
-        description = "I wanna go to the moon, don't leave so soon, How could I get through?",
+        description = "aeroplane hake",
         category = Category.MOVEMENT,
         dangerous = true
 )

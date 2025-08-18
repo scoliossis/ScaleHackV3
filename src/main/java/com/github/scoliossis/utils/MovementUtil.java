@@ -1,8 +1,23 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import net.minecraft.util.Vec3;
 
 public class MovementUtil {
+    public static int ticks = 0;
+    public static int airTicks = 0;
+    public static int groundTicks = 0;
+
+    @SubscribeEvent(priority = 0)
+    public static void onPlayerTickEvent(PlayerUpdateEvent e) {
+        ticks++;
+        airTicks++;
+        groundTicks++;
+        if (C.p().onGround) airTicks = 0;
+        else groundTicks = 0;
+    }
+
     public static boolean isMoving(boolean y) {
         return C.p().posX != C.p().prevPosX || C.p().posZ != C.p().prevPosZ || (C.p().posY != C.p().prevPosY && y);
     }

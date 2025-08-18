@@ -20,8 +20,13 @@ import net.minecraft.entity.Entity;
 public class MovementFix extends Module {
     @RegisterSubModule(name = "Fix Movement", description = "Fixes movement client side to be accurate to the server side rotation")
     public static boolean movementFix = true;
-    @RegisterSubModule(name = "Fancy Move Fix", description = "Tries its best to move you in the correct direction when fixing movement", parent = "Fix Movement")
-    public static boolean fancyMoveFix = true;
+    @RegisterSubModule(name = "Move Fix Mode", parent = "Fix Movement")
+    public static MoveFixMode moveFixMode = MoveFixMode.Straight;
+    public enum MoveFixMode {
+        Vanilla,
+        Smooth,
+        Straight
+    }
 
     @RegisterSubModule(name = "Fix Rotation", description = "Makes sure your hovering the correct block/entity that you are server side")
     public static boolean rotationFix = true;
@@ -42,7 +47,8 @@ public class MovementFix extends Module {
 
     @SubscribeEvent
     public static void onMovementInputEvent(MovementInputEvent event) {
-        if (!fancyMoveFix || !shouldMoveFix(C.p())) return;
+        if (!shouldMoveFix(C.p())) return;
+        if (moveFixMode == MoveFixMode.Vanilla) return;
 
         float speed = Math.max(Math.abs(event.movementInput.moveForward), Math.abs(event.movementInput.moveStrafe));
         // make sure ur moving
@@ -58,13 +64,16 @@ public class MovementFix extends Module {
     private static MovementDirection getMovementDirection(MovementInputEvent event) {
         float yawDifference = C.p().rotationYaw - PlayerUtil.playerUpdateEvent.rotation.yaw;
 
-        float yawDeficitAdded = MathUtil.toNearest(yawDifference + yawDeficit, 45) - yawDifference;
+        if (moveFixMode == MoveFixMode.Straight) {
+            float yawDeficitAdded = MathUtil.toNearest(yawDifference + yawDeficit, 45) - yawDifference;
 
-        yawDifference += yawDeficitAdded;
-        yawDeficit -= yawDeficitAdded;
+            yawDifference += yawDeficitAdded;
+            yawDeficit -= yawDeficitAdded;
 
-        // calculate how much yaw precision we have lost.
-        yawDeficit += MathUtil.toNearest(yawDifference, 45) - yawDifference;
+            // calculate how much yaw precision we have lost.
+            yawDeficit += MathUtil.toNearest(yawDifference, 45) - yawDifference;
+        }
+        else yawDifference += yawDifference < 0 ? -22.5f : 22.5f;
 
         int yawOrdinal = Math.floorMod((int) (yawDifference / 45), MovementDirection.values().length);
 
@@ -93,7 +102,6 @@ public class MovementFix extends Module {
     @Override
     protected void onEnable() {
         yawDeficit = 0;
-        ChatUtil.chat("reset");
     }
 
     @Override

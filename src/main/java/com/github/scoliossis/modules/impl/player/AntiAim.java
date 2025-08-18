@@ -17,7 +17,7 @@ import com.github.scoliossis.utils.RotationUtil;
 )
 public class AntiAim extends Module {
     // always goes first
-    @SubscribeEvent(priority = 0)
+    @SubscribeEvent(priority = 1)
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
         event.rotation = new RotationUtil.Rotation(
                 MathUtil.getRandomInRange(-90, 90),

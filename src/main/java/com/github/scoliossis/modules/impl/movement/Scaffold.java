@@ -33,11 +33,15 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Previous Blocks Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
     public static long showPreviousBlocksTime = 3000;
 
+    @RegisterSubModule(name = "Tower", description = "I wanna go to the moon, don't leave so soon, How could I get through?")
+    public static boolean tower = true;
+
     private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();
 
     private static RotationUtil.Rotation rotation;
 
     private static int blocksPlaced = 0;
+    private static boolean jumpStarted = false;
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
@@ -50,6 +54,10 @@ public class Scaffold extends Module {
 
         BlockTarget targetBlock = getBestTargetBlock();
         if (targetBlock == null) return;
+
+        if (shouldTower() && towerMovement()) {
+            jumpStarted = C.mc.gameSettings.keyBindJump.isKeyDown();
+        }
 
         if (!rotate(targetBlock, event)) {
             event.rotation = rotation;
@@ -100,6 +108,38 @@ public class Scaffold extends Module {
                     true
             );
         }
+    }
+
+    private static boolean shouldTower() {
+        // only stop and start towering when on ground
+        if (C.p().onGround || MovementUtil.airTicks == 1)
+            jumpStarted = C.mc.gameSettings.keyBindJump.isKeyDown();
+
+        return tower && jumpStarted;
+    }
+
+    /// returns true when the player can stop towering if they want to
+    // get em high
+    private static boolean towerMovement() {
+        // slightly more reliable than airTicks % 3
+        int playerYto2Decimals = (int) ((C.p().posY % 1) * 100);
+        switch (playerYto2Decimals) {
+            case 0:
+                //getJumpUpwardsMotion() is always 0.42F
+                // todo: implement jumpboost check maybe?
+                // if (this.isPotionActive(Potion.jump)) this.motionY += (double)((float)(this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F);
+                C.p().motionY = 0.42F;
+                break;
+            case 41:
+                C.p().motionY = 0.33F;
+                break;
+            case 75: // 42 + 33
+                // should always be ~0.25, but it could lose accuracy over time
+                C.p().motionY = 1 - (C.p().posY % 1);
+                return true;
+        }
+
+        return false;
     }
 
     private static BlockTarget getBestTargetBlock() {
