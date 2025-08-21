@@ -14,7 +14,7 @@ public class RotationUtil {
         return new Rotation(C.p().rotationPitch, C.p().rotationYaw);
     }
 
-    private static Rotation applyGcd(Rotation currentRotation, Rotation targetRotation) {
+    public static Rotation applyGcd(Rotation currentRotation, Rotation targetRotation) {
         double f = C.mc.gameSettings.mouseSensitivity * (double) 0.6F + (double) 0.2F;
         double sens = (f * f * f) * (double) 8.0F;
 
@@ -63,7 +63,26 @@ public class RotationUtil {
         );
     }
 
+    public static Rotation getLimitedRotation(Rotation to, float maxTurnAmount) {
+        Rotation from = PlayerUtil.getPrevPlayerUpdateEvent().rotation;
+        Rotation rotationDifference = to.subtract(from);
+        float pitchDelta = MathHelper.clamp_float(rotationDifference.pitch, -maxTurnAmount, maxTurnAmount);
+        float yawDelta = MathHelper.clamp_float(rotationDifference.yaw, -maxTurnAmount, maxTurnAmount);
+
+        return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
+    }
+
+    public static Rotation getSmoothRotation(Rotation to, float smoothing) {
+        Rotation from = PlayerUtil.getPrevPlayerUpdateEvent().rotation;
+        Rotation rotationDifference = to.subtract(from);
+        float pitchDelta = rotationDifference.pitch / smoothing;
+        float yawDelta = rotationDifference.yaw / smoothing;
+
+        return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
+    }
+
     // always goes last, applies gcd to rotations from disabling modules or just setting rotation
+    // todo: fix
     //@SubscribeEvent(priority = 9999)
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
         event.rotation = RotationUtil.applyGcd(
@@ -83,6 +102,10 @@ public class RotationUtil {
 
         public Rotation add(Rotation other) {
             return new Rotation(pitch + other.pitch, yaw + other.yaw);
+        }
+
+        public Rotation subtract(Rotation other) {
+            return new Rotation(pitch - other.pitch, yaw - other.yaw);
         }
     }
 }
