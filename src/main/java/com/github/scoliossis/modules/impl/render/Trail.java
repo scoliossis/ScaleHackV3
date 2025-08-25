@@ -40,6 +40,9 @@ public class Trail extends Module {
     @RegisterSubModule(name = "Trail Length", min = 5, max = 500)
     public static int trailLength = 10;
 
+    @RegisterSubModule(name = "Fade Speed", max = 10, increment = 0.1)
+    public static float fadeSpeed = 2;
+
     @RegisterSubModule(name = "Draw On Ground")
     public static boolean drawOnGround = true;
 
@@ -69,7 +72,7 @@ public class Trail extends Module {
             RenderUtil.beginAddingVertex(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
             GL11.glLineWidth(lineWidth);
             for (PosAndTime node : nodes) {
-                Color color = RenderUtil.getColorsFade(node.time + System.currentTimeMillis(), ThemeModule.getThemeColours(), 5f);
+                Color color = RenderUtil.getColorsFade(node.time, ThemeModule.getThemeColours(), fadeSpeed);
                 Vec3 relativeCoordinatePos = Render3dUtil.getRelativeCoordinatePos(node.pos, event.partialTicks);
                 RenderUtil.getTessalator().getWorldRenderer()
                         .pos(relativeCoordinatePos.xCoord, relativeCoordinatePos.yCoord, relativeCoordinatePos.zCoord)
@@ -80,7 +83,7 @@ public class Trail extends Module {
         }
         else {
             for (PosAndTime node : nodes) {
-                Color color = RenderUtil.getColorsFade(node.time + System.currentTimeMillis(), ThemeModule.getThemeColours(), 5f);
+                Color color = RenderUtil.getColorsFade(node.time, ThemeModule.getThemeColours(), fadeSpeed);
 
                 GL11.glPushMatrix();
                 RenderUtil.glTranslate(Render3dUtil.getRelativeCoordinatePos(node.pos, event.partialTicks));

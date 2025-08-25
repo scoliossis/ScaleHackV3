@@ -41,15 +41,22 @@ public class Disabler extends Module {
     public static List<String> racistWords = Arrays.asList(
             "nigger",
             "nigga",
-            "spook",
+            "spook", // cookclops
             "coon",
             "wigga",
             "faggot",
             "monkey",
             "racism",
+            "clanker", // new wow
 
-            "cheat",
+            "cheat", // none of this pls.
             "hack",
+
+            "fuck",
+            "shit",
+            "bitch",
+            "bastard",
+            "rape",
 
             // truly disheartening words. (mushroom client is BANNED from this client.)
             "mushroom",

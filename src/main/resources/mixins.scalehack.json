@@ -13,6 +13,7 @@
   ],
   "client": [
     "net.minecraft.client.MinecraftMixin",
+    "net.minecraft.client.entity.AbstractClientPlayerMixin",
     "net.minecraft.client.entity.EntityPlayerSPMixin",
     "net.minecraft.client.gui.FontRendererMixin",
     "net.minecraft.client.gui.GuiDisconnectedMixin",

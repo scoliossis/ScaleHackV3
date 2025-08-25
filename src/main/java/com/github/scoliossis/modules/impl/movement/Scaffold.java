@@ -22,9 +22,9 @@ import java.util.Iterator;
         category = Category.MOVEMENT,
         dangerous = true
 )
-// todo: duplicaterotplace on grim, just move yaw a lil sometimes.
+// todo: auto f5, enable when holding blocks, safewalk, better rotations, telly bridger.
 public class Scaffold extends Module {
-    @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6)
+    @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1)
     public static float blockReach = 5f;
 
     @RegisterSubModule(name = "Show Previous Blocks")
@@ -47,6 +47,9 @@ public class Scaffold extends Module {
 
     @RegisterSubModule(name = "Max Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
     public static int maxPitch = 90;
+
+    @RegisterSubModule(name = "Max Blocks Per Tick", parent = "If you want to place multiple blocks in a tick", min = 1, max = 10, dangerous = true)
+    public static int maxBlocksPerTick = 1;
 
     @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check")
     public static boolean noDuplicateRot = true;
@@ -72,30 +75,31 @@ public class Scaffold extends Module {
             C.p().inventory.currentItem = bestStack;
         }
 
-        Vec3 positionToRotateFrom = C.p().getPositionVector();
-        if (!WorldUtil.isOverAir()) {
-            Vec3 predictedNextPosition = getPredictedNextPosition();
-            if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
-        }
+        for (int i = 0; i < maxBlocksPerTick; i++) {
 
-        BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
-        if (targetBlock == null) return;
+            Vec3 positionToRotateFrom = C.p().getPositionVector();
+            if (!WorldUtil.isOverAir()) {
+                Vec3 predictedNextPosition = getPredictedNextPosition();
+                if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
+            }
 
-        if (shouldTower() && towerMovement()) setShouldTower();
+            BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
+            if (targetBlock == null) return;
 
-        if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
+            if (shouldTower() && towerMovement()) setShouldTower();
 
-        if (!WorldUtil.isOverAir()) return;
+            if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
+            if (!WorldUtil.isOverAir()) return;
 
-        MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
+            MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
 
-        if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-        if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
+            if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+            if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
 
-        if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
-            C.p().swingItem();
+            if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
+                C.p().swingItem();
 
-            float deltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
+                float deltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
             /* // here to test grim's duplicate rot place check in singleplayer
             if (deltaX > 2) {
                 float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
@@ -105,12 +109,13 @@ public class Scaffold extends Module {
             }
              */
 
-            lastPlacedDeltaX = deltaX;
-            blocksPlaced++;
-            previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
+                lastPlacedDeltaX = deltaX;
+                blocksPlaced++;
+                previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
 
-            // minecraft blehhhh
-            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
+                // minecraft blehhhh
+                if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
+            }
         }
     }
 
@@ -191,7 +196,7 @@ public class Scaffold extends Module {
                 // if (this.isPotionActive(Potion.jump)) this.motionY += (double)((float)(this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F);
                 C.p().motionY = 0.42F;
                 break;
-            case 41:
+            case 41: // 0.42f ~= 0.419999, and im not rounding, im chopping off the digits
                 C.p().motionY = 0.33F;
                 break;
             case 75: // 42 + 33
@@ -225,25 +230,12 @@ public class Scaffold extends Module {
                 if (facing == EnumFacing.UP && shouldKeepY()) continue;
 
                 if (C.w().getBlockState(blockPosOffset).getBlock().isBlockSolid(C.w(), blockPosOffset, EnumFacing.UP)) continue;
-                if (blockPosOffset.getY() > C.p().posY-1) continue;
+                if (blockPosOffset.getY() >= C.p().posY) continue;
 
                 Vec3 offsetBlockCentre = new Vec3(blockPosOffset.getX() + 0.5, blockPosOffset.getY() + 0.5, blockPosOffset.getZ() + 0.5);
                 double distance = position.distanceTo(offsetBlockCentre);
 
-                // not really needed lwk, fixes edgecase of having 2 blocks to choose from and choosing the one which needs more yaw rotation.
-                if (bestBlock != null && blockPos.offset(facing).equals(bestBlock.pos.offset(bestBlock.direction))) {
-                    Vec3 currentBlockRotationPoint = getPredictedRotationPoint(new BlockTarget(blockPos, facing));
-                    Vec3 bestBlockRotationPoint = getPredictedRotationPoint(bestBlock);
-
-                    RotationUtil.Rotation rotationNeededCurrent = RotationUtil.getRotation(WorldUtil.getEyes(position), currentBlockRotationPoint);
-                    RotationUtil.Rotation rotationNeededBest = RotationUtil.getRotation(WorldUtil.getEyes(position), bestBlockRotationPoint);
-
-                    double yawChangeCurrent = Math.abs(PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw - rotationNeededCurrent.yaw);
-                    double yawChangeBest = Math.abs(PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw - rotationNeededBest.yaw);
-
-                    if (yawChangeCurrent > yawChangeBest) continue;
-                }
-                else if (distance > bestDistance) continue;
+                if (distance > bestDistance) continue;
 
                 bestDistance = distance;
                 bestBlock = new BlockTarget(blockPos, facing);
@@ -254,13 +246,8 @@ public class Scaffold extends Module {
         return bestBlock;
     }
 
-    // this function is maybe dumb?
-    private static Vec3 getPredictedRotationPoint(BlockTarget blockTarget) {
-        return new Vec3(blockTarget.pos)
-                .add(new Vec3(0.5,0,0.5))
-                .add(new Vec3(blockTarget.direction.getFrontOffsetX()*0.5, blockTarget.direction.getFrontOffsetY()*0.5, blockTarget.direction.getFrontOffsetZ()*0.5));
-    }
-
+    // todo: take next block into account.
+    // maybe doing the block searching in here would be smarter but idk
     private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, PlayerUpdateEvent event) {
         MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, rotation);
 
@@ -270,9 +257,11 @@ public class Scaffold extends Module {
             float closestYaw = 181;
             boolean foundRotation = false;
 
-            // searches for closest yaw + pitch change, prioritizes yaw
+            BlockPos targetBlock = blockTarget.pos.offset(blockTarget.direction);
+
+            // searches for closest yaw + pitch change
             // <= Math.abs(closestYaw) to stop worthless loops!
-            for (float yaw = -closestYaw; yaw <= Math.abs(closestYaw); yaw++) {
+            for (float yaw = -closestYaw+1; yaw <= Math.abs(closestYaw); yaw++) {
                 for (float pitch = 90; pitch >= 0; pitch--) {
                     RotationUtil.Rotation gcdedRotation = RotationUtil.applyGcd(rotation, new RotationUtil.Rotation(pitch, rotation.yaw + yaw));
                     float yawChange = gcdedRotation.yaw - rotation.yaw;
@@ -295,8 +284,9 @@ public class Scaffold extends Module {
 
                     MovingObjectPosition raycast = WorldUtil.rayTrace(blockReach, playerPosition, gcdedRotation);
                     if (raycast == null) continue;
+                    BlockPos raycastBlock = raycast.getBlockPos().offset(raycast.sideHit);
 
-                    if (raycast.sideHit == blockTarget.direction && raycast.getBlockPos().equals(blockTarget.pos)) {
+                    if (raycastBlock.equals(targetBlock) && (!shouldKeepY() || raycast.sideHit != EnumFacing.UP)) {
                         float bestRotationChange = Math.abs(rotation.pitch - closestPitch) + Math.abs(closestYaw);
                         float currentRotationChange = Math.abs(rotation.pitch - gcdedRotation.pitch) + Math.abs(yawChange);
                         if (currentRotationChange < bestRotationChange) {
@@ -330,6 +320,7 @@ public class Scaffold extends Module {
     @Override
     protected void onDisable() {
         previousInteractions.clear();
+        shouldTower = false;
     }
 
     // no records :( java 8

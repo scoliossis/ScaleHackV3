@@ -41,10 +41,5 @@ public class ClickGUIModule extends Module {
 
     @Override
     protected void onDisable() {
-        if (!C.isInGame()) return;
-
-        C.mc.displayGuiScreen(null);
-
-        ClickGUIScreen.saveCategoryPositions();
     }
 }

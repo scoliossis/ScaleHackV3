@@ -78,6 +78,12 @@ public class ClickGUIScreen extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        if (!ModuleManager.isEnabled(ClickGUIModule.class)) {
+            C.mc.displayGuiScreen(null);
+            ClickGUIScreen.saveCategoryPositions();
+            return;
+        }
+
         fpsMultiplier = Math.max(Minecraft.getDebugFPS() * 0.1f, 2);
 
         int scrolledAmount = Mouse.getDWheel() / 5;
