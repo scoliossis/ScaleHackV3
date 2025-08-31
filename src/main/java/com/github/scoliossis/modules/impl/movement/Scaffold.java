@@ -1,6 +1,7 @@
 package com.github.scoliossis.modules.impl.movement;
 
 import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.modules.Category;
@@ -11,6 +12,7 @@ import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.*;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.*;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ import java.util.Iterator;
         category = Category.MOVEMENT,
         dangerous = true
 )
-// todo: auto f5, enable when holding blocks, safewalk, better rotations, telly bridger.
+// todo: auto f5, enable when holding blocks, safewalk, better rotations
 public class Scaffold extends Module {
     @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1)
     public static float blockReach = 5f;
@@ -57,12 +59,30 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Snap Rotation", description = "Only Rotate To Place Blocks")
     public static boolean snapRotation = true;
 
+    @RegisterSubModule(name = "Telly Bridge", description = "Snap Head Forward Every Other Jump")
+    public static boolean tellyBridge = true;
+
+    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward Every Other Jump", max = 5)
+    public static int tellyTicks = 2;
+
+    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5)
+    public static int tellyPlaceDelay = 2;
+
     private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();
 
     private static RotationUtil.Rotation rotation;
     private static float lastPlacedDeltaX = -1;
 
     private static int blocksPlaced = 0;
+
+    private static int tellyTicksCounter = 0;
+    private static int tellyPlaceDelayCounter = 0;
+
+    @SubscribeEvent
+    public static void onKeyInput(MovementInputEvent event) {
+        if (tellyBridge)
+            event.movementInput.jump = tellyTicksCounter == 1;
+    }
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
@@ -75,8 +95,17 @@ public class Scaffold extends Module {
             C.p().inventory.currentItem = bestStack;
         }
 
-        for (int i = 0; i < maxBlocksPerTick; i++) {
+        if (C.p().onGround && tellyBridge) {
+            tellyTicksCounter = 0;
+            tellyPlaceDelayCounter = 0;
+        }
 
+        tellyTicksCounter++;
+        if (tellyTicksCounter <= tellyTicks) return;
+
+        tellyPlaceDelayCounter++;
+
+        for (int i = 0; i < maxBlocksPerTick; i++) {
             Vec3 positionToRotateFrom = C.p().getPositionVector();
             if (!WorldUtil.isOverAir()) {
                 Vec3 predictedNextPosition = getPredictedNextPosition();
@@ -91,6 +120,8 @@ public class Scaffold extends Module {
             if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
             if (!WorldUtil.isOverAir()) return;
 
+            if (tellyBridge && tellyPlaceDelayCounter < tellyPlaceDelay) return;
+
             MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
 
             if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
@@ -100,14 +131,14 @@ public class Scaffold extends Module {
                 C.p().swingItem();
 
                 float deltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
-            /* // here to test grim's duplicate rot place check in singleplayer
-            if (deltaX > 2) {
-                float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
-                if (xDiff < 0.0001) {
-                    ChatUtil.chat("&bGrim &8» &f" + C.p().getName() + " &bfailed &fDuplicateRotPlace (x&c" + deltaX + "&f)");
+                /* // here to test grim's duplicate rot place check in singleplayer
+                if (deltaX > 2) {
+                    float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
+                    if (xDiff < 0.0001) {
+                        ChatUtil.chat("&bGrim &8» &f" + C.p().getName() + " &bfailed &fDuplicateRotPlace (x&c" + deltaX + "&f)");
+                    }
                 }
-            }
-             */
+                 */
 
                 lastPlacedDeltaX = deltaX;
                 blocksPlaced++;
@@ -127,6 +158,7 @@ public class Scaffold extends Module {
         return keepY && !shouldTower();
     }
 
+    // 1 second time travel hack
     private static Vec3 getPredictedNextPosition() {
         Vec3 pos = C.p().getPositionVector();
         double averageXvelocity = C.p().posX - C.p().prevPosX;

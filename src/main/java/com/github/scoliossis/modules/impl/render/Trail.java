@@ -26,6 +26,7 @@ import java.util.ArrayList;
         description = "Told in three interconnected segments, Takaki tells the story of his life as cruel winters, cold technology, and finally, adult obligations and responsibility converge to test the delicate petals of love.",
         category = Category.RENDER
 )
+// todo: trail dissappears in 2nd person or whatever.
 public class Trail extends Module {
     @RegisterSubModule(name = "Mode")
     public static Mode mode = Mode.Dots;
