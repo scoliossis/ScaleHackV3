@@ -50,7 +50,8 @@ public class CommandManager {
         Optional<ExtractedResult> best = FuzzySearch.extractAll(commandName, commandNames, 40).stream().max(Comparator.comparingInt(ExtractedResult::getScore));
         if (!best.isPresent()) {
             ChatUtil.prefixMessage("&cCouldn't find command: " + commandName);
-            ChatUtil.prefixMessage("&cUse .help for a list of commands!");
+            ChatUtil.prefixMessage("&cUse &f\".help\" &cfor information about the commands system!");
+            ChatUtil.prefixMessage("&cUse &f\".help commands\" &cfor a list of commands!");
             return;
         }
 

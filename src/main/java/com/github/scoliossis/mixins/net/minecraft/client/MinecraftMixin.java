@@ -6,6 +6,7 @@ import com.github.scoliossis.bridge.net.minecraft.util.TimerBridge;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
+import com.github.scoliossis.events.impl.MouseScrolledEvent;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.FrameUtil;
 import com.github.scoliossis.utils.PlayerUtil;
@@ -14,6 +15,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,6 +37,19 @@ public class MinecraftMixin implements MinecraftBridge {
     @Inject(method = "runTick", at = @At(value = "HEAD"))
     public void onRunTick(CallbackInfo ci) {
         Bus.post(new ClientTickEvent());
+    }
+
+    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I"))
+    private int runTick$getEventDWheel() {
+        int scrollAmount = Mouse.getEventDWheel();
+        if (scrollAmount != 0) {
+            MouseScrolledEvent event = new MouseScrolledEvent(scrollAmount);
+            Bus.post(event);
+
+            if (event.isCancelled()) return 0;
+        }
+
+        return scrollAmount;
     }
 
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V"))

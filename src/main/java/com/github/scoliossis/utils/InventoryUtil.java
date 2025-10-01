@@ -3,7 +3,6 @@ package com.github.scoliossis.utils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
 public class InventoryUtil {

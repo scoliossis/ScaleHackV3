@@ -147,4 +147,9 @@ public class Animations extends Module {
     protected void onDisable() {
 
     }
+
+    public static boolean shouldHideHeldItem() {
+        return ModuleManager.isEnabled(Freecam.class) ||
+                (C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Zoom.class) && Zoom.hideHand);
+    }
 }

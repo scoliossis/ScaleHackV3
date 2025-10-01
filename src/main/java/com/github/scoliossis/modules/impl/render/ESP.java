@@ -6,8 +6,10 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.modules.impl.client.ThemeModule;
-import com.github.scoliossis.utils.*;
+import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.EasingUtil;
+import com.github.scoliossis.utils.Render3dUtil;
+import com.github.scoliossis.utils.RenderUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,21 +27,11 @@ public class ESP extends Module {
     @RegisterSubModule(name = "Health Bar")
     public static boolean healthBar = true;
 
-    @RegisterSubModule(name = "Glow")
-    public static boolean glow = true;
+    @RegisterSubModule(name = "Square")
+    public static boolean square = true;
 
-    @RegisterSubModule(name = "Color Mode", parent = "Glow")
-    public static ColourMode colourMode = ColourMode.Theme;
-    public enum ColourMode {
-        Custom,
-        Theme
-    }
-
-    @RegisterSubModule(name = "Color 1", parent = "Color Mode", modeParentString = "Custom")
-    public static Color espCustomColour1 = new Color(250, 80, 180, 150);
-
-    @RegisterSubModule(name = "Color 2", parent = "Color Mode", modeParentString = "Custom")
-    public static Color espCustomColour2 = new Color(150, 255, 230, 150);
+    @RegisterSubModule(name = "Square Colour", parent = "Square")
+    public static Color squareColour = new Color(255, 132, 132);
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
@@ -48,19 +40,17 @@ public class ESP extends Module {
 
             EntityLivingBase livingEntity = (EntityLivingBase) entity;
 
-            if (glow) renderGlow(livingEntity, event.partialTicks);
+            if (square) renderSquare(livingEntity, event.partialTicks);
             if (healthBar) renderHealthBar(livingEntity, event.partialTicks);
         }
     }
 
-    private static void renderGlow(EntityLivingBase entity, float partialTicks) {
+    private static void renderSquare(EntityLivingBase entity, float partialTicks) {
         GL11.glPushMatrix();
         RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
         Render3dUtil.transform2Dto3D(false);
 
-        Color[] colours = colourMode == ColourMode.Theme ? ThemeModule.getThemeColours() : new Color[]{espCustomColour1, espCustomColour2};
-        Color espColour = RenderUtil.getColorsFade((entity.posX + entity.posY + entity.posZ) * 100, colours, 1);
-        Render3dUtil.drawRoundedRectGlow(-0.5f, 0, 1, 2, 1, espColour);
+        RenderUtil.drawRectOutline(-0.5, 0, 1, entity.height, 1, squareColour);
 
         GL11.glPopMatrix();
     }

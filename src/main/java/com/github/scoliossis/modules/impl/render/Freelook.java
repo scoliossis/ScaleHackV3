@@ -1,9 +1,8 @@
 package com.github.scoliossis.modules.impl.render;
 
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.KeyPressedEvent;
+import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import com.github.scoliossis.utils.RotationUtil;
@@ -14,6 +13,19 @@ import com.github.scoliossis.utils.RotationUtil;
         category = Category.RENDER
 )
 public class Freelook extends Module {
+    @RegisterSubModule(name = "Disable On Key Release")
+    public static boolean disableOnKeyRelease = true;
+
+    @SubscribeEvent
+    public static void onKeyRelease(KeyPressedEvent event) {
+        if (disableOnKeyRelease && !event.pressed) {
+            Module thiz = ModuleManager.getModule(Freelook.class);
+            if (event.keyCode == thiz.getKeybind()) {
+                thiz.setEnabled(false);
+            }
+        }
+    }
+
     private int lastPerspective = 0;
 
     @Override

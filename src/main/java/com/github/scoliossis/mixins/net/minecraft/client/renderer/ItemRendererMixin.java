@@ -2,7 +2,6 @@ package com.github.scoliossis.mixins.net.minecraft.client.renderer;
 
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.render.Animations;
-import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -30,7 +29,7 @@ public abstract class ItemRendererMixin {
     public void onRenderItem(EntityLivingBase entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform, CallbackInfo ci) {
         if (entityIn != C.p()) return;
 
-        if (ModuleManager.isEnabled(Freecam.class)) ci.cancel();
+        if (Animations.shouldHideHeldItem()) ci.cancel();
 
         if (this.itemToRender != null && C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Animations.class)) {
             Vec3 itemScale = Animations.getScaleVec();
