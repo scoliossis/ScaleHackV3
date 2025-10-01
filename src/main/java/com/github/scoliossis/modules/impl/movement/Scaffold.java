@@ -4,15 +4,11 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
+import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.*;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.*;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -26,47 +22,62 @@ import java.util.Iterator;
 )
 // todo: auto f5, enable when holding blocks, safewalk, better rotations
 public class Scaffold extends Module {
-    @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1)
+    @RegisterSubModule(name = "Basics")
+    public static SubCategory basicCategory = new SubCategory();
+
+    @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1, parent = "Basics")
     public static float blockReach = 5f;
 
-    @RegisterSubModule(name = "Show Previous Blocks")
-    public static boolean showPreviousBlocks = true;
+    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Basics")
+    public static boolean noDuplicateRot = true;
 
-    @RegisterSubModule(name = "Previous Blocks Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
-    public static long showPreviousBlocksTime = 3000;
+    @RegisterSubModule(name = "Bridging Mode", parent = "Basics")
+    public static BridgingMode bridgingMode = BridgingMode.God;
 
-    @RegisterSubModule(name = "Keep Y", description = "im stuck bruh")
-    public static boolean keepY = true;
+    public enum BridgingMode {
+        God,
+        Telly,
+        Derp
+    }
 
-    @RegisterSubModule(name = "Tower", description = "I wanna go to the moon, don't leave so soon, How could I get through?")
-    public static boolean tower = true;
+    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyTicks = 2;
 
-    @RegisterSubModule(name = "Tower Pitch Range", parent = "Tower", description = "Only tower within certain pitch range")
+    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyPlaceDelay = 2;
+
+    @RegisterSubModule(name = "Tower")
+    public static SubCategory towerCategory = new SubCategory();
+
+    @RegisterSubModule(name = "Tower Mode", parent = "Tower", description = "Only tower within certain pitch range")
+    public static TowerMode towerMode = TowerMode.Legit;
+
+    public enum TowerMode {
+        None,
+        Legit,
+        Vanilla
+    }
+
+    @RegisterSubModule(name = "Only If Space Down", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "Only tower if holding your jump key")
+    public static boolean onlyIfSpaceDown = true;
+
+    @RegisterSubModule(name = "Tower Pitch Range", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "Only tower within certain pitch range")
     public static boolean onlyTowerLookingUp = true;
 
     @RegisterSubModule(name = "Min Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
-    public static int minPitch = 0;
+    public static int minPitch = -90;
 
     @RegisterSubModule(name = "Max Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
-    public static int maxPitch = 90;
+    public static int maxPitch = 0;
 
-    @RegisterSubModule(name = "Max Blocks Per Tick", parent = "If you want to place multiple blocks in a tick", min = 1, max = 10, dangerous = true)
-    public static int maxBlocksPerTick = 1;
+    @RegisterSubModule(name = "Visuals")
+    public static SubCategory visuals = new SubCategory();
 
-    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check")
-    public static boolean noDuplicateRot = true;
+    @RegisterSubModule(name = "Show Previous Blocks", parent = "Visuals")
+    public static boolean showPreviousBlocks = true;
 
-    @RegisterSubModule(name = "Snap Rotation", description = "Only Rotate To Place Blocks")
-    public static boolean snapRotation = true;
-
-    @RegisterSubModule(name = "Telly Bridge", description = "Snap Head Forward Every Other Jump")
-    public static boolean tellyBridge = true;
-
-    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward Every Other Jump", max = 5)
-    public static int tellyTicks = 2;
-
-    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5)
-    public static int tellyPlaceDelay = 2;
+    @RegisterSubModule(name = "Fade Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
+    public static long showPreviousBlocksTime = 3000;
 
     private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();
 
@@ -80,13 +91,12 @@ public class Scaffold extends Module {
 
     @SubscribeEvent
     public static void onKeyInput(MovementInputEvent event) {
-        if (tellyBridge)
-            event.movementInput.jump = tellyTicksCounter == 1;
+        event.movementInput.jump |= bridgingMode == BridgingMode.Telly || (towerMode == TowerMode.Legit && shouldTower());
     }
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (snapRotation) rotation = RotationUtil.getCurrentClientRotation();
+        if (bridgingMode == BridgingMode.Derp) rotation = RotationUtil.getCurrentClientRotation();
 
         if (!InventoryUtil.isValidBlock(C.p().getCurrentEquippedItem())) {
             int bestStack = InventoryUtil.biggestBlockSlot();
@@ -95,7 +105,18 @@ public class Scaffold extends Module {
             C.p().inventory.currentItem = bestStack;
         }
 
-        if (C.p().onGround && tellyBridge) {
+        Vec3 positionToRotateFrom = C.p().getPositionVector();
+        if (!WorldUtil.isOverAir()) {
+            Vec3 predictedNextPosition = getPredictedNextPosition();
+            if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
+        }
+
+        BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
+        if (targetBlock == null) return;
+
+        if (shouldTower() && towerMovement()) setShouldTower();
+
+        if (bridgingMode == BridgingMode.Telly && C.p().onGround) {
             tellyTicksCounter = 0;
             tellyPlaceDelayCounter = 0;
         }
@@ -105,57 +126,30 @@ public class Scaffold extends Module {
 
         tellyPlaceDelayCounter++;
 
-        for (int i = 0; i < maxBlocksPerTick; i++) {
-            Vec3 positionToRotateFrom = C.p().getPositionVector();
-            if (!WorldUtil.isOverAir()) {
-                Vec3 predictedNextPosition = getPredictedNextPosition();
-                if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
-            }
+        if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
+        if (!WorldUtil.isOverAir()) return;
 
-            BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
-            if (targetBlock == null) return;
+        if (bridgingMode == BridgingMode.Telly && tellyPlaceDelayCounter < tellyPlaceDelay) return;
 
-            if (shouldTower() && towerMovement()) setShouldTower();
+        MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
 
-            if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
-            if (!WorldUtil.isOverAir()) return;
+        if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+        if (rayTrace.sideHit == EnumFacing.UP && !shouldTower()) return;
 
-            if (tellyBridge && tellyPlaceDelayCounter < tellyPlaceDelay) return;
+        if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
+            C.p().swingItem();
 
-            MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
+            lastPlacedDeltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
+            blocksPlaced++;
+            previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
 
-            if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-            if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
-
-            if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
-                C.p().swingItem();
-
-                float deltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
-                /* // here to test grim's duplicate rot place check in singleplayer
-                if (deltaX > 2) {
-                    float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
-                    if (xDiff < 0.0001) {
-                        ChatUtil.chat("&bGrim &8» &f" + C.p().getName() + " &bfailed &fDuplicateRotPlace (x&c" + deltaX + "&f)");
-                    }
-                }
-                 */
-
-                lastPlacedDeltaX = deltaX;
-                blocksPlaced++;
-                previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
-
-                // minecraft blehhhh
-                if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
-            }
+            // minecraft blehhhh
+            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
         }
     }
 
     private static boolean shouldRotate() {
-        return !snapRotation || WorldUtil.isOverAir();
-    }
-
-    private static boolean shouldKeepY() {
-        return keepY && !shouldTower();
+        return bridgingMode != BridgingMode.Derp || WorldUtil.isOverAir();
     }
 
     // 1 second time travel hack
@@ -206,35 +200,43 @@ public class Scaffold extends Module {
     private static boolean shouldTower = false;
 
     private static boolean shouldTower() {
+        if (towerMode == TowerMode.None) return false;
+
         // only stop and start towering when on ground
         if (C.p().onGround || MovementUtil.airTicks == 1) setShouldTower();
 
-        return tower && shouldTower;
+        return shouldTower;
     }
 
     private static void setShouldTower() {
-        shouldTower = C.mc.gameSettings.keyBindJump.isKeyDown() && (!onlyTowerLookingUp || C.p().rotationPitch <= maxPitch && C.p().rotationPitch >= minPitch);
+        shouldTower = (!onlyIfSpaceDown || C.mc.gameSettings.keyBindJump.isKeyDown())
+                && (!onlyTowerLookingUp || C.p().rotationPitch <= maxPitch && C.p().rotationPitch >= minPitch);
     }
 
     /// returns true when the player can stop towering if they want to
     // get em high
     private static boolean towerMovement() {
-        // slightly more reliable than airTicks % 3
-        int playerYto2Decimals = (int) ((C.p().posY % 1) * 100);
-        switch (playerYto2Decimals) {
-            case 0:
-                //getJumpUpwardsMotion() is always 0.42F
-                // todo: implement jumpboost check maybe?
-                // if (this.isPotionActive(Potion.jump)) this.motionY += (double)((float)(this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F);
-                C.p().motionY = 0.42F;
-                break;
-            case 41: // 0.42f ~= 0.419999, and im not rounding, im chopping off the digits
-                C.p().motionY = 0.33F;
-                break;
-            case 75: // 42 + 33
-                // should always be ~0.25, but it could lose accuracy over time
-                C.p().motionY = 1 - (C.p().posY % 1);
+        switch (towerMode) {
+            case Legit:
                 return true;
+            case Vanilla:
+                // slightly more reliable than airTicks % 3
+                int playerYto2Decimals = (int) ((C.p().posY % 1) * 100);
+                switch (playerYto2Decimals) {
+                    case 0:
+                        //getJumpUpwardsMotion() is always 0.42F
+                        // todo: implement jumpboost check maybe?
+                        // if (this.isPotionActive(Potion.jump)) this.motionY += (double)((float)(this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F);
+                        C.p().motionY = 0.42F;
+                        break;
+                    case 41: // 0.42f ~= 0.419999, and im not rounding, im chopping off the digits
+                        C.p().motionY = 0.33F;
+                        break;
+                    case 75: // 42 + 33
+                        // should always be ~0.25, but it could lose accuracy over time
+                        C.p().motionY = 1 - (C.p().posY % 1);
+                        return true;
+                }
         }
 
         return false;
@@ -259,7 +261,7 @@ public class Scaffold extends Module {
 
                 // obviously placing a block above you isnt helpful.
                 if (facing == EnumFacing.DOWN) continue;
-                if (facing == EnumFacing.UP && shouldKeepY()) continue;
+                if (facing == EnumFacing.UP && !shouldTower()) continue;
 
                 if (C.w().getBlockState(blockPosOffset).getBlock().isBlockSolid(C.w(), blockPosOffset, EnumFacing.UP)) continue;
                 if (blockPosOffset.getY() >= C.p().posY) continue;
@@ -318,7 +320,7 @@ public class Scaffold extends Module {
                     if (raycast == null) continue;
                     BlockPos raycastBlock = raycast.getBlockPos().offset(raycast.sideHit);
 
-                    if (raycastBlock.equals(targetBlock) && (!shouldKeepY() || raycast.sideHit != EnumFacing.UP)) {
+                    if (raycastBlock.equals(targetBlock) && (shouldTower() || raycast.sideHit != EnumFacing.UP)) {
                         float bestRotationChange = Math.abs(rotation.pitch - closestPitch) + Math.abs(closestYaw);
                         float currentRotationChange = Math.abs(rotation.pitch - gcdedRotation.pitch) + Math.abs(yawChange);
                         if (currentRotationChange < bestRotationChange) {

@@ -24,7 +24,9 @@ public class HUD extends Module {
     @SubscribeEvent
     public static void onRender2D(RenderTickEvent event) {
         String clientGamesenseName = Main.MOD_NAME.split(" ")[0] + "Sense";
-        String hudText = clientGamesenseName + " " + Main.MOD_VERSION + " | " + Minecraft.getDebugFPS() + " fps | " + (C.mc.getCurrentServerData() != null ? C.mc.getCurrentServerData().serverIP : "singleplayer");
+
+        String server = C.mc.isSingleplayer() ? "singleplayer" : C.mc.getCurrentServerData() != null ? C.mc.getCurrentServerData().serverIP : "unknown";
+        String hudText = clientGamesenseName + " " + Main.MOD_VERSION + " | " + Minecraft.getDebugFPS() + " fps | " + server;
         float width = FontUtil.getStringWidth(hudText, fontSize) + 4;
         float height = 12;
 

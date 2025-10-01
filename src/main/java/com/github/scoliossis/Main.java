@@ -12,6 +12,7 @@ import com.github.scoliossis.utils.alts.microsoft.AuthServer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.lwjgl.opengl.Display;
 
 @Mod(modid = Main.MOD_ID, name = Main.MOD_NAME, version = Main.MOD_VERSION)
@@ -26,9 +27,10 @@ public class Main {
 
     public static final String baseConfig = "base";
 
-    public static final String configPath = "config/" + Main.MOD_ID + "/";
+    public static final String baseFolderPath = "config/" + Main.MOD_ID + "/";
+    public static final String configPath = baseFolderPath + "config/";
     public static final String configExtension = ".cfg";
-    public static final String extraSavedFeaturesPath = configPath + "extras/";
+    public static final String extraSavedFeaturesPath = baseFolderPath + "extras/";
 
     static {
         // load font here so it can be used immediately!!
@@ -36,7 +38,9 @@ public class Main {
     }
 
     @EventHandler
-    public void onInit(FMLInitializationEvent event) {
+    public void onInit(FMLPreInitializationEvent event) {
+        if (FrameUtil.frame != null) FrameUtil.frame.setAlwaysOnTop(false);
+
         Display.setTitle(MOD_NAME + " " + MOD_VERSION);
 
         ModuleManager.init();

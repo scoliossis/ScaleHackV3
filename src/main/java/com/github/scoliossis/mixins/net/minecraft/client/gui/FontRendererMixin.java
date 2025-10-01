@@ -2,9 +2,13 @@ package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
+import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.FontUtil;
+import com.github.scoliossis.utils.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.scoreboard.Scoreboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -14,7 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.awt.*;
 
-// fun fact: minecraft feeds the setColor(r,g,b,a) function r,b,g,a. this is a WILD typo and happened 3 TIMES??
+// fun fact: minecraft feeds the setColor(r,g,b,a) function r,b,g,a in renderString
+// its misnamed, this.blue = (float)(p_renderString_4_ >> 8 & 255) / 255.0F; which is the green part.
+
 @Mixin(FontRenderer.class)
 public abstract class FontRendererMixin {
     @Shadow public abstract int getStringWidth(final String p0);
@@ -27,9 +33,21 @@ public abstract class FontRendererMixin {
 
     @Shadow public abstract int drawString(String text, float x, float y, int color, boolean dropShadow);
 
+    @Shadow
+    private boolean bidiFlag;
+
+    @Shadow
+    protected abstract String bidiReorder(String p_bidiReorder_1_);
+
+    // todo: 3d text rendering is wrong, it isnt culled, you can see signs through walls.
     @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;resetStyles()V", shift = At.Shift.AFTER), cancellable = true)
-    public void onDrawString(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
-        // fix text to hide nick
+    public void onDrawString(String text, float x, float y, int colourInt, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
+        if (text == null || text.isEmpty()) return;
+
+        // special chars are always drawn by the default font renderer
+        if (text.length() == 1 && FontUtil.isSpecialChar(text.charAt(0))) return;
+
+        // fix text to hide disgusting words.
         String text2 = NickHider.fixText(text);
 
         if (text2.isEmpty()) {
@@ -38,22 +56,22 @@ public abstract class FontRendererMixin {
         }
 
         if (FontRenderer$shouldUseCustomFont()) {
-            if ((color & -67108864) == 0) {
-                color |= -16777216;
+            if (this.bidiFlag) {
+                text2 = this.bidiReorder(text);
             }
 
-            // minecraft uses red, blue, green colouring btw.
-            Color colour = new Color((float)(color >> 16 & 255) / 255.0F,
-                    (float)(color >> 8 & 255) / 255.0F,
-                    (float)(color & 255) / 255.0F
-                    //(float)(color >> 24 & 255) / 255.0F
-            );
+            if ((colourInt & -67108864) == 0) {
+                colourInt |= -16777216;
+            }
+
+            // i dont know why the scoreboard always has the colour 20FFFFFF, which is transparent.
+            Color colour = new Color(colourInt, colourInt != 0x20FFFFFF);
 
             FontUtil.drawString(text2, x, y - (ThemeModule.minecraftFontSize - 7), ThemeModule.minecraftFontSize, colour, dropShadow);
-            cir.setReturnValue((int) (x + FontUtil.getStringWidth(text2, ThemeModule.minecraftFontSize)));
+            cir.setReturnValue((int) (x + FontUtil.getStringWidth(text2, ThemeModule.minecraftFontSize)) + (dropShadow ? 1 : 0));
         }
         else if (!text.equals(text2)) {
-            cir.setReturnValue(this.drawString(text2, x, y, color, dropShadow));
+            cir.setReturnValue(this.drawString(text2, x, y, colourInt, dropShadow));
         }
     }
 

@@ -241,7 +241,7 @@ public class ClickGUIScreen extends GuiScreen {
         else if (keyCode == Keyboard.KEY_ESCAPE) ModuleManager.setEnabled(ClickGUIModule.class, false);
         else if (subModuleHovered != null && subModuleHovered.isSlider()) {
             double increment = subModuleHovered.getAnnotation().increment();
-            if (subModuleHovered.getField().getType() == long.class || subModuleHovered.getField().getType() == int.class && increment < 1) increment = 1;
+            if ((subModuleHovered.getField().getType() == long.class || subModuleHovered.getField().getType() == int.class) && increment < 1) increment = 1;
 
             double value = Double.parseDouble(subModuleHovered.get().toString());
 

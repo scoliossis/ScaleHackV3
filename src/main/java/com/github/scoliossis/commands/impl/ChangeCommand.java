@@ -14,17 +14,22 @@ public class ChangeCommand extends Command {
 
     @Override
     public boolean execute(String[] args) {
-        if (args.length < 3) return false;
+        if (args.length < 2) return false;
 
         switch (args[0]) {
             case "name":
-                if (!args[2].equals("confirm")) return false;
+                if (args.length < 3 || !args[2].equals("confirm")) return false;
 
                 ChatUtil.prefixMessage(SessionUtil.changeName(C.mc.getSession().getToken(), args[1]));
                 return true;
 
             case "skin":
-                ChatUtil.prefixMessage(SessionUtil.changeSkin(C.mc.getSession().getToken(), args[1], args[2].equals("slim") ? "slim" : "classic"));
+                if (args.length >= 3) {
+                    ChatUtil.prefixMessage(SessionUtil.changeSkin(C.mc.getSession().getToken(), args[1], args[2].equals("slim") ? "slim" : "classic"));
+                }
+                else {
+                    ChatUtil.prefixMessage(SessionUtil.changeSkin(C.mc.getSession().getToken(), args[1]));
+                }
 
                 return true;
         }
@@ -36,6 +41,7 @@ public class ChangeCommand extends Command {
     public String[] usage() {
         return new String[] {
                 "name <new name> confirm",
+                "skin <skin url>",
                 "skin <skin url> [slim/classic]",
         };
     }

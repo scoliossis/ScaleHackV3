@@ -96,7 +96,7 @@ public class Login {
         public Login.AltTypes type;
         public HashMap<String, String> json;
 
-        private BufferedImage head;
+        public BufferedImage head;
 
         Path skinsPath;
         Path headPath;
@@ -118,7 +118,7 @@ public class Login {
 
         public void updateHeadTexture() {
             try {
-                this.head = ImageIO.read(new URL("https://www.mc-heads.net/avatar/"+uuid+"/16"));
+                this.head = SessionUtil.getHead(uuid);
                 ImageIO.write(this.head, "png", headPath.toFile());
             } catch (IOException e) {
                 e.printStackTrace();

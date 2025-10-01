@@ -3,6 +3,7 @@ package com.github.scoliossis.utils;
 import com.github.scoliossis.Main;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.lwjgl.opengl.GL11;
 
@@ -10,6 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 // open to pull requests <3, oldish code! main issue is its unoptimized!
 public class FontUtil {
@@ -20,8 +22,8 @@ public class FontUtil {
 
     private static Font currentFont = null;
 
-    // list by minecraft in FontRenderer.renderChar
-    private static final String letters = "ÀÁÂÈÊËÍÓÔÕÚßãõğİıŒœŞşŴŵžȇ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αβΓπΣσμτΦΘΩδ∞∅∈∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u0000";
+    // list by minecraft in FontRenderer.renderChar, removed all glyphs.
+    private static final String letters = "ÀÁÂÈÊËÍÓÔÕÚßãõğİıŒœŞşŴŵž !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»πμΩ∞±≥≤÷≈°∙·√²\u0000";
 
     private static Font getCustomFont(int fontSize) {
         try {
@@ -93,6 +95,8 @@ public class FontUtil {
     public static void drawString(String string, float x, float y, int size, Color colour, boolean shadow) {
         GL11.glPushMatrix();
 
+        float opacity = colour.getAlpha()/255f;
+
         int scaleFactor = getScaleFactor();
         GL11.glScaled(1d / scaleFactor, 1d / scaleFactor, 1);
 
@@ -121,7 +125,9 @@ public class FontUtil {
                 colorCode = false;
 
                 String colourCodes = "0123456789abcdef";
-                if (colourCodes.indexOf(character) != -1) colour = new Color(C.mc.fontRendererObj.getColorCode(character));
+                if (colourCodes.indexOf(character) != -1) {
+                    colour = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), opacity);
+                }
                 switch (character) {
                     case 'k':
                         obfuscated = true;
@@ -158,6 +164,16 @@ public class FontUtil {
 
             if (obfuscated) character = letters.charAt((int) (Math.random()*letters.length()));
 
+            if (FontUtil.isSpecialChar(character)) {
+                GL11.glPushMatrix();
+                GL11.glTranslated(x, y + size/3f, 0);
+                GL11.glScaled(0.1*size, 0.1*size, 1);
+                C.mc.fontRendererObj.drawString(String.valueOf(character), 0, 0, colour.getRGB());
+                x += size;
+                GL11.glPopMatrix();
+                continue;
+            }
+
             Texture texture = textures.get(character);
             if (texture == null) continue;
 
@@ -190,11 +206,26 @@ public class FontUtil {
     }
 
     public static int getStringWidth(String string, int size) {
+        if (string.isEmpty()) return 0;
+
+        String validText = string.replaceAll("[&§].", "");
+        if (validText.isEmpty()) return 0;
+
         int scaleFactor = getScaleFactor();
         size *= scaleFactor;
         graphics.setFont(currentFont.deriveFont((float)size));
 
-        return graphics.getFontMetrics().getStringBounds(string.replaceAll("[&§].", ""), graphics).getBounds().width / scaleFactor;
+        String normalCharacters = validText.replaceAll("[^" + Pattern.quote(letters) + "]", "");
+        int specialCharacterAmount = validText.length() - normalCharacters.length();
+
+        int stringWidth = graphics.getFontMetrics().getStringBounds(normalCharacters, graphics).getBounds().width / scaleFactor;
+        int specialCharsWidth = (size/scaleFactor) * specialCharacterAmount;
+
+        return stringWidth + specialCharsWidth;
+    }
+
+    public static boolean isSpecialChar(char character) {
+        return !letters.contains(String.valueOf(character));
     }
 
     public static float getFontHeight(float size) {

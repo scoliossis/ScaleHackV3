@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// i dont like this command manager but im sadly too lazy to make the improvements it needs.
 public class CommandManager {
     @Getter
     private static final ArrayList<Command> commands = new ArrayList<>();
@@ -62,5 +63,14 @@ public class CommandManager {
                 ChatUtil.prefixMessage("&c." + command.name() + " &f" + usage);
             }
         }
+    }
+
+    public static String gatherArgs(String[] args, int split) {
+        String remainingArgs = "";
+        for (int i = split; i < args.length; i++) {
+            remainingArgs += args[i] + " ";
+        }
+
+        return remainingArgs.trim();
     }
 }

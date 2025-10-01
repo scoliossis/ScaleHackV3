@@ -113,8 +113,7 @@ public class ListCommand extends Command {
                         subModule.getField().getType() == SubCategory.class ?
                                 "\n&6" + subModule.getAnnotation().name()
                                 :
-                                // only show subsetting if it would be shown in gui, or if its parent is a subcategory
-                                subModule.shouldRender(true)
+                                subModule.shouldRender(true, true)
                                         ?
                                         (subModule.getAnnotation().dangerous() ? "&4" : "&c") + subModule.getAnnotation().name() + "&f: " +
                                                 subModule.get() +

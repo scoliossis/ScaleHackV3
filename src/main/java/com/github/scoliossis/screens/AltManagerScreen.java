@@ -19,6 +19,9 @@ import org.lwjgl.opengl.GL11;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -176,7 +179,10 @@ public class AltManagerScreen extends GuiScreen {
                     hovered ? new Color(255,255,255,255) : new Color(255,255,255,190);
             RenderUtil.drawBlurRect(altX, altY, width, height, 3);
             RenderUtil.drawRect(altX, altY, width, height, new Color(22,22,22, 100));
-            RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, Color.WHITE, texture);
+
+            boolean headHovered = ScreenUtil.isMouseOver(altX + headIndent, altY + headIndent, headSize, headSize, mX, mY);
+            RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, headHovered ? Color.WHITE.darker() : Color.WHITE, texture);
+
             Color[] colorsFade = RenderUtil.getColorsFade(translation[0]+altX, width, RenderUtil.ThemeColours.Gay.colours, 1);
             RenderUtil.drawGradientLR(altX, altY, width, 1, colorsFade[0], colorsFade[1]);
 
@@ -189,7 +195,20 @@ public class AltManagerScreen extends GuiScreen {
             RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth, altY + altFontHeight, iconDiameter, iconDiameter, binHovered ? Color.LIGHT_GRAY : Color.WHITE, binTexture);
             RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth + iconDiameter, altY + altFontHeight, iconDiameter, iconDiameter, pencilHovered ? Color.LIGHT_GRAY : Color.WHITE, pencilTexture);
 
-            if (binHovered) {
+            // i hate this codebase, too lazy to restart.
+            if (headHovered) {
+                if (mouseButton == 0) {
+                    try {
+                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        String data = (String) clipboard.getData(DataFlavor.stringFlavor);
+
+                        Login.addProgressReport(SessionUtil.changeSkin(C.mc.getSession().getToken(), data));
+                    } catch (Exception e) {
+                        Login.setErrorMessage("Invalid clipboard data");
+                    }
+                }
+            }
+            else if (binHovered) {
                 if (mouseButton == 0) {
                     try {
                         Files.delete(Login.getAccountPath(alt.uuid));

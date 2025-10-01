@@ -148,6 +148,9 @@ public class Cookies {
         StringBuilder cook = new StringBuilder();
         for (String s : fileContent.split("\n")) {
             String[] strings = s.split("\t");
+
+            if (strings.length < 5) continue;
+
             cook.append(strings[5]).append("=").append(strings[6]);
         }
         return cook.substring(0, cook.length() - 2);

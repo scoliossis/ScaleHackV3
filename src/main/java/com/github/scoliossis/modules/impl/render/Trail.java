@@ -45,7 +45,7 @@ public class Trail extends Module {
     public static float fadeSpeed = 2;
 
     @RegisterSubModule(name = "Draw On Ground")
-    public static boolean drawOnGround = true;
+    public static boolean drawOnGround = false;
 
     private static final ArrayList<PosAndTime> nodes = new ArrayList<>();
 

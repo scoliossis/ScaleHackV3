@@ -39,9 +39,6 @@ public class SubModule {
             if (field.getType() == double.class || field.getType() == float.class || field.getType() == long.class || field.getType() == int.class) {
                 double value = Double.parseDouble(object.toString());
                 double roundedValue = MathUtil.toNearest(value, annotation.increment());
-                // this is def stupid, my fault og
-                if ((annotation.increment()+"").contains("."))
-                    roundedValue = MathUtil.roundTo(roundedValue, (annotation.increment()+"").split("\\.")[1].length());
 
                 double clampedValue = MathHelper.clamp_double(roundedValue, annotation.min(), annotation.max());
 
@@ -76,15 +73,17 @@ public class SubModule {
     }
 
     public boolean shouldRender() {
-        return shouldRender(false);
+        return shouldRender(false, false);
     }
 
-    public boolean shouldRender(boolean ignoreSubCategory) {
-        if (!ignoreSubCategory && !this.parentModule.isOpen() && EasingUtil.getAnimation(this.parentModule.getUniqueKey("")) == -1)
+    public boolean shouldRender(boolean ignoreSubCategory, boolean ignoreRightClick) {
+        boolean parentOpen = ignoreRightClick || this.parentModule.isOpen();
+
+        if (!ignoreSubCategory && !parentOpen && EasingUtil.getAnimation(this.parentModule.getUniqueKey("")) == -1)
             return false;
 
         if (this.parent == null) return true;
-        if (!this.parent.shouldRender()) return false;
+        if (!this.parent.shouldRender(ignoreSubCategory, ignoreRightClick) && !ignoreRightClick) return false;
         if (EasingUtil.getAnimation(this.parent.getUniqueKey()) != -1) return true;
 
         if (this.parent.getField().getType() == boolean.class)
@@ -101,13 +100,13 @@ public class SubModule {
                         parentValue.name().equalsIgnoreCase(string)
                         || EasingUtil.getAnimation((this.parent.getUniqueKey() + string).toLowerCase()) != -1
                 )
-                    return this.parent.shouldRender();
+                    return this.parent.shouldRender(ignoreSubCategory, ignoreRightClick);
             }
 
             return false;
         }
 
-        return this.parent.shouldRender();
+        return this.parent.shouldRender(ignoreSubCategory, ignoreRightClick);
     }
 
     // messy, but being smart is hard.

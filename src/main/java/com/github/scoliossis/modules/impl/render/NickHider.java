@@ -15,7 +15,8 @@ import net.minecraft.client.Minecraft;
 public class NickHider extends Module {
 
     public static String fixText(String text) {
-        if (ModuleManager.isEnabled(NickHider.class)) text = text.replaceAll(Minecraft.getMinecraft().getSession().getUsername(), "scale");
+        if (ModuleManager.isEnabled(NickHider.class))
+            text = text.replaceAll(Minecraft.getMinecraft().getSession().getUsername(), "scale");
         if (Disabler.racismDisabler && ModuleManager.isEnabled(Disabler.class)) {
             // patches racism. donald trump should try this
             for (String word : Disabler.racistWords) {

@@ -40,7 +40,7 @@ public class FrameUtil {
             Canvas canvas = new Canvas();
 
             frame = new JFrame(Main.MOD_NAME + " " + Main.MOD_VERSION);
-            frame.setSize(Display.getWidth(), Display.getHeight());
+            frame.setSize(Display.getWidth(), Display.getHeight() + 35);
             frame.setLocation(Display.getX(), Display.getY());
             frame.addWindowListener(new WindowAdapter() {
                 @Override
@@ -62,6 +62,9 @@ public class FrameUtil {
 
             System.out.println(Main.MOD_NAME + " has successfully created a JFrame.");
             initialized = true;
+
+            // fixes game launching with blackscreen
+            frame.setAlwaysOnTop(true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
