@@ -1,18 +1,14 @@
 package com.github.scoliossis;
 
 import com.github.scoliossis.commands.CommandManager;
-import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
-import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.FontUtil;
 import com.github.scoliossis.utils.FrameUtil;
 import com.github.scoliossis.utils.alts.microsoft.AuthServer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.lwjgl.opengl.Display;
 
 @Mod(modid = Main.MOD_ID, name = Main.MOD_NAME, version = Main.MOD_VERSION)
@@ -38,7 +34,7 @@ public class Main {
     }
 
     @EventHandler
-    public void onInit(FMLPreInitializationEvent event) {
+    public void onInit(FMLInitializationEvent event) {
         if (FrameUtil.frame != null) FrameUtil.frame.setAlwaysOnTop(false);
 
         Display.setTitle(MOD_NAME + " " + MOD_VERSION);

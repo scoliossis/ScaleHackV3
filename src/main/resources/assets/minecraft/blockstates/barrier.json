@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "normal": [
+      { "model": "barrier" },
+      { "model": "barrier_mirrored" },
+      { "model": "barrier", "y": 180 },
+      { "model": "barrier_mirrored", "y": 180 }
+    ]
+  }
+}

@@ -29,12 +29,20 @@ public abstract class ItemRendererMixin {
     public void onRenderItem(EntityLivingBase entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform, CallbackInfo ci) {
         if (entityIn != C.p()) return;
 
-        if (Animations.shouldHideHeldItem()) ci.cancel();
+        if (Animations.shouldHideHeldItem()) {
+            ci.cancel();
+            return;
+        }
 
         if (this.itemToRender != null && C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Animations.class)) {
             Vec3 itemScale = Animations.getScaleVec();
             GL11.glScaled(itemScale.xCoord, itemScale.yCoord, itemScale.zCoord);
         }
+    }
+
+    @Inject(method = "renderPlayerArm", at = @At(value = "HEAD"), cancellable = true)
+    public void onRenderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress, CallbackInfo ci) {
+        if (Animations.shouldHideHeldItem()) ci.cancel();
     }
 
     @Redirect(method = "renderOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isEntityInsideOpaqueBlock()Z"))
