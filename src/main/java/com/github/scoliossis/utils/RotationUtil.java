@@ -1,7 +1,7 @@
 package com.github.scoliossis.utils;
 
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -12,6 +12,10 @@ public class RotationUtil {
     }
     public static Rotation getCurrentClientRotation() {
         return new Rotation(C.p().rotationPitch, C.p().rotationYaw);
+    }
+
+    public static Rotation applyGcd(Rotation targetRotation) {
+        return applyGcd(PlayerUtil.lastRotation(), targetRotation);
     }
 
     public static Rotation applyGcd(Rotation currentRotation, Rotation targetRotation) {
@@ -30,16 +34,16 @@ public class RotationUtil {
     }
 
     public static Rotation getRotation(Vec3 to) {
-        return getRotation(PlayerUtil.getPrevPlayerUpdateEvent().rotation, C.p().getPositionEyes(1), to);
+        return getRotation(PlayerUtil.lastRotation(), C.p().getPositionEyes(1), to);
     }
 
     public static Rotation getRotation(Vec3 from, Vec3 to) {
-        return getRotation(PlayerUtil.getPrevPlayerUpdateEvent().rotation, from, to);
+        return getRotation(PlayerUtil.lastRotation(), from, to);
     }
 
     public static Rotation getRotation(Rotation currentRotation, Vec3 from, Vec3 to) {
         return applyGcd(currentRotation, getRotationNoGcd(currentRotation, from, to));
-    };
+    }
 
     private static Rotation getRotationNoGcd(Rotation currentRotation, Vec3 from, Vec3 to) {
         Vec3 diff = to.subtract(from);
@@ -64,7 +68,7 @@ public class RotationUtil {
     }
 
     public static Rotation getLimitedRotation(Rotation to, float maxTurnAmount) {
-        Rotation from = PlayerUtil.getPrevPlayerUpdateEvent().rotation;
+        Rotation from = PlayerUtil.lastRotation();
         Rotation rotationDifference = to.subtract(from);
         float pitchDelta = MathHelper.clamp_float(rotationDifference.pitch, -maxTurnAmount, maxTurnAmount);
         float yawDelta = MathHelper.clamp_float(rotationDifference.yaw, -maxTurnAmount, maxTurnAmount);
@@ -73,7 +77,7 @@ public class RotationUtil {
     }
 
     public static Rotation getSmoothRotation(Rotation to, float smoothing) {
-        Rotation from = PlayerUtil.getPrevPlayerUpdateEvent().rotation;
+        Rotation from = PlayerUtil.lastRotation();
         Rotation rotationDifference = to.subtract(from);
         float pitchDelta = rotationDifference.pitch / smoothing;
         float yawDelta = rotationDifference.yaw / smoothing;
@@ -82,13 +86,9 @@ public class RotationUtil {
     }
 
     // always goes last, applies gcd to rotations from disabling modules or just setting rotation
-    // todo: fix
-    //@SubscribeEvent(priority = 9999)
-    public static void onPlayerUpdate(PlayerUpdateEvent event) {
-        event.rotation = RotationUtil.applyGcd(
-                PlayerUtil.getPrevPlayerUpdateEvent().rotation,
-                PlayerUtil.playerUpdateEvent.rotation
-        );
+    @SubscribeEvent(priority = 9998)
+    public static void onPlayerUpdate(RotationEvent event) {
+        event.rotation = RotationUtil.applyGcd(PlayerUtil.currentRotation());
     }
 
     @AllArgsConstructor
@@ -106,6 +106,11 @@ public class RotationUtil {
 
         public Rotation subtract(Rotation other) {
             return new Rotation(pitch - other.pitch, yaw - other.yaw);
+        }
+
+        @Override
+        public String toString() {
+            return "Rotation(" + pitch + ", " + yaw + ")";
         }
     }
 }

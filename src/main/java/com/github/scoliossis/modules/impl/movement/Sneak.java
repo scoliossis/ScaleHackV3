@@ -1,8 +1,12 @@
 package com.github.scoliossis.modules.impl.movement;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
+import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.utils.C;
 
 @RegisterModule(
         name = "Sneak",
@@ -11,6 +15,14 @@ import com.github.scoliossis.modules.RegisterModule;
         dangerous = true
 )
 public class Sneak extends Module {
+    @SubscribeEvent
+    public static void onMovementInputEvent(MovementInputEvent event) {
+        if (ModuleManager.isEnabled(Sneak.class) && C.p().isSneaking()) {
+            event.movementInput.moveStrafe /= 0.3f;
+            event.movementInput.moveForward /= 0.3f;
+        }
+    }
+
     @Override
     protected void onEnable() {
 

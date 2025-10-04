@@ -12,7 +12,6 @@ import com.github.scoliossis.utils.WorldUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,15 +36,21 @@ public abstract class EntityMixin {
 
     @Redirect(method = "moveFlying", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;rotationYaw:F"))
     public float editYawOnMoveFlying(Entity instance) {
-        return MovementFix.shouldMoveFix(instance) ? PlayerUtil.playerUpdateEvent.rotation.yaw : instance.rotationYaw;
+        return MovementFix.shouldMoveFix(instance) ? PlayerUtil.currentRotation().yaw : instance.rotationYaw;
     }
 
     @Inject(method = "rayTrace", at = @At("HEAD"), cancellable = true)
     public void redirectRayTrace(double blockReachDistance, float partialTicks, CallbackInfoReturnable<MovingObjectPosition> cir) {
         if (this.entityId == C.p().getEntityId()) {
             Vec3 pos = C.p().getPositionEyes(partialTicks);
-            RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.getPrevPlayerUpdateEvent().rotation : RotationUtil.getPreviousClientRotation();
-            RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix() ? PlayerUtil.playerUpdateEvent.rotation : RotationUtil.getCurrentClientRotation();
+
+            RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix()
+                    ? PlayerUtil.lastRotation()
+                    : RotationUtil.getPreviousClientRotation();
+
+            RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix()
+                    ? PlayerUtil.currentRotation()
+                    : RotationUtil.getCurrentClientRotation();
 
             if (PlayerUtil.shouldFixPlayerFakeLook()) {
                 if (PlayerUtil.realRotation != null) {
@@ -55,7 +60,13 @@ public abstract class EntityMixin {
                 if (PlayerUtil.realPos != null) pos = PlayerUtil.realPos.addVector(0, C.p().getEyeHeight(), 0);
             }
 
-            cir.setReturnValue(WorldUtil.rayTrace(blockReachDistance, partialTicks, pos, prevRot, currentRot));
+            cir.setReturnValue(WorldUtil.rayTrace(
+                    blockReachDistance,
+                    partialTicks,
+                    pos,
+                    prevRot,
+                    currentRot
+            ));
         }
     }
 

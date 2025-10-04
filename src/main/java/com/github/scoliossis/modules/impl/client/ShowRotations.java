@@ -1,9 +1,12 @@
 package com.github.scoliossis.modules.impl.client;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.MathHelper;
 
 @RegisterModule(
         name = "Show Rotations",
@@ -12,44 +15,77 @@ import net.minecraft.entity.EntityLivingBase;
         enabledByDefault = true
 )
 public class ShowRotations extends Module {
-    @RegisterSubModule(name = "Server Rotations")
-    public static SubCategory serverRotations = new SubCategory();
-
-    @RegisterSubModule(name = "Head Rotation", parent = "Server Rotations")
+    @RegisterSubModule(name = "Head Rotation")
     public static boolean headRotations = true;
-    @RegisterSubModule(name = "Body Rotation", parent = "Server Rotations")
+    @RegisterSubModule(name = "Body Rotation")
     public static boolean bodyRotations = false;
-    @RegisterSubModule(name = "Pitch Rotation", parent = "Server Rotations")
-    public static boolean pitchRotations = false;
+    @RegisterSubModule(name = "Pitch Rotation")
+    public static boolean pitchRotations = true;
 
-    @RegisterSubModule(name = "Other", description = "Other rotation settings")
-    public static SubCategory other = new SubCategory();
-
-    @RegisterSubModule(name = "No Smooth", parent = "Other", description = "Removes the rotation smoothing done by minecraft on yourself in f5")
-    public static boolean selfNoSmooth = false;
-    @RegisterSubModule(name = "No Smooth Others", parent = "Other", description = "Removes the rotation smoothing done by minecraft for other players")
-    public static boolean otherNoSmooth = false;
+    // should always go last.
+    @SubscribeEvent(priority = 99999)
+    public static void onPlayerUpdate(PlayerUpdateEvent event) {
+        updateDistance();
+    }
 
     // eriojoghbe8i4g9u80w09ijgb
-    public static float getRotation(EntityLivingBase instance, RotationPart rotationPart, boolean current) {
-        boolean isSelf = instance == C.p();
-        current |= ModuleManager.isEnabled(ShowRotations.class) && ((isSelf && selfNoSmooth) || (!isSelf && otherNoSmooth));
-
-        if (isSelf && PlayerUtil.getPrevPlayerUpdateEvent() != null && ModuleManager.isEnabled(ShowRotations.class)) {
-            if (rotationPart == RotationPart.PITCH && pitchRotations && PlayerUtil.playerUpdateEvent.rotation.pitch != PlayerUtil.currentTickClientRotation.pitch)
-                return current ? PlayerUtil.playerUpdateEvent.rotation.pitch : PlayerUtil.getPrevPlayerUpdateEvent().rotation.pitch;
-            else if (PlayerUtil.playerUpdateEvent.rotation.yaw != PlayerUtil.currentTickClientRotation.yaw && (rotationPart == RotationPart.HEAD_YAW && headRotations) || (rotationPart == RotationPart.BODY_YAW && bodyRotations))
-                    return current ? PlayerUtil.playerUpdateEvent.rotation.yaw : PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw;
-        }
-
-        float rotationPitch = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.pitch : current  ? instance.rotationPitch : instance.prevRotationPitch;
-        float rotationYaw = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.yaw : current ? instance.renderYawOffset : instance.prevRenderYawOffset;
-        float rotationYawHead = (PlayerUtil.realRotation != null && isSelf) ? PlayerUtil.realRotation.yaw : current ? instance.rotationYawHead : instance.prevRotationYawHead;
+    public static float getRotation(EntityLivingBase instance, float value, RotationPart rotationPart, boolean current) {
+        if (instance != C.p() || !ModuleManager.isEnabled(ShowRotations.class)) return value;
 
         switch (rotationPart) {
-            case PITCH: return rotationPitch;
-            case HEAD_YAW: return rotationYawHead;
-            default: return rotationYaw;
+            case PITCH:
+                return pitchRotations
+                        ? (current ? PlayerUtil.currentRotation().pitch : PlayerUtil.lastRotation().pitch)
+                        : value;
+            case HEAD_YAW:
+                return headRotations
+                        ? (current ? PlayerUtil.currentRotation().yaw : PlayerUtil.lastRotation().yaw)
+                        : value;
+            default:
+                return bodyRotations
+                        ? (current ? PlayerUtil.serverRenderYawOffset : PlayerUtil.prevServerRenderYawOffset)
+                        : value;
+        }
+    }
+
+    // net.minecraft.entity.EntityLivingBase.updateDistance
+    public static void updateDistance() {
+        PlayerUtil.prevServerRenderYawOffset = PlayerUtil.serverRenderYawOffset;
+
+        float rotationYaw = getRotation(C.p(), C.p().rotationYaw, RotationPart.HEAD_YAW, true);
+
+        double d0 = C.p().posX - C.p().prevPosX;
+        double d1 = C.p().posZ - C.p().prevPosZ;
+        float f = (float)(d0 * d0 + d1 * d1);
+        float f1 = PlayerUtil.serverRenderYawOffset;
+
+        if (f > 0.0025000002F) {
+            f1 = (float)MathHelper.atan2(d1, d0) * 180.0F / (float)Math.PI - 90.0F;
+        }
+
+        if (C.p().swingProgress > 0.0F) {
+            f1 = rotationYaw;
+        }
+
+        float f3 = MathHelper.wrapAngleTo180_float(f1 - PlayerUtil.serverRenderYawOffset);
+        PlayerUtil.serverRenderYawOffset += f3 * 0.3F;
+        float f4 = MathHelper.wrapAngleTo180_float(rotationYaw - PlayerUtil.serverRenderYawOffset);
+
+        if (f4 < -75.0F)
+        {
+            f4 = -75.0F;
+        }
+
+        if (f4 >= 75.0F)
+        {
+            f4 = 75.0F;
+        }
+
+        PlayerUtil.serverRenderYawOffset = rotationYaw - f4;
+
+        if (f4 * f4 > 2500.0F)
+        {
+            PlayerUtil.serverRenderYawOffset += f4 * 0.2F;
         }
     }
 

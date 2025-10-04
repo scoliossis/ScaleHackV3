@@ -9,7 +9,6 @@ public enum Category {
     RENDER(new Color(0x3700CF)),
     MOVEMENT(new Color(0x2DCB6E)),
     PLAYER(new Color(0x803D9E)),
-    SKYBLOCK(new Color(0x4C9DCC)),
     CLIENT(new Color(0xF29C11));
 
     Category(Color color) {
@@ -28,7 +27,7 @@ public enum Category {
     public float posX, posY;
     public float renderX, renderY;
 
-    public float scroll, renderScroll, previousScroll;
+    public float scroll, renderScroll;
 
     public boolean open = true;
 }

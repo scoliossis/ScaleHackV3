@@ -5,7 +5,6 @@ import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.MathUtil;
 import com.github.scoliossis.utils.PlayerUtil;
 import lombok.AllArgsConstructor;
@@ -36,13 +35,13 @@ public class MovementFix extends Module {
     public static boolean shouldMoveFix(Entity instance) {
         return movementFix
                 && instance == C.p()
-                && PlayerUtil.playerUpdateEvent != null
                 && ModuleManager.isEnabled(MovementFix.class)
-                && !ModuleManager.isEnabled(Freecam.class) &&
-                C.p().rotationYaw != PlayerUtil.playerUpdateEvent.rotation.yaw;
+                && !ModuleManager.isEnabled(Freecam.class);
     }
     public static boolean shouldRotationFix() {
-        return (rotationFix && PlayerUtil.getPrevPlayerUpdateEvent() != null && ModuleManager.isEnabled(MovementFix.class) && !ModuleManager.isEnabled(Freecam.class) && PlayerUtil.currentTickClientRotation != PlayerUtil.playerUpdateEvent.rotation);
+        return rotationFix
+                && ModuleManager.isEnabled(MovementFix.class)
+                && !ModuleManager.isEnabled(Freecam.class);
     }
 
     @SubscribeEvent
@@ -62,7 +61,7 @@ public class MovementFix extends Module {
     }
 
     private static MovementDirection getMovementDirection(MovementInputEvent event) {
-        float yawDifference = C.p().rotationYaw - PlayerUtil.playerUpdateEvent.rotation.yaw;
+        float yawDifference = C.p().rotationYaw - PlayerUtil.currentRotation().yaw;
 
         if (moveFixMode == MoveFixMode.Straight) {
             float yawDeficitAdded = MathUtil.toNearest(yawDifference + yawDeficit, 45) - yawDifference;

@@ -21,7 +21,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -172,7 +171,7 @@ public class AltManagerScreen extends GuiScreen {
             }
 
             boolean subtextHovered = ScreenUtil.isMouseOver(altX + xOffset, altY + altFontHeight, width, altSubFontHeight + 4, mX, mY);
-            boolean hovered = !subtextHovered && !isCurrentAccount && ScreenUtil.isMouseOver(altX, altY, width, height, mX, mY);
+            boolean hovered = !subtextHovered && ScreenUtil.isMouseOver(altX, altY, width, height, mX, mY);
 
             Color stringColor =
                     (isCurrentAccount && renamedAlt != alt) ? new Color(99, 255, 102,255) :

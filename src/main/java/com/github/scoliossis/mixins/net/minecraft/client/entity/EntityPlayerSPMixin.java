@@ -9,7 +9,6 @@ import com.github.scoliossis.modules.impl.movement.Sneak;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.RotationUtil;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovementInput;
@@ -25,12 +24,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityPlayerSP.class)
 public class EntityPlayerSPMixin {
-    @Inject(method = "onUpdate", at = @At("HEAD"))
+    @Inject(method = "onUpdate", at = @At("HEAD"), cancellable = true)
     private void onUpdate$pre(CallbackInfo ci) {
         PlayerUtil.fakePlayerPosAndRot();
 
-        PlayerUtil.setLastPlayerUpdateEvent(new PlayerUpdateEvent(RotationUtil.getCurrentClientRotation()));
-        Bus.post(PlayerUtil.playerUpdateEvent);
+        PlayerUpdateEvent playerUpdateEvent = new PlayerUpdateEvent();
+        Bus.post(playerUpdateEvent);
+
+        if (playerUpdateEvent.isCancelled()) ci.cancel();
     }
 
     @Inject(method = "onUpdate", at = @At("TAIL"))
@@ -44,12 +45,6 @@ public class EntityPlayerSPMixin {
         MovementInputEvent movementInputEvent = new MovementInputEvent(C.p().movementInput);
         Bus.post(movementInputEvent);
         C.p().movementInput = movementInputEvent.movementInput;
-
-        // increase sneak speed
-        if (ModuleManager.isEnabled(Sneak.class) && C.p().isSneaking()) {
-            C.p().movementInput.moveStrafe /= 0.3f;
-            C.p().movementInput.moveForward /= 0.3f;
-        }
     }
 
     @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;sneak:Z"))
@@ -75,12 +70,12 @@ public class EntityPlayerSPMixin {
 
     @Redirect(method = "onUpdateWalkingPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;rotationYaw:F"))
     public float editRotationYaw(EntityPlayerSP instance) {
-        return PlayerUtil.playerUpdateEvent.rotation.yaw;
+        return PlayerUtil.currentRotation().yaw;
     }
 
     @Redirect(method = "onUpdateWalkingPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;rotationPitch:F"))
     public float editRotationPitch(EntityPlayerSP instance) {
-        return PlayerUtil.playerUpdateEvent.rotation.pitch;
+        return PlayerUtil.currentRotation().pitch;
     }
 
     @Redirect(method = "onUpdateWalkingPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;posX:D"))

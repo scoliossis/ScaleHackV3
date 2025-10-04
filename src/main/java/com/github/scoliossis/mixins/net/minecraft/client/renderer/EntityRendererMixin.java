@@ -45,14 +45,12 @@ public abstract class EntityRendererMixin {
 
     @Redirect(method = "getMouseOver", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLook(F)Lnet/minecraft/util/Vec3;"))
     public Vec3 redirectGetLook(Entity instance, float partialTicks) {
-        RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.getPrevPlayerUpdateEvent().rotation : RotationUtil.getPreviousClientRotation();
-        RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix() ? PlayerUtil.playerUpdateEvent.rotation : RotationUtil.getCurrentClientRotation();
+        RotationUtil.Rotation prevRot = MovementFix.shouldRotationFix() ? PlayerUtil.lastRotation() : RotationUtil.getPreviousClientRotation();
+        RotationUtil.Rotation currentRot = MovementFix.shouldRotationFix() ? PlayerUtil.currentRotation() : RotationUtil.getCurrentClientRotation();
 
-        if (PlayerUtil.shouldFixPlayerFakeLook()) {
-            if (PlayerUtil.realRotation != null) {
-                prevRot = PlayerUtil.realRotation;
-                currentRot = PlayerUtil.realRotation;
-            }
+        if (PlayerUtil.shouldFixPlayerFakeLook() && PlayerUtil.realRotation != null) {
+            prevRot = PlayerUtil.realRotation;
+            currentRot = PlayerUtil.realRotation;
         }
 
         float f = prevRot.pitch + (currentRot.pitch - prevRot.pitch) * partialTicks;

@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class EntityLivingBaseMixin {
     @Redirect(method = "jump", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F"))
     public float editYawOnJump(EntityLivingBase instance) {
-        return MovementFix.shouldMoveFix(instance) ? PlayerUtil.playerUpdateEvent.rotation.yaw : instance.rotationYaw;
+        return MovementFix.shouldMoveFix(instance) ? PlayerUtil.currentRotation().yaw : instance.rotationYaw;
     }
 }

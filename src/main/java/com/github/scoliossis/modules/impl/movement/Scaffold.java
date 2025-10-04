@@ -4,6 +4,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.*;
@@ -20,13 +21,16 @@ import java.util.Iterator;
         category = Category.MOVEMENT,
         dangerous = true
 )
-// todo: auto f5, enable when holding blocks, safewalk, better rotations
+// todo: safewalk, better rotations
 public class Scaffold extends Module {
     @RegisterSubModule(name = "Basics")
     public static SubCategory basicCategory = new SubCategory();
 
     @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1, parent = "Basics")
     public static float blockReach = 5f;
+
+    @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
+    public static boolean blocksOnly = true;
 
     @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Basics")
     public static boolean noDuplicateRot = true;
@@ -58,6 +62,12 @@ public class Scaffold extends Module {
         Vanilla
     }
 
+    @RegisterSubModule(name = "Default To Keep Y", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "If requirements are not met, assumes you want keep y")
+    public static boolean defaultKeepY = true;
+
+    @RegisterSubModule(name = "Only Off Ground", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "Only tower if holding your jump key")
+    public static boolean onlyOffGround = true;
+
     @RegisterSubModule(name = "Only If Space Down", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "Only tower if holding your jump key")
     public static boolean onlyIfSpaceDown = true;
 
@@ -73,15 +83,19 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Visuals")
     public static SubCategory visuals = new SubCategory();
 
+    @RegisterSubModule(name = "Auto F5", parent = "Visuals")
+    public static boolean autoF5 = true;
+
     @RegisterSubModule(name = "Show Previous Blocks", parent = "Visuals")
     public static boolean showPreviousBlocks = true;
 
     @RegisterSubModule(name = "Fade Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
     public static long showPreviousBlocksTime = 3000;
 
+    private static boolean shouldScaffold = false;
+
     private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();
 
-    private static RotationUtil.Rotation rotation;
     private static float lastPlacedDeltaX = -1;
 
     private static int blocksPlaced = 0;
@@ -91,19 +105,31 @@ public class Scaffold extends Module {
 
     @SubscribeEvent
     public static void onKeyInput(MovementInputEvent event) {
-        event.movementInput.jump |= bridgingMode == BridgingMode.Telly || (towerMode == TowerMode.Legit && shouldTower());
+        if (shouldScaffold) {
+            event.movementInput.jump |= bridgingMode == BridgingMode.Telly || (towerMode == TowerMode.Legit && shouldTower());
+        }
     }
 
-    @SubscribeEvent
-    public static void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (bridgingMode == BridgingMode.Derp) rotation = RotationUtil.getCurrentClientRotation();
+    private static boolean didPlace = false;
+    private static int previousStack = -1;
 
-        if (!InventoryUtil.isValidBlock(C.p().getCurrentEquippedItem())) {
+    @SubscribeEvent
+    public static void onRotationEvent(RotationEvent event) {
+        didPlace |= C.p().inventory.currentItem == previousStack && InventoryUtil.isSlotEmpty(C.p().inventory.currentItem) && shouldScaffold;
+
+        if (!InventoryUtil.isValidBlock()) {
             int bestStack = InventoryUtil.biggestBlockSlot();
-            if (bestStack == -1) return;
+            if ((blocksOnly && !didPlace) || bestStack == -1) {
+                disable();
+                return;
+            }
 
             C.p().inventory.currentItem = bestStack;
         }
+
+        if (!shouldScaffold) enable();
+
+        didPlace = false;
 
         Vec3 positionToRotateFrom = C.p().getPositionVector();
         if (!WorldUtil.isOverAir()) {
@@ -113,8 +139,6 @@ public class Scaffold extends Module {
 
         BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
-
-        if (shouldTower() && towerMovement()) setShouldTower();
 
         if (bridgingMode == BridgingMode.Telly && C.p().onGround) {
             tellyTicksCounter = 0;
@@ -127,24 +151,29 @@ public class Scaffold extends Module {
         tellyPlaceDelayCounter++;
 
         if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
-        if (!WorldUtil.isOverAir()) return;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerUpdate(PlayerUpdateEvent event) {
+        if (shouldTower() && towerMovement()) setShouldTower();
+
+        if (!WorldUtil.isOverAir() || !InventoryUtil.isValidBlock()) return;
 
         if (bridgingMode == BridgingMode.Telly && tellyPlaceDelayCounter < tellyPlaceDelay) return;
 
-        MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, event.rotation);
+        MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
         if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-        if (rayTrace.sideHit == EnumFacing.UP && !shouldTower()) return;
+        if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
 
         if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
             C.p().swingItem();
 
-            lastPlacedDeltaX = Math.abs(event.rotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
+            lastPlacedDeltaX = Math.abs(PlayerUtil.currentRotation().yaw - PlayerUtil.lastRotation().yaw);
             blocksPlaced++;
             previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
 
-            // minecraft blehhhh
-            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
+            previousStack = C.p().inventory.currentItem;
         }
     }
 
@@ -199,6 +228,10 @@ public class Scaffold extends Module {
     // todo: mess.
     private static boolean shouldTower = false;
 
+    private static boolean shouldKeepY() {
+        return !shouldTower() && defaultKeepY;
+    }
+
     private static boolean shouldTower() {
         if (towerMode == TowerMode.None) return false;
 
@@ -209,7 +242,8 @@ public class Scaffold extends Module {
     }
 
     private static void setShouldTower() {
-        shouldTower = (!onlyIfSpaceDown || C.mc.gameSettings.keyBindJump.isKeyDown())
+        shouldTower = (!onlyOffGround || !C.p().onGround)
+                && (!onlyIfSpaceDown || C.mc.gameSettings.keyBindJump.isKeyDown())
                 && (!onlyTowerLookingUp || C.p().rotationPitch <= maxPitch && C.p().rotationPitch >= minPitch);
     }
 
@@ -261,7 +295,7 @@ public class Scaffold extends Module {
 
                 // obviously placing a block above you isnt helpful.
                 if (facing == EnumFacing.DOWN) continue;
-                if (facing == EnumFacing.UP && !shouldTower()) continue;
+                if (facing == EnumFacing.UP && shouldKeepY()) continue;
 
                 if (C.w().getBlockState(blockPosOffset).getBlock().isBlockSolid(C.w(), blockPosOffset, EnumFacing.UP)) continue;
                 if (blockPosOffset.getY() >= C.p().posY) continue;
@@ -282,8 +316,8 @@ public class Scaffold extends Module {
 
     // todo: take next block into account.
     // maybe doing the block searching in here would be smarter but idk
-    private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, PlayerUpdateEvent event) {
-        MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, rotation);
+    private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, RotationEvent event) {
+        MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, PlayerUtil.lastRotation());
 
         // the previous blockpos is good, dont change.
         if (!blockHitResult.getBlockPos().equals(blockTarget.pos) || blockHitResult.sideHit != blockTarget.direction) {
@@ -297,11 +331,13 @@ public class Scaffold extends Module {
             // <= Math.abs(closestYaw) to stop worthless loops!
             for (float yaw = -closestYaw+1; yaw <= Math.abs(closestYaw); yaw++) {
                 for (float pitch = 90; pitch >= 0; pitch--) {
-                    RotationUtil.Rotation gcdedRotation = RotationUtil.applyGcd(rotation, new RotationUtil.Rotation(pitch, rotation.yaw + yaw));
-                    float yawChange = gcdedRotation.yaw - rotation.yaw;
+                    RotationUtil.Rotation gcdedRotation = RotationUtil.applyGcd(new RotationUtil.Rotation(pitch, PlayerUtil.lastRotation().yaw + yaw));
+                    float yawChange = gcdedRotation.yaw - PlayerUtil.lastRotation().yaw;
 
                     // check from grim:
                     /* https://github.com/GrimAnticheat/Grim/blob/2.0/common/src/main/java/ac/grim/grimac/checks/impl/scaffolding/DuplicateRotPlace.java
+                    // where deltaX = rotationUpdate.getDeltaXRotABS();
+                    // and this.lastPlacedDeltaX = deltaX onPostFlyingBlockPlace
                     if (deltaX > 2) {
                         float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
                         if (xDiff < 0.0001) {
@@ -310,7 +346,7 @@ public class Scaffold extends Module {
                         // rewards if else
                     }
                      */
-                    float deltaX = Math.abs(gcdedRotation.yaw - PlayerUtil.getPrevPlayerUpdateEvent().rotation.yaw);
+                    float deltaX = Math.abs(gcdedRotation.yaw - PlayerUtil.lastRotation().yaw);
                     if (deltaX > 2 && noDuplicateRot) {
                         float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
                         if (xDiff < 0.0001) continue;
@@ -320,9 +356,9 @@ public class Scaffold extends Module {
                     if (raycast == null) continue;
                     BlockPos raycastBlock = raycast.getBlockPos().offset(raycast.sideHit);
 
-                    if (raycastBlock.equals(targetBlock) && (shouldTower() || raycast.sideHit != EnumFacing.UP)) {
-                        float bestRotationChange = Math.abs(rotation.pitch - closestPitch) + Math.abs(closestYaw);
-                        float currentRotationChange = Math.abs(rotation.pitch - gcdedRotation.pitch) + Math.abs(yawChange);
+                    if (raycastBlock.equals(targetBlock) && (!shouldKeepY() || raycast.sideHit != EnumFacing.UP)) {
+                        float bestRotationChange = Math.abs(PlayerUtil.lastRotation().pitch - closestPitch) + Math.abs(closestYaw);
+                        float currentRotationChange = Math.abs(PlayerUtil.lastRotation().pitch - gcdedRotation.pitch) + Math.abs(yawChange);
                         if (currentRotationChange < bestRotationChange) {
                             closestYaw = yawChange;
                             closestPitch = gcdedRotation.pitch;
@@ -333,28 +369,45 @@ public class Scaffold extends Module {
             }
 
             if (foundRotation) {
-                rotation = new RotationUtil.Rotation(closestPitch, rotation.yaw + closestYaw);
+                event.rotation = new RotationUtil.Rotation(closestPitch, PlayerUtil.lastRotation().yaw + closestYaw);
+                return;
             }
         }
 
-        event.rotation = rotation;
+        if (bridgingMode != BridgingMode.Derp) {
+            event.rotation = PlayerUtil.lastRotation();
+        }
+    }
+
+    private static int previousPerspective = 0;
+
+    private static void enable() {
+        shouldScaffold = true;
+        blocksPlaced = 0;
+
+        if (autoF5) {
+            previousPerspective = C.mc.gameSettings.thirdPersonView;
+            C.mc.gameSettings.thirdPersonView = 1;
+        }
     }
 
     @Override
-    protected void onEnable() {
-        if (!C.isInGame()) {
-            this.toggle();
-            return;
-        }
+    protected void onEnable() {}
 
-        blocksPlaced = 0;
-        rotation = RotationUtil.getCurrentClientRotation();
+    private static void disable() {
+        if (shouldScaffold) {
+            shouldScaffold = false;
+            shouldTower = false;
+
+            if (autoF5) {
+                C.mc.gameSettings.thirdPersonView = previousPerspective;
+            }
+        }
     }
 
     @Override
     protected void onDisable() {
-        previousInteractions.clear();
-        shouldTower = false;
+        disable();
     }
 
     // no records :( java 8

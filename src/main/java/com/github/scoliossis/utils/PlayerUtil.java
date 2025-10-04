@@ -1,26 +1,42 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.render.Freecam;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
+import lombok.Getter;
 import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
-    private static PlayerUpdateEvent prevPlayerUpdateEvent;
-    public static PlayerUpdateEvent playerUpdateEvent;
 
-    public static PlayerUpdateEvent getPrevPlayerUpdateEvent() {
-        return prevPlayerUpdateEvent != null ? prevPlayerUpdateEvent : playerUpdateEvent;
+    // i only learnt today (4/10/25) that when using a comma between initializing variables they arnt both set to the final value
+    @Getter
+    private static RotationEvent
+            previousRotationEvent = new RotationEvent(new RotationUtil.Rotation(0,0)),
+            currentRotationEvent = previousRotationEvent;
+
+    public static void setRotationEvent(RotationEvent event) {
+        previousRotationEvent = currentRotationEvent;
+        currentRotationEvent = event;
+
+        Bus.post(PlayerUtil.getCurrentRotationEvent());
     }
 
-    public static MotionEvent motionEvent;
+    public static RotationUtil.Rotation lastRotation() {
+        return previousRotationEvent.rotation;
+    }
 
-    public static RotationUtil.Rotation currentTickClientRotation;
+    public static RotationUtil.Rotation currentRotation() {
+        return currentRotationEvent.rotation;
+    }
+
+    public static float prevServerRenderYawOffset;
+    public static float serverRenderYawOffset;
+
+    public static MotionEvent motionEvent;
 
     public static boolean noClip = false;
     public static boolean noClipRender = false;
@@ -43,15 +59,6 @@ public class PlayerUtil {
 
     public static boolean shouldFixPlayerFakeLook() {
         return !ModuleManager.isEnabled(Freecam.class) || !Freecam.allowInteract;
-    }
-
-
-    public static void setLastPlayerUpdateEvent(PlayerUpdateEvent event) {
-        if (playerUpdateEvent != null)
-            prevPlayerUpdateEvent = new PlayerUpdateEvent(new RotationUtil.Rotation(playerUpdateEvent.rotation.pitch, playerUpdateEvent.rotation.yaw));
-
-        playerUpdateEvent = event;
-        currentTickClientRotation = event.rotation;
     }
 
     public static void fakePlayerPosAndRot() {

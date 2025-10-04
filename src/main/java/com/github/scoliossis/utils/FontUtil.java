@@ -3,7 +3,6 @@ package com.github.scoliossis.utils;
 import com.github.scoliossis.Main;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.lwjgl.opengl.GL11;
 
@@ -53,7 +52,7 @@ public class FontUtil {
             BufferedImage image = generateStringImage(String.valueOf(character), font);
             DynamicTexture texture = new DynamicTexture(image);
 
-            textureMap.put(character, new Texture(image.getWidth(), image.getHeight(), font.getSize(), texture));
+            textureMap.put(character, new Texture(image.getWidth(), image.getHeight(), texture));
         }
 
         fonts.put(font.getSize(), textureMap);
@@ -82,7 +81,7 @@ public class FontUtil {
 
     @AllArgsConstructor
     private static class Texture {
-        public int width, height, size;
+        public int width, height;
         public DynamicTexture dynamicTexture;
     }
 
@@ -95,7 +94,7 @@ public class FontUtil {
     public static void drawString(String string, float x, float y, int size, Color colour, boolean shadow) {
         GL11.glPushMatrix();
 
-        float opacity = colour.getAlpha()/255f;
+        Color originalColour = colour;
 
         int scaleFactor = getScaleFactor();
         GL11.glScaled(1d / scaleFactor, 1d / scaleFactor, 1);
@@ -126,7 +125,7 @@ public class FontUtil {
 
                 String colourCodes = "0123456789abcdef";
                 if (colourCodes.indexOf(character) != -1) {
-                    colour = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), opacity);
+                    colour = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), originalColour.getAlpha()/255d);
                 }
                 switch (character) {
                     case 'k':
@@ -145,7 +144,8 @@ public class FontUtil {
                         rainbow = true;
                         break;
 
-                    default:
+                    case 'r':
+                        colour = originalColour;
                         obfuscated = false;
                         underline = false;
                         bold = false;

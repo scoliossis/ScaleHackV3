@@ -7,9 +7,11 @@ import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.events.impl.MouseScrolledEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.FrameUtil;
 import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.RotationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.Session;
@@ -37,6 +39,13 @@ public class MinecraftMixin implements MinecraftBridge {
     @Inject(method = "runTick", at = @At(value = "HEAD"))
     public void onRunTick(CallbackInfo ci) {
         Bus.post(new ClientTickEvent());
+    }
+
+    @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V"))
+    private void onRunGameLoop(CallbackInfo ci) {
+        if (C.isInGame()) {
+            PlayerUtil.setRotationEvent(new RotationEvent(RotationUtil.getCurrentClientRotation()));
+        }
     }
 
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventDWheel()I"))

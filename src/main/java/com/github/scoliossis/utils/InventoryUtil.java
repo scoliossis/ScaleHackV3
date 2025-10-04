@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 
 public class InventoryUtil {
     public static boolean isSlotEmpty(int slot) {
@@ -39,10 +41,13 @@ public class InventoryUtil {
         if (block == null) return false;
 
         // no falling blocks
-        if (block.equals(Blocks.sand) || block.equals(Blocks.gravel)) return false;
+        if (block.equals(Blocks.sand) || block.equals(Blocks.gravel) || block.equals(Blocks.anvil)) return false;
         // no interactable blocks
         if (block.equals(Blocks.furnace) || block.equals(Blocks.crafting_table)) return false;
+
+        AxisAlignedBB collisionBox = block.getCollisionBoundingBox(C.w(), BlockPos.ORIGIN, block.getDefaultState());
         // only full cubes
-        return block.isOpaqueCube();
+        return collisionBox.minX == 0 && collisionBox.minY == 0 && collisionBox.minZ == 0
+                && collisionBox.maxX == 1 && collisionBox.maxY == 1 && collisionBox.maxZ == 1;
     }
 }
