@@ -2,13 +2,9 @@ package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.FontUtil;
 import com.github.scoliossis.utils.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.scoreboard.Scoreboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,7 +22,7 @@ public abstract class FontRendererMixin {
     @Shadow public abstract int getStringWidth(final String p0);
 
     @Unique private boolean FontRenderer$shouldUseCustomFont() {
-        return ThemeModule.globalFont;
+        return ThemeModule.globalFont && RenderUtil.renderSide != RenderUtil.RenderSide.World;
     }
 
     @Shadow public abstract int drawString(String text, int x, int y, int color);

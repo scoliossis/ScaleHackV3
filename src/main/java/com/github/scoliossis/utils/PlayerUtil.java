@@ -21,7 +21,6 @@ public class PlayerUtil {
     public static void setRotationEvent(RotationEvent event) {
         previousRotationEvent = currentRotationEvent;
         currentRotationEvent = event;
-
         Bus.post(PlayerUtil.getCurrentRotationEvent());
     }
 

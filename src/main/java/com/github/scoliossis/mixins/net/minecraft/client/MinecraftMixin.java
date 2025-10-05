@@ -44,7 +44,10 @@ public class MinecraftMixin implements MinecraftBridge {
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V"))
     private void onRunGameLoop(CallbackInfo ci) {
         if (C.isInGame()) {
+            // i dont like this
+            PlayerUtil.fakePlayerPosAndRot();
             PlayerUtil.setRotationEvent(new RotationEvent(RotationUtil.getCurrentClientRotation()));
+            PlayerUtil.resetFakePlayerPosAndRot();
         }
     }
 

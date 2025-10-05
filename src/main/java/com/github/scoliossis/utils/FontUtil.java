@@ -10,7 +10,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.regex.Pattern;
+import java.util.Random;
 
 // open to pull requests <3, oldish code! main issue is its unoptimized!
 public class FontUtil {
@@ -89,6 +89,8 @@ public class FontUtil {
         drawString(string, x-(getStringWidth(string, size)/2f), y, size, colour, shadow);
     }
 
+    public static Random fontRandom = new Random();
+
     // todo: according to profiler, the issue is the finishRendering() function, mainly that it calls getTessalator().draw()
     //  so to optimize this i will somehow need to draw each character in order at the end of a frame? because i believe you cant just change texture mid render.
     public static void drawString(String string, float x, float y, int size, Color colour, boolean shadow) {
@@ -96,7 +98,7 @@ public class FontUtil {
 
         Color originalColour = colour;
 
-        int scaleFactor = getScaleFactor();
+        int scaleFactor = C.res().getScaleFactor();
         GL11.glScaled(1d / scaleFactor, 1d / scaleFactor, 1);
 
         // weird artifacts appear at non rounded values, sowwy
@@ -125,6 +127,10 @@ public class FontUtil {
 
                 String colourCodes = "0123456789abcdef";
                 if (colourCodes.indexOf(character) != -1) {
+                    obfuscated = false;
+                    underline = false;
+                    bold = false;
+                    strikethrough = false;
                     colour = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), originalColour.getAlpha()/255d);
                 }
                 switch (character) {
@@ -162,14 +168,35 @@ public class FontUtil {
                 continue;
             }
 
-            if (obfuscated) character = letters.charAt((int) (Math.random()*letters.length()));
+            // code from net.minecraft.client.gui.FontRenderer.renderStringAtPos
+            if (obfuscated) {
+                int k = (int) getCharWidth(character);
+                char c1;
+
+                while (true)
+                {
+                    int j = fontRandom.nextInt(letters.length());
+                    c1 = letters.charAt(j);
+
+                    if (k == (int) getCharWidth(c1))
+                    {
+                        break;
+                    }
+                }
+
+                character = c1;
+            }
 
             if (FontUtil.isSpecialChar(character)) {
                 GL11.glPushMatrix();
                 GL11.glTranslated(x, y + size/3f, 0);
                 GL11.glScaled(0.1*size, 0.1*size, 1);
-                C.mc.fontRendererObj.drawString(String.valueOf(character), 0, 0, colour.getRGB());
-                x += size;
+
+                int width = C.mc.fontRendererObj.drawString(String.valueOf(character), 0, 0, colour.getRGB()) * (size/10);
+                if (width != 0) {
+                    x += width;
+                }
+
                 GL11.glPopMatrix();
                 continue;
             }
@@ -201,27 +228,29 @@ public class FontUtil {
     private static final BufferedImage blankImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
     private static final Graphics2D graphics = blankImage.createGraphics();
 
-    private static int getScaleFactor() {
-        return RenderUtil.renderSide == RenderUtil.RenderSide.World ? 4 : C.res().getScaleFactor();
+    public static float getCharWidth(char character) {
+        if (isSpecialChar(character))
+            return C.mc.fontRendererObj.getCharWidth(character) * (graphics.getFont().getSize() / 10f);
+        else {
+            return graphics.getFontMetrics().getStringBounds(String.valueOf(character), graphics).getBounds().width;
+        }
+
     }
 
     public static int getStringWidth(String string, int size) {
-        if (string.isEmpty()) return 0;
-
         String validText = string.replaceAll("[&§].", "");
         if (validText.isEmpty()) return 0;
 
-        int scaleFactor = getScaleFactor();
+        float width = 0;
+
+        int scaleFactor = C.res().getScaleFactor();
+
         size *= scaleFactor;
         graphics.setFont(currentFont.deriveFont((float)size));
 
-        String normalCharacters = validText.replaceAll("[^" + Pattern.quote(letters) + "]", "");
-        int specialCharacterAmount = validText.length() - normalCharacters.length();
+        for (int i = 0; i < validText.length(); i++) width += getCharWidth(validText.charAt(i));
 
-        int stringWidth = graphics.getFontMetrics().getStringBounds(normalCharacters, graphics).getBounds().width / scaleFactor;
-        int specialCharsWidth = (size/scaleFactor) * specialCharacterAmount;
-
-        return stringWidth + specialCharsWidth;
+        return (int) (width / scaleFactor);
     }
 
     public static boolean isSpecialChar(char character) {

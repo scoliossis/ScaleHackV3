@@ -31,6 +31,10 @@ public class Render3dUtil {
     }
 
     public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean cull) {
+        draw3dBox(x, y, z, w, h, d, color, partialTicks, true, true, true, true, true, true, cull);
+    }
+
+    public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean down, boolean up, boolean north, boolean south, boolean west, boolean east, boolean cull) {
         // setup drawing
         Vec3 relativeCoordinatePos = getRelativeCoordinatePos(new Vec3(x, y, z), partialTicks);
         x = relativeCoordinatePos.xCoord; y = relativeCoordinatePos.yCoord; z = relativeCoordinatePos.zCoord;
@@ -40,35 +44,47 @@ public class Render3dUtil {
         RenderUtil.glColor(color);
         RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
 
-        add3DVertex(x, y, z);
-        add3DVertex(x+w, y, z);
-        add3DVertex(x+w, y, z+d);
-        add3DVertex(x, y, z+d);
+        if (down) {
+            add3DVertex(x, y, z);
+            add3DVertex(x + w, y, z);
+            add3DVertex(x + w, y, z + d);
+            add3DVertex(x, y, z + d);
+        }
 
-        add3DVertex(x, y+h, z+d);
-        add3DVertex(x+w, y+h, z+d);
-        add3DVertex(x+w, y+h, z);
-        add3DVertex(x, y+h, z);
+        if (up) {
+            add3DVertex(x, y + h, z + d);
+            add3DVertex(x + w, y + h, z + d);
+            add3DVertex(x + w, y + h, z);
+            add3DVertex(x, y + h, z);
+        }
 
-        add3DVertex(x, y, z+d);
-        add3DVertex(x, y+h, z+d);
-        add3DVertex(x, y+h, z);
-        add3DVertex(x, y, z);
+        if (west) {
+            add3DVertex(x, y, z + d);
+            add3DVertex(x, y + h, z + d);
+            add3DVertex(x, y + h, z);
+            add3DVertex(x, y, z);
+        }
 
-        add3DVertex(x+w, y, z);
-        add3DVertex(x+w, y+h, z);
-        add3DVertex(x+w, y+h, z+d);
-        add3DVertex(x+w, y, z+d);
+        if (east) {
+            add3DVertex(x + w, y, z);
+            add3DVertex(x + w, y + h, z);
+            add3DVertex(x + w, y + h, z + d);
+            add3DVertex(x + w, y, z + d);
+        }
 
-        add3DVertex(x, y+h, z);
-        add3DVertex(x+w, y+h, z);
-        add3DVertex(x+w, y, z);
-        add3DVertex(x, y, z);
+        if (north) {
+            add3DVertex(x, y + h, z);
+            add3DVertex(x + w, y + h, z);
+            add3DVertex(x + w, y, z);
+            add3DVertex(x, y, z);
+        }
 
-        add3DVertex(x, y, z+d);
-        add3DVertex(x+w, y, z+d);
-        add3DVertex(x+w, y+h, z+d);
-        add3DVertex(x, y+h, z+d);
+        if (south) {
+            add3DVertex(x, y, z + d);
+            add3DVertex(x + w, y, z + d);
+            add3DVertex(x + w, y + h, z + d);
+            add3DVertex(x, y + h, z + d);
+        }
 
 
         // we have finished! draw!

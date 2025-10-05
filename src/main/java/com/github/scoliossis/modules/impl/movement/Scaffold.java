@@ -9,11 +9,14 @@ import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.*;
 import lombok.AllArgsConstructor;
-import net.minecraft.util.*;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RegisterModule(
         name = "Scaffold",
@@ -49,6 +52,9 @@ public class Scaffold extends Module {
 
     @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
     public static int tellyPlaceDelay = 2;
+
+    @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyForwardTicks = 2;
 
     @RegisterSubModule(name = "Tower")
     public static SubCategory towerCategory = new SubCategory();
@@ -94,7 +100,7 @@ public class Scaffold extends Module {
 
     private static boolean shouldScaffold = false;
 
-    private static final ArrayList<PreviousInteraction> previousInteractions = new ArrayList<>();
+    private static final ConcurrentHashMap<BlockPos, Long> previousInteractions = new ConcurrentHashMap<>();
 
     private static float lastPlacedDeltaX = -1;
 
@@ -103,10 +109,21 @@ public class Scaffold extends Module {
     private static int tellyTicksCounter = 0;
     private static int tellyPlaceDelayCounter = 0;
 
+    private static boolean tellyBlockPlaced = true;
+    private static int tellyForwardTicksCount = -1;
+
     @SubscribeEvent
     public static void onKeyInput(MovementInputEvent event) {
         if (shouldScaffold) {
-            event.movementInput.jump |= bridgingMode == BridgingMode.Telly || (towerMode == TowerMode.Legit && shouldTower());
+            tellyForwardTicksCount = C.p().onGround && tellyBlockPlaced ? tellyForwardTicksCount+1 : -1;
+
+            if (bridgingMode == BridgingMode.Telly) {
+                event.movementInput.jump = shouldTellyJump();
+                tellyBlockPlaced &= !event.movementInput.jump;
+            }
+            else {
+                event.movementInput.jump |= towerMode == TowerMode.Legit && shouldTower();
+            }
         }
     }
 
@@ -132,7 +149,7 @@ public class Scaffold extends Module {
         didPlace = false;
 
         Vec3 positionToRotateFrom = C.p().getPositionVector();
-        if (!WorldUtil.isOverAir()) {
+        if (!shouldPlaceBlock()) {
             Vec3 predictedNextPosition = getPredictedNextPosition();
             if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
         }
@@ -140,7 +157,7 @@ public class Scaffold extends Module {
         BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
 
-        if (bridgingMode == BridgingMode.Telly && C.p().onGround) {
+        if (bridgingMode == BridgingMode.Telly && C.p().onGround && tellyBlockPlaced) {
             tellyTicksCounter = 0;
             tellyPlaceDelayCounter = 0;
         }
@@ -157,7 +174,7 @@ public class Scaffold extends Module {
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
         if (shouldTower() && towerMovement()) setShouldTower();
 
-        if (!WorldUtil.isOverAir() || !InventoryUtil.isValidBlock()) return;
+        if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
 
         if (bridgingMode == BridgingMode.Telly && tellyPlaceDelayCounter < tellyPlaceDelay) return;
 
@@ -171,14 +188,25 @@ public class Scaffold extends Module {
 
             lastPlacedDeltaX = Math.abs(PlayerUtil.currentRotation().yaw - PlayerUtil.lastRotation().yaw);
             blocksPlaced++;
-            previousInteractions.add(new PreviousInteraction(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis(), blocksPlaced));
+            previousInteractions.put(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis());
+
+            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) {
+                C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
+            }
 
             previousStack = C.p().inventory.currentItem;
+
+            tellyBlockPlaced = C.p().onGround;
         }
     }
 
+    private static boolean shouldPlaceBlock() {
+        return WorldUtil.isOverAir()
+                && (C.p().onGround || !shouldKeepY() || WorldUtil.isOverAir(C.p().getPositionVector().subtract(0, 1, 0)));
+    }
+
     private static boolean shouldRotate() {
-        return bridgingMode != BridgingMode.Derp || WorldUtil.isOverAir();
+        return bridgingMode != BridgingMode.Derp || shouldPlaceBlock();
     }
 
     // 1 second time travel hack
@@ -199,30 +227,38 @@ public class Scaffold extends Module {
     public static void onRenderWorldEvent(RenderWorldEvent event) {
         if (!showPreviousBlocks) return;
 
-        for (int i = 0; i < previousInteractions.size(); i++) {
-            PreviousInteraction interaction = previousInteractions.get(i);
-            if (System.currentTimeMillis() - interaction.time > showPreviousBlocksTime) {
-                previousInteractions.remove(interaction);
-                continue;
+        previousInteractions.forEach((blockPos, time) -> {
+            if (System.currentTimeMillis() - time > showPreviousBlocksTime) {
+                previousInteractions.remove(blockPos);
+                return;
             }
 
-            double animationValue = (double) (System.currentTimeMillis() - interaction.time) / showPreviousBlocksTime;
-            double alpha = MathHelper.clamp_double(0.5 * (1 - animationValue), 0, 1);
+            double animationValue = (double) (System.currentTimeMillis() - time) / showPreviousBlocksTime;
 
-            Color color = RenderUtil.getColorsFade(interaction.blockNumber * 20, ThemeModule.getThemeColours(), 0.2f);
+            Color color = RenderUtil.getColorsFade(time / 20d, ThemeModule.getThemeColours(), 0.2f);
 
-            Render3dUtil.drawCentered3dBox(
-                    interaction.pos.getX()+.5,
-                    interaction.pos.getY()+.5,
-                    interaction.pos.getZ()+.5,
-                    1.01,
-                    1.01,
-                    1.01,
-                    RenderUtil.setOpacity(color, alpha),
+            Render3dUtil.draw3dBox(
+                    blockPos.getX(),
+                    blockPos.getY(),
+                    blockPos.getZ(),
+                    1,
+                    1,
+                    1,
+                    RenderUtil.setOpacity(color, 0.5*(1 - animationValue)),
                     event.partialTicks,
-                    true
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.DOWN)),
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.UP)),
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.NORTH)),
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.SOUTH)),
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.WEST)),
+                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.EAST)),
+                    false
             );
-        }
+        });
+    }
+
+    private static boolean shouldTellyJump() {
+        return tellyBlockPlaced && tellyForwardTicksCount >= tellyForwardTicks;
     }
 
     // todo: mess.
@@ -415,11 +451,5 @@ public class Scaffold extends Module {
     private static class BlockTarget {
         public BlockPos pos;
         public EnumFacing direction;
-    }
-    @AllArgsConstructor
-    private static class PreviousInteraction {
-        public BlockPos pos;
-        public long time;
-        public int blockNumber;
     }
 }
