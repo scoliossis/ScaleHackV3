@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 // https://login.microsoftonline.com/consumers/oauth2/v2.0/logout
 public class AuthServer {
     public static final String URL = "https://login.live.com/oauth20_authorize.srf" +
-            "?client_id=54fd49e4-2103-4044-9603-2b028c814ec3" +
+            "?client_id=" + MSAuth.clientId +
             "&response_type=code" +
             "&scope=XboxLive.signin%20XboxLive.offline_access" +
             "&prompt=select_account" +
-            "&redirect_uri=http://localhost:59125/";
+            "&redirect_uri=http://localhost:"+MSAuth.port+"/";
 
     private final Pattern codePattern = Pattern.compile("\\?code=(.+?)$", 0);
 

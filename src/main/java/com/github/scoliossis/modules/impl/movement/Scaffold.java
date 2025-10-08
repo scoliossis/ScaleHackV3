@@ -35,27 +35,6 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
     public static boolean blocksOnly = true;
 
-    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Basics")
-    public static boolean noDuplicateRot = true;
-
-    @RegisterSubModule(name = "Bridging Mode", parent = "Basics")
-    public static BridgingMode bridgingMode = BridgingMode.God;
-
-    public enum BridgingMode {
-        God,
-        Telly,
-        Derp
-    }
-
-    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
-    public static int tellyTicks = 2;
-
-    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
-    public static int tellyPlaceDelay = 2;
-
-    @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
-    public static int tellyForwardTicks = 2;
-
     @RegisterSubModule(name = "Tower")
     public static SubCategory towerCategory = new SubCategory();
 
@@ -98,6 +77,42 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Fade Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
     public static long showPreviousBlocksTime = 3000;
 
+    @RegisterSubModule(name = "Bypass")
+    public static SubCategory bypass = new SubCategory();
+
+    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Bypass")
+    public static boolean noDuplicateRot = true;
+
+    @RegisterSubModule(name = "Bridging Mode", parent = "Bypass")
+    public static BridgingMode bridgingMode = BridgingMode.God;
+
+    public enum BridgingMode {
+        God,
+        Telly,
+        Derp
+    }
+
+    @RegisterSubModule(name = "Only When Jumping", description = "Only telly bridge if space held down", parent = "Bridging Mode", modeParentString = "Telly")
+    public static boolean spaceDownOnly = true;
+
+    @RegisterSubModule(name = "Smooth Rotation", description = "Doesn't snap back to placing blocks", parent = "Bridging Mode", modeParentString = "Telly")
+    public static boolean smoothRotationTelly = true;
+
+    @RegisterSubModule(name = "Smooth Rot Keep Y", description = "Doesn't snap back to placing blocks while keep y", parent = "Smooth Rotation")
+    public static boolean smoothRotationKeepY = true;
+
+    @RegisterSubModule(name = "Smooth Rot Tower", description = "Doesn't snap back to placing blocks while tower", parent = "Smooth Rotation")
+    public static boolean smoothRotationTower = true;
+
+    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyTicks = 1;
+
+    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyPlaceDelay = 3;
+
+    @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static int tellyForwardTicks = 1;
+
     private static boolean shouldScaffold = false;
 
     private static final ConcurrentHashMap<BlockPos, Long> previousInteractions = new ConcurrentHashMap<>();
@@ -117,8 +132,8 @@ public class Scaffold extends Module {
         if (shouldScaffold) {
             tellyForwardTicksCount = C.p().onGround && tellyBlockPlaced ? tellyForwardTicksCount+1 : -1;
 
-            if (bridgingMode == BridgingMode.Telly) {
-                event.movementInput.jump = shouldTellyJump();
+            if (shouldTelly()) {
+                event.movementInput.jump = shouldTellyJump(event.movementInput.jump);
                 tellyBlockPlaced &= !event.movementInput.jump;
             }
             else {
@@ -150,14 +165,14 @@ public class Scaffold extends Module {
 
         Vec3 positionToRotateFrom = C.p().getPositionVector();
         if (!shouldPlaceBlock()) {
-            Vec3 predictedNextPosition = getPredictedNextPosition();
+            Vec3 predictedNextPosition = getPredictedNextPosition(false);
             if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
         }
 
         BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
 
-        if (bridgingMode == BridgingMode.Telly && C.p().onGround && tellyBlockPlaced) {
+        if (shouldTelly() && C.p().onGround && (tellyBlockPlaced || tellyForwardTicks == 0)) {
             tellyTicksCounter = 0;
             tellyPlaceDelayCounter = 0;
         }
@@ -176,7 +191,7 @@ public class Scaffold extends Module {
 
         if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
 
-        if (bridgingMode == BridgingMode.Telly && tellyPlaceDelayCounter < tellyPlaceDelay) return;
+        if (shouldTelly() && tellyPlaceDelayCounter < tellyPlaceDelay) return;
 
         MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
@@ -200,6 +215,10 @@ public class Scaffold extends Module {
         }
     }
 
+    private static boolean shouldTelly() {
+        return bridgingMode == BridgingMode.Telly && (!spaceDownOnly || C.mc.gameSettings.keyBindJump.isKeyDown());
+    }
+
     private static boolean shouldPlaceBlock() {
         return WorldUtil.isOverAir()
                 && (C.p().onGround || !shouldKeepY() || WorldUtil.isOverAir(C.p().getPositionVector().subtract(0, 1, 0)));
@@ -210,15 +229,16 @@ public class Scaffold extends Module {
     }
 
     // 1 second time travel hack
-    private static Vec3 getPredictedNextPosition() {
+    private static Vec3 getPredictedNextPosition(boolean preTick) {
         Vec3 pos = C.p().getPositionVector();
-        double averageXvelocity = C.p().posX - C.p().prevPosX;
-        double averageZvelocity = C.p().posZ - C.p().prevPosZ;
+        double velocityX = preTick ? C.p().motionX : C.p().posX - C.p().prevPosX;
+        double velocityZ = preTick ? C.p().motionZ : C.p().posZ - C.p().prevPosZ;
 
         for (int i = 1; i <= 20; i++) {
-            pos = pos.add(new Vec3(averageXvelocity, 0, averageZvelocity));
+            pos = pos.add(new Vec3(velocityX, 0, velocityZ));
             if (WorldUtil.isOverAir(pos)) return pos;
         }
+
 
         return null;
     }
@@ -257,8 +277,10 @@ public class Scaffold extends Module {
         });
     }
 
-    private static boolean shouldTellyJump() {
-        return tellyBlockPlaced && tellyForwardTicksCount >= tellyForwardTicks;
+    private static boolean shouldTellyJump(boolean jumpDown) {
+        return (tellyBlockPlaced && tellyForwardTicksCount >= tellyForwardTicks)
+                || (jumpDown && getPredictedNextPosition(true) == null)
+                || tellyForwardTicks == 0;
     }
 
     // todo: mess.
@@ -356,7 +378,7 @@ public class Scaffold extends Module {
         MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, PlayerUtil.lastRotation());
 
         // the previous blockpos is good, dont change.
-        if (!blockHitResult.getBlockPos().equals(blockTarget.pos) || blockHitResult.sideHit != blockTarget.direction) {
+        if (!blockHitResult.getBlockPos().offset(blockHitResult.sideHit).equals(blockTarget.pos.offset(blockTarget.direction))) {
             float closestPitch = 91;
             float closestYaw = 181;
             boolean foundRotation = false;
@@ -405,7 +427,13 @@ public class Scaffold extends Module {
             }
 
             if (foundRotation) {
-                event.rotation = new RotationUtil.Rotation(closestPitch, PlayerUtil.lastRotation().yaw + closestYaw);
+                RotationUtil.Rotation bestRotation = new RotationUtil.Rotation(closestPitch, PlayerUtil.lastRotation().yaw + closestYaw);
+
+                if (shouldSmoothRotate()) {
+                    event.rotation = RotationUtil.getSmoothRotation(bestRotation, getSmoothRotateFactor());
+                }
+                else event.rotation = bestRotation;
+
                 return;
             }
         }
@@ -413,6 +441,17 @@ public class Scaffold extends Module {
         if (bridgingMode != BridgingMode.Derp) {
             event.rotation = PlayerUtil.lastRotation();
         }
+    }
+
+    private static boolean shouldSmoothRotate() {
+        return shouldTelly()
+                && tellyPlaceDelayCounter < tellyPlaceDelay
+                && smoothRotationTelly
+                && (shouldKeepY() ? smoothRotationKeepY : smoothRotationTower);
+    }
+
+    private static float getSmoothRotateFactor() {
+        return tellyPlaceDelay-tellyPlaceDelayCounter;
     }
 
     private static int previousPerspective = 0;

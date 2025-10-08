@@ -1,7 +1,7 @@
 package com.github.scoliossis.utils;
 
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.events.impl.ClientTickEvent;
 import net.minecraft.util.Vec3;
 
 public class MovementUtil {
@@ -10,12 +10,14 @@ public class MovementUtil {
     public static int groundTicks = 0;
 
     @SubscribeEvent(priority = 0)
-    public static void onPlayerTickEvent(PlayerUpdateEvent e) {
-        ticks++;
-        airTicks++;
-        groundTicks++;
-        if (C.p().onGround) airTicks = 0;
-        else groundTicks = 0;
+    public static void onClientTickEvent(ClientTickEvent e) {
+        if (C.isInGame()) {
+            ticks++;
+            airTicks++;
+            groundTicks++;
+            if (C.p().onGround) airTicks = 0;
+            else groundTicks = 0;
+        }
     }
 
     public static boolean isMoving(boolean y) {

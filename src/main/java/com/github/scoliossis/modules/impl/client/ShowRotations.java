@@ -14,6 +14,7 @@ import net.minecraft.util.MathHelper;
         category = Category.CLIENT,
         enabledByDefault = true
 )
+// todo: rotations are shown in inventory too. blehhh.
 public class ShowRotations extends Module {
     @RegisterSubModule(name = "Head Rotation")
     public static boolean headRotations = true;
@@ -28,7 +29,6 @@ public class ShowRotations extends Module {
         updateDistance();
     }
 
-    // eriojoghbe8i4g9u80w09ijgb
     public static float getRotation(EntityLivingBase instance, float value, RotationPart rotationPart, boolean current) {
         if (instance != C.p() || !ModuleManager.isEnabled(ShowRotations.class)) return value;
 

@@ -3,7 +3,7 @@ package com.github.scoliossis.utils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 
@@ -16,13 +16,9 @@ public class InventoryUtil {
         int biggestSlot = -1;
 
         for (int i = 0; i < InventoryPlayer.getHotbarSize(); i++) {
-            if (isSlotEmpty(i)) continue;
+            if (!isValidBlock(getItemInSlot(i))) continue;
 
-            ItemStack stack = C.p().inventory.getStackInSlot(i);
-
-            if (!isValidBlock(stack)) continue;
-
-            if (biggestSlot != -1 && stack.stackSize < C.p().inventory.getStackInSlot(biggestSlot).stackSize) continue;
+            if (biggestSlot != -1 && C.p().inventory.getStackInSlot(i).stackSize < C.p().inventory.getStackInSlot(biggestSlot).stackSize) continue;
 
             biggestSlot = i;
         }
@@ -30,14 +26,20 @@ public class InventoryUtil {
         return biggestSlot;
     }
 
-    public static boolean isValidBlock() {
-        return isValidBlock(C.p().inventory.getCurrentItem());
+    public static Item getHeldItem() {
+        return C.p().inventory.getCurrentItem() == null ? null : C.p().inventory.getCurrentItem().getItem();
     }
 
-    public static boolean isValidBlock(ItemStack stack) {
-        if (stack == null) return false;
+    public static Item getItemInSlot(int i) {
+        return C.p().inventory.getStackInSlot(i) == null ? null : C.p().inventory.getStackInSlot(i).getItem();
+    }
 
-        Block block = Block.getBlockFromItem(stack.getItem());
+    public static boolean isValidBlock() {
+        return isValidBlock(getHeldItem());
+    }
+
+    public static boolean isValidBlock(Item stack) {
+        Block block = Block.getBlockFromItem(stack);
         if (block == null) return false;
 
         // no falling blocks
@@ -46,6 +48,9 @@ public class InventoryUtil {
         if (block.equals(Blocks.furnace) || block.equals(Blocks.crafting_table)) return false;
 
         AxisAlignedBB collisionBox = block.getCollisionBoundingBox(C.w(), BlockPos.ORIGIN, block.getDefaultState());
+
+        if (collisionBox == null) return false;
+
         // only full cubes
         return collisionBox.minX == 0 && collisionBox.minY == 0 && collisionBox.minZ == 0
                 && collisionBox.maxX == 1 && collisionBox.maxY == 1 && collisionBox.maxZ == 1;

@@ -3,6 +3,7 @@ package com.github.scoliossis.utils;
 import com.github.scoliossis.Main;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.FileDroppedEvent;
+import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.Display;
 
 import javax.imageio.ImageIO;
@@ -12,7 +13,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
-import java.awt.event.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.List;
 
@@ -58,13 +60,13 @@ public class FrameUtil {
 
             canvas.setBackground(Color.BLACK);
             frame.add(canvas);
+
+            OpenGlHelper.initializeTextures();
+
             Display.setParent(canvas);
 
             System.out.println(Main.MOD_NAME + " has successfully created a JFrame.");
             initialized = true;
-
-            // fixes game launching with blackscreen
-            frame.setAlwaysOnTop(true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

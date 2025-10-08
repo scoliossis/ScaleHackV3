@@ -4,7 +4,6 @@ import com.github.scoliossis.commands.CommandManager;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
 import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.FrameUtil;
 import com.github.scoliossis.utils.alts.microsoft.AuthServer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -35,8 +34,6 @@ public class Main {
 
     @EventHandler
     public void onInit(FMLInitializationEvent event) {
-        if (FrameUtil.frame != null) FrameUtil.frame.setAlwaysOnTop(false);
-
         Display.setTitle(MOD_NAME + " " + MOD_VERSION);
 
         ModuleManager.init();

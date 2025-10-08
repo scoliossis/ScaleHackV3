@@ -1,10 +1,14 @@
 package com.github.scoliossis.utils;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.*;
+
+import java.util.List;
 
 public class WorldUtil {
     public static Vec3 getEyes(Vec3 vec3) {
@@ -49,5 +53,99 @@ public class WorldUtil {
         float f2 = -MathHelper.cos(-pitch * 0.017453292F);
         float f3 = MathHelper.sin(-pitch * 0.017453292F);
         return new Vec3(f1 * f2, f3, f * f2);
+    }
+
+    // net.minecraft.client.renderer.EntityRenderer.getMouseOver
+    public static Entity getMouseOver(double reach, RotationUtil.Rotation rotation, boolean ignoreWalls)
+    {
+        Entity entity = C.mc.getRenderViewEntity();
+
+        float partialTicks = 1;
+
+        if (entity != null)
+        {
+            if (C.mc.theWorld != null)
+            {
+                Entity pointedEntity = null;
+                MovingObjectPosition objectMouseOver = rayTrace(ignoreWalls ? 0 : reach, rotation);
+                double d1 = reach;
+                Vec3 vec3 = entity.getPositionEyes(partialTicks);
+
+                if (objectMouseOver != null)
+                {
+                    d1 = objectMouseOver.hitVec.distanceTo(vec3);
+                }
+
+                Vec3 vec31 = getVectorForRotation(rotation.pitch, rotation.yaw);
+                Vec3 vec32 = vec3.addVector(vec31.xCoord * reach, vec31.yCoord * reach, vec31.zCoord * reach);
+                Vec3 vec33 = null;
+                float f = 1.0F;
+                List<Entity> list = C.mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * reach, vec31.yCoord * reach, vec31.zCoord * reach).expand((double)f, (double)f, (double)f), Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
+                {
+                    public boolean apply(Entity p_apply_1_)
+                    {
+                        return p_apply_1_.canBeCollidedWith();
+                    }
+                }));
+                double d2 = d1;
+
+                for (int j = 0; j < list.size(); ++j)
+                {
+                    Entity entity1 = (Entity)list.get(j);
+                    float f1 = entity1.getCollisionBorderSize();
+                    AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expand((double)f1, (double)f1, (double)f1);
+                    MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
+
+                    if (axisalignedbb.isVecInside(vec3))
+                    {
+                        if (d2 >= 0.0D)
+                        {
+                            pointedEntity = entity1;
+                            vec33 = movingobjectposition == null ? vec3 : movingobjectposition.hitVec;
+                            d2 = 0.0D;
+                        }
+                    }
+                    else if (movingobjectposition != null)
+                    {
+                        double d3 = vec3.distanceTo(movingobjectposition.hitVec);
+
+                        if (d3 < d2 || d2 == 0.0D)
+                        {
+                            if (entity1 == entity.ridingEntity && !entity.canRiderInteract())
+                            {
+                                if (d2 == 0.0D)
+                                {
+                                    pointedEntity = entity1;
+                                    vec33 = movingobjectposition.hitVec;
+                                }
+                            }
+                            else
+                            {
+                                pointedEntity = entity1;
+                                vec33 = movingobjectposition.hitVec;
+                                d2 = d3;
+                            }
+                        }
+                    }
+                }
+
+                if (pointedEntity != null && vec3.distanceTo(vec33) > reach)
+                {
+                    pointedEntity = null;
+                    objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec33, (EnumFacing)null, new BlockPos(vec33));
+                }
+
+                if (pointedEntity != null && (d2 < d1 || objectMouseOver == null))
+                {
+                    if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
+                    {
+                        return pointedEntity;
+                    }
+                }
+
+            }
+        }
+
+        return null;
     }
 }

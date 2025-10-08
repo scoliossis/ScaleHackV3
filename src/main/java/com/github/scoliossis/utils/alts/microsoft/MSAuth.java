@@ -15,11 +15,12 @@ import org.apache.http.util.EntityUtils;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 
-// stolen from old mushroom
+// stolen from old mushroom, which i assume stole it from some library, i should just add a library for this, mb.
 public class MSAuth {
     private static AccessRefreshToken refreshToken;
 
-    private static final String clientId = "54fd49e4-2103-4044-9603-2b028c814ec3";
+    public static final String clientId = "54fd49e4-2103-4044-9603-2b028c814ec3";
+    public static final String port = "59125";
     private static final String scope = "XboxLive.signin XboxLive.offline_access";
 
     private static AccessRefreshToken authCode(String code) throws Exception {
@@ -30,7 +31,7 @@ public class MSAuth {
         payload.add(new BasicNameValuePair("client_id", clientId));
         payload.add(new BasicNameValuePair("code", code));
         payload.add(new BasicNameValuePair("grant_type", "authorization_code"));
-        payload.add(new BasicNameValuePair("redirect_uri", "http://localhost:59125/"));
+        payload.add(new BasicNameValuePair("redirect_uri", "http://localhost:"+port+"/"));
         payload.add(new BasicNameValuePair("scope", scope));
         req.setEntity(new UrlEncodedFormEntity(payload));
 

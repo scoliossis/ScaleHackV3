@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.util.MathHelper;
 
-import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
@@ -39,7 +38,8 @@ public class SubModule {
             if (field.getType() == double.class || field.getType() == float.class || field.getType() == long.class || field.getType() == int.class) {
                 double value = Double.parseDouble(object.toString());
                 double roundedValue = MathUtil.toNearest(value, annotation.increment());
-
+                // rounded to the right amount of decimals to stop random .1000000002's
+                roundedValue = MathUtil.roundTo(roundedValue, String.valueOf(annotation.increment()).split("\\.")[1].length());
                 double clampedValue = MathHelper.clamp_double(roundedValue, annotation.min(), annotation.max());
 
                 if (field.getType() == double.class) field.set(parentModule, clampedValue);

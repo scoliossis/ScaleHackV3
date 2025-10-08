@@ -4,8 +4,10 @@ import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.modules.impl.client.MovementFix;
+import com.github.scoliossis.modules.impl.combat.Reach;
 import com.github.scoliossis.utils.*;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
@@ -13,6 +15,7 @@ import net.minecraft.util.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -41,6 +44,23 @@ public abstract class EntityRendererMixin {
             Bus.post(new RenderWorldEvent(partialTicks));
         }
         instance.endStartSection(name);
+    }
+
+    @Redirect(method = "getMouseOver", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;extendedReach()Z"))
+    public boolean redirectExtendedReach(PlayerControllerMP instance) {
+        // if reach is enabled we gotta make sure "flag" is false
+        return Reach.shouldOverwriteReach() || instance.getCurrentGameType().isCreative();
+    }
+
+    @Redirect(method = "getMouseOver", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;getBlockReachDistance()F"))
+    public float redirectBlockReachRayTrace(PlayerControllerMP instance) {
+        return Reach.shouldOverwriteReach() ? Reach.getBlockReach() : instance.getBlockReachDistance();
+    }
+
+    // @ModifyVariable needs to be called before @Redirect, thats a cool fun fact!
+    @ModifyVariable(method = "getMouseOver", name = "d1", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLook(F)Lnet/minecraft/util/Vec3;"))
+    public double redirectAttackReach(double value) {
+        return Reach.shouldOverwriteReach() ? Reach.getAttackReach() : value;
     }
 
     @Redirect(method = "getMouseOver", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getLook(F)Lnet/minecraft/util/Vec3;"))

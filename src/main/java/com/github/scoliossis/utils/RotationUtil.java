@@ -1,7 +1,5 @@
 package com.github.scoliossis.utils;
 
-import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -83,12 +81,6 @@ public class RotationUtil {
         float yawDelta = rotationDifference.yaw / smoothing;
 
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
-    }
-
-    // always goes last, applies gcd to rotations from disabling modules or just setting rotation
-    @SubscribeEvent(priority = 9998)
-    public static void onPlayerUpdate(RotationEvent event) {
-        event.rotation = RotationUtil.applyGcd(PlayerUtil.currentRotation());
     }
 
     @AllArgsConstructor
