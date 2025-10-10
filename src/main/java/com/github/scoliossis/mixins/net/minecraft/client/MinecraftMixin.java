@@ -8,12 +8,14 @@ import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.events.impl.MouseScrolledEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.FrameUtil;
 import com.github.scoliossis.utils.PlayerUtil;
 import com.github.scoliossis.utils.RotationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import org.lwjgl.input.Keyboard;
@@ -26,10 +28,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
-public class MinecraftMixin implements MinecraftBridge {
+public abstract class MinecraftMixin implements MinecraftBridge {
     @Shadow private Timer timer;
 
     @Shadow private Session session;
+
+    @Shadow
+    protected abstract void clickMouse();
+
+    @Shadow
+    protected abstract void rightClickMouse();
 
     @Inject(method = "createDisplay", at = @At("TAIL"))
     public void onCreateDisplay(CallbackInfo ci) {
@@ -73,6 +81,17 @@ public class MinecraftMixin implements MinecraftBridge {
         }
     }
 
+    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 7))
+    public boolean onAttemptClick(KeyBinding instance) {
+        boolean isPressed = instance.isPressed();
+
+        if (isPressed && AutoBlock.canSwingWhileBlocking()) {
+            this.clickMouse();
+        }
+
+        return isPressed;
+    }
+
     @Redirect(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isEntityInsideOpaqueBlock()Z"))
     private boolean overrideCanF5inBlocks(EntityPlayerSP instance) {
         if (PlayerUtil.noClipRender) return false;
@@ -85,5 +104,9 @@ public class MinecraftMixin implements MinecraftBridge {
 
     public void bridge$setSession(SessionBridge session) {
         this.session = (Session) session;
+    }
+
+    public void bridge$rightClickMouse() {
+        this.rightClickMouse();
     }
 }

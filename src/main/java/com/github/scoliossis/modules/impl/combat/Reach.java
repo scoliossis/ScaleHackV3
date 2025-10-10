@@ -10,7 +10,7 @@ import com.github.scoliossis.modules.*;
 )
 // who is even using reach in 2027
 public class Reach extends Module {
-    @RegisterSubModule(name = "Attack Reach", max = 10)
+    @RegisterSubModule(name = "Attack Reach", max = 6)
     public static double attackReach = 3;
 
     @RegisterSubModule(name = "Block Reach", max = 10)

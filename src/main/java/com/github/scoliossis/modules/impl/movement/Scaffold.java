@@ -98,12 +98,6 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Smooth Rotation", description = "Doesn't snap back to placing blocks", parent = "Bridging Mode", modeParentString = "Telly")
     public static boolean smoothRotationTelly = true;
 
-    @RegisterSubModule(name = "Smooth Rot Keep Y", description = "Doesn't snap back to placing blocks while keep y", parent = "Smooth Rotation")
-    public static boolean smoothRotationKeepY = true;
-
-    @RegisterSubModule(name = "Smooth Rot Tower", description = "Doesn't snap back to placing blocks while tower", parent = "Smooth Rotation")
-    public static boolean smoothRotationTower = true;
-
     @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
     public static int tellyTicks = 1;
 
@@ -404,7 +398,7 @@ public class Scaffold extends Module {
                         // rewards if else
                     }
                      */
-                    float deltaX = Math.abs(gcdedRotation.yaw - PlayerUtil.lastRotation().yaw);
+                    float deltaX = Math.abs(yawChange);
                     if (deltaX > 2 && noDuplicateRot) {
                         float xDiff = Math.abs(deltaX - lastPlacedDeltaX);
                         if (xDiff < 0.0001) continue;
@@ -446,8 +440,7 @@ public class Scaffold extends Module {
     private static boolean shouldSmoothRotate() {
         return shouldTelly()
                 && tellyPlaceDelayCounter < tellyPlaceDelay
-                && smoothRotationTelly
-                && (shouldKeepY() ? smoothRotationKeepY : smoothRotationTower);
+                && smoothRotationTelly;
     }
 
     private static float getSmoothRotateFactor() {
@@ -483,6 +476,11 @@ public class Scaffold extends Module {
     @Override
     protected void onDisable() {
         disable();
+    }
+
+    @Override
+    public String arrayListExtraInfo() {
+        return bridgingMode.name();
     }
 
     // no records :( java 8

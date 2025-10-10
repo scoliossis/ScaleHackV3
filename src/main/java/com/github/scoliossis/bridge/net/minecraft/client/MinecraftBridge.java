@@ -10,4 +10,6 @@ public interface MinecraftBridge {
 
     TimerBridge bridge$getTimer();
     void bridge$setSession(SessionBridge session);
+
+    void bridge$rightClickMouse();
 }

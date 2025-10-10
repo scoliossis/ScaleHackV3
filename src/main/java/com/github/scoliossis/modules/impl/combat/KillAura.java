@@ -6,12 +6,9 @@ import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.*;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemSword;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.Vec3;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,17 +36,16 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Through Walls", parent = "Targeting")
     public static boolean throughWalls = false;
 
-    @RegisterSubModule(name = "Target Sorting", parent = "Targeting")
-    public static KillAuraSorting killAuraSorting = KillAuraSorting.Health;
-    public enum KillAuraSorting {
-        Distance, Hurt_Time, Health
-    }
-
-    // maybe add multi idk
     @RegisterSubModule(name = "Target Choice", parent = "Targeting")
     public static KillAuraTargeting killAuraTarget = KillAuraTargeting.Best;
     public enum KillAuraTargeting {
         Switch, Best, Single
+    }
+
+    @RegisterSubModule(name = "Target Sorting", parent = "Target Choice", modeParentString = {"Best", "Single"})
+    public static KillAuraSorting killAuraSorting = KillAuraSorting.Health;
+    public enum KillAuraSorting {
+        Distance, Hurt_Time, Health
     }
 
     @RegisterSubModule(name = "Rotation")
@@ -84,14 +80,14 @@ public class KillAura extends Module {
 
     private static int nextAttackTick = -1;
 
-    private static EntityPlayer lastTarget = null;
-    private static int switchTargetIndex = -1;
+    private static EntityLivingBase lastTarget = null;
+    private static int switchTargetIndex = 0;
 
     @SubscribeEvent
     public static void onRotationEvent(RotationEvent event) {
         if (!shouldRotate()) return;
 
-        EntityPlayer target = getTarget();
+        EntityLivingBase target = getTarget();
 
         if (target == null || !shouldRotateToEntity(target)) return;
 
@@ -103,15 +99,15 @@ public class KillAura extends Module {
         if (!shouldAttack()) return;
 
         if (rotations == KillAuraRotations.None) {
-            EntityPlayer target = getTarget();
+            EntityLivingBase target = getTarget();
 
             if (target != null) attack(target);
             return;
         }
 
-        EntityPlayer target = getEntityOver(PlayerUtil.currentRotation(), killAuraAttackRange);
+        Entity target = WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls);
 
-        if (target == null) return;
+        if (!TargetUtil.isValidTarget(target)) return;
 
         attack(target);
     }
@@ -124,21 +120,27 @@ public class KillAura extends Module {
         return shouldAura() && MovementUtil.ticks >= nextAttackTick;
     }
 
-    private static EntityPlayer getTarget() {
-        List<EntityPlayer> sortedTargets = C.w().playerEntities.stream().filter(
-                entityPlayer -> canEntityBeHit(entityPlayer, Math.max(killAuraRotationRange, killAuraAttackRange))
-        ).sorted(Comparator.comparingDouble(entityPlayer -> {
-            switch (killAuraSorting) {
-                case Distance:
-                    return getDistanceToPlayer(entityPlayer);
-                case Health:
-                    return entityPlayer.getHealth();
-                case Hurt_Time:
-                    return entityPlayer.hurtTime;
-                default:
-                    return 0;
-            }
-        })).collect(Collectors.toList());
+    private static EntityLivingBase getTarget() {
+        List<EntityLivingBase> sortedTargets = TargetUtil.getPossibleTargets(
+                        Math.max(killAuraRotationRange, killAuraAttackRange),
+                        throughWalls,
+                        rotations != KillAuraRotations.None
+                )
+                .stream()
+                .sorted(Comparator.comparingDouble(entity -> {
+                    if (killAuraTarget == KillAuraTargeting.Switch) return entity.getEntityId();
+
+                    switch (killAuraSorting) {
+                        case Distance:
+                            return TargetUtil.getDistanceToEntity(entity);
+                        case Health:
+                            return entity.getHealth();
+                        case Hurt_Time:
+                            return entity.hurtTime;
+                        default:
+                            return 0;
+                    }
+                })).collect(Collectors.toList());
 
         if (sortedTargets.isEmpty()) {
             lastTarget = null;
@@ -155,14 +157,12 @@ public class KillAura extends Module {
                 break;
             case Switch:
                 switchTargetIndex = switchTargetIndex % sortedTargets.size();
+                int prevSwitchIndex = switchTargetIndex;
 
                 // dont switch onto a target out of range
                 while (!shouldAttackEntity(sortedTargets.get(switchTargetIndex))) {
-                    switchTargetIndex += 1;
-                    if (switchTargetIndex >= sortedTargets.size()) {
-                        switchTargetIndex = 0;
-                        break;
-                    }
+                    switchTargetIndex = (switchTargetIndex + 1) % sortedTargets.size();
+                    if (switchTargetIndex == prevSwitchIndex) break;
                 }
 
                 targetIndex = switchTargetIndex;
@@ -173,8 +173,8 @@ public class KillAura extends Module {
         return lastTarget;
     }
 
-    private static boolean shouldAttackEntity(EntityPlayer entityPlayer) {
-        return getDistanceToPlayer(entityPlayer) <= killAuraAttackRange;
+    private static boolean shouldAttackEntity(EntityLivingBase EntityLivingBase) {
+        return TargetUtil.getDistanceToEntity(EntityLivingBase) <= killAuraAttackRange;
     }
 
     private static boolean shouldRotate() {
@@ -183,17 +183,15 @@ public class KillAura extends Module {
                 && rotations != KillAuraRotations.None;
     }
 
-    private static boolean shouldRotateToEntity(EntityPlayer entityPlayer) {
-        return getDistanceToPlayer(entityPlayer) <= killAuraRotationRange;
+    private static boolean shouldRotateToEntity(EntityLivingBase EntityLivingBase) {
+        return TargetUtil.getDistanceToEntity(EntityLivingBase) <= killAuraRotationRange;
     }
 
-    private static RotationUtil.Rotation getRotation(EntityPlayer entityPlayer) {
-        RotationUtil.Rotation targetRotation = getTargetRotation(entityPlayer, killAuraRotationRange);
+    private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
+        RotationUtil.Rotation targetRotation = TargetUtil.getTargetRotation(entity, killAuraRotationRange, throughWalls);
 
         // should only be null if rotationRange is lower than attack range
-        if (targetRotation == null) {
-            return PlayerUtil.currentRotation();
-        }
+        if (targetRotation == null) return PlayerUtil.currentRotation();
 
         switch (rotations) {
             case Simple:
@@ -201,88 +199,17 @@ public class KillAura extends Module {
             case Smooth:
                 return RotationUtil.getSmoothRotation(targetRotation, smoothRotationSpeed);
             default:
-                return targetRotation;
+                return RotationUtil.applyGcd(targetRotation);
         }
-    }
-
-    // yeah, can cause issues if player is behind a block, idc, just turn on through walls.
-    private static RotationUtil.Rotation getTargetRotation(EntityPlayer entityPlayer, double range) {
-        // great variable naming
-        AxisAlignedBB rotationTarget = entityPlayer.getEntityBoundingBox();
-        Vec3 eyePos = C.p().getPositionEyes(1);
-
-        double posX = eyePos.xCoord;
-        double posY = eyePos.yCoord;
-        double posZ = eyePos.zCoord;
-
-        if (eyePos.xCoord < rotationTarget.minX) posX = rotationTarget.minX;
-        else if (eyePos.xCoord > rotationTarget.maxX) posX = rotationTarget.maxX;
-
-        if (eyePos.yCoord < rotationTarget.minY) posY = rotationTarget.minY;
-        else if (eyePos.yCoord > rotationTarget.maxY) posY = rotationTarget.maxY;
-
-        if (eyePos.zCoord < rotationTarget.minZ) posZ = rotationTarget.minZ;
-        else if (eyePos.zCoord > rotationTarget.maxZ) posZ = rotationTarget.maxZ;
-
-        RotationUtil.Rotation bestRotation = RotationUtil.getRotation(new Vec3(posX, posY, posZ));
-
-        // if best rotation works, lock it in.
-        if (getEntityOver(bestRotation, range) == entityPlayer) return bestRotation;
-
-        ArrayList<Vec3> possibleRotations = new ArrayList<>();
-        // added in binary order (000, 100, 010, 110, 001, 101, 011, 111)
-        for (int i = 0; i < 8; i++) {
-            possibleRotations.add(new Vec3(
-                    i % 2 == 0 ? rotationTarget.minX : rotationTarget.maxX,
-                    i % 4 >= 2 ? rotationTarget.minY : rotationTarget.maxY,
-                    i % 8 >= 4 ? rotationTarget.minZ : rotationTarget.maxZ
-            ));
-        }
-
-        // maybe the middle is meta
-        possibleRotations.add(new Vec3(entityPlayer.posX, (rotationTarget.maxY + rotationTarget.minY) / 2, entityPlayer.posZ));
-
-        // try other rotations, surely one will work
-        for (Vec3 possibleRotationVector : possibleRotations) {
-            RotationUtil.Rotation possibleRotation = RotationUtil.getRotation(possibleRotationVector);
-            if (getEntityOver(possibleRotation, range) == entityPlayer) {
-                return possibleRotation;
-            }
-        }
-
-        // after all that, we still fail.
-        return null;
-    }
-
-    // silly code blehhh
-    private static boolean canEntityBeHit(EntityPlayer entityPlayer, double range) {
-        return entityPlayer != C.p()
-                && getDistanceToPlayer(entityPlayer) <= range
-                // if the rotation code wont lock onto the entity, dont bother targeting them
-                && (rotations == KillAuraRotations.None || getTargetRotation(entityPlayer, range) != null);
-    }
-
-    private static double getDistanceToPlayer(EntityPlayer entityPlayer) {
-        return Math.min(
-                C.p().getPositionEyes(1).distanceTo(entityPlayer.getPositionVector()),
-                C.p().getPositionEyes(1).distanceTo(entityPlayer.getPositionVector().add(new Vec3(0, entityPlayer.height, 0)))
-        );
-    }
-
-    private static EntityPlayer getEntityOver(RotationUtil.Rotation rotation, double range) {
-        Entity raytrace = WorldUtil.getMouseOver(range, rotation, throughWalls);
-
-        return !(raytrace instanceof EntityPlayer) ? null : (EntityPlayer) raytrace;
     }
 
     private static void attack(Entity target) {
-        C.p().swingItem();
-        C.mc.playerController.attackEntity(C.p(), target);
+        if (PlayerUtil.attack(target)) {
+            int nextCps = (int) MathUtil.getRandomInRange(killAuraAttackSpeedMin, killAuraAttackSpeedMax);
 
-        int nextCps = (int) MathUtil.getRandomInRange(killAuraAttackSpeedMin, killAuraAttackSpeedMax);
-
-        nextAttackTick = MovementUtil.ticks + (20 / (Math.max(nextCps, 1)));
-        switchTargetIndex += 1;
+            nextAttackTick = MovementUtil.ticks + (20 / (Math.max(nextCps, 1)));
+            switchTargetIndex += 1;
+        }
     }
 
     @Override

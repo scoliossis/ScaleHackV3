@@ -5,6 +5,7 @@ import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.modules.impl.movement.NoSlow;
 import com.github.scoliossis.modules.impl.movement.Sneak;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.utils.C;
@@ -45,6 +46,11 @@ public class EntityPlayerSPMixin {
         MovementInputEvent movementInputEvent = new MovementInputEvent(C.p().movementInput);
         Bus.post(movementInputEvent);
         C.p().movementInput = movementInputEvent.movementInput;
+    }
+
+    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z"))
+    public boolean editIsUsingItem(EntityPlayerSP instance) {
+        return NoSlow.isPlayerUsingItem();
     }
 
     @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;sneak:Z"))

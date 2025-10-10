@@ -24,6 +24,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -212,6 +213,7 @@ public class AltManagerScreen extends GuiScreen {
                     try {
                         Files.delete(Login.getAccountPath(alt.uuid));
                         AltManagerScreen.alts.remove(alt);
+                        Files.delete(Paths.get(Login.altsPath + "\\skins\\" + alt.uuid + ".png"));
                         Login.addProgressReport("Removed alt: &6" + alt.name);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -318,7 +320,7 @@ public class AltManagerScreen extends GuiScreen {
 
             if (nameChangeDate.equals("ALLOWED")) return true;
             // this means the request FAILED. idk what to do, just pretend it worked
-            if (nameChangeDate.contains("path")) return true;
+            if (nameChangeDate.isEmpty() || nameChangeDate.contains("path")) return true;
 
             // 30 days in seconds
             return Instant.now().isAfter(Instant.parse(nameChangeDate).plusSeconds(2592000));

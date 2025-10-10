@@ -56,7 +56,7 @@ public class WorldUtil {
     }
 
     // net.minecraft.client.renderer.EntityRenderer.getMouseOver
-    public static Entity getMouseOver(double reach, RotationUtil.Rotation rotation, boolean ignoreWalls)
+    public static Entity getMouseOver(RotationUtil.Rotation rotation, double reach, boolean ignoreWalls)
     {
         Entity entity = C.mc.getRenderViewEntity();
 
@@ -67,7 +67,7 @@ public class WorldUtil {
             if (C.mc.theWorld != null)
             {
                 Entity pointedEntity = null;
-                MovingObjectPosition objectMouseOver = rayTrace(ignoreWalls ? 0 : reach, rotation);
+                MovingObjectPosition objectMouseOver = ignoreWalls ? null : rayTrace(reach+2, rotation);
                 double d1 = reach;
                 Vec3 vec3 = entity.getPositionEyes(partialTicks);
 

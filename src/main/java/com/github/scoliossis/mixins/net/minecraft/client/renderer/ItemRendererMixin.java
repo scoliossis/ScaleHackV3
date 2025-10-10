@@ -1,6 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.renderer;
 
 import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
@@ -38,6 +39,11 @@ public abstract class ItemRendererMixin {
             Vec3 itemScale = Animations.getScaleVec();
             GL11.glScaled(itemScale.xCoord, itemScale.yCoord, itemScale.zCoord);
         }
+    }
+
+    @Redirect(method = "renderItemInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;getItemInUseCount()I"))
+    public int onGetItemInUseCount(AbstractClientPlayer instance) {
+        return instance.getItemInUseCount() + (AutoBlock.isBlocking() ? 1 : 0);
     }
 
     @Inject(method = "renderPlayerArm", at = @At(value = "HEAD"), cancellable = true)

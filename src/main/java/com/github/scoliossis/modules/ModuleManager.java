@@ -3,6 +3,7 @@ package com.github.scoliossis.modules;
 import com.github.scoliossis.Main;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.FontUtil;
 import com.github.scoliossis.utils.KeybindHandler;
 import com.google.gson.internal.LinkedTreeMap;
 import org.apache.commons.io.FileUtils;
@@ -94,7 +95,10 @@ public class ModuleManager {
     }
 
     public static List<Module> getModulesByCategory(Category category, List<Module> modules) {
-        return modules.stream().filter(e -> e.getAnnotation().category().equals(category)).collect(Collectors.toList());
+        return modules.stream()
+                .filter(e -> e.getAnnotation().category().equals(category))
+                .sorted(Comparator.comparingInt(module -> FontUtil.getStringWidth(module.getAnnotation().name(), 10)))
+                .collect(Collectors.toList());
     }
 
     public static String getModuleName(Class<? extends Module> clazz) {

@@ -1,0 +1,29 @@
+package com.github.scoliossis.modules.impl.movement;
+
+import com.github.scoliossis.modules.Category;
+import com.github.scoliossis.modules.Module;
+import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.utils.C;
+
+@RegisterModule(
+        name = "No Slow",
+        description = "Can't nobody take my pride (Uh-uh, uh-uh) Can't nobody hold me down Oh, no I got to keep on movin'",
+        category = Category.MOVEMENT,
+        dangerous = true
+)
+public class NoSlow extends Module {
+    public static boolean isPlayerUsingItem() {
+        return !ModuleManager.isEnabled(NoSlow.class) && C.p().isUsingItem();
+    }
+
+    @Override
+    protected void onEnable() {
+
+    }
+
+    @Override
+    protected void onDisable() {
+
+    }
+}

@@ -6,11 +6,23 @@ import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import lombok.Getter;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
+    public static boolean attack(Entity target) {
+        if (!AutoBlock.isBlockingSwing() || AutoBlock.canSwingWhileBlocking()) {
+            C.p().swingItem();
+            C.mc.playerController.attackEntity(C.p(), target);
+
+            return true;
+        }
+
+        return false;
+    }
 
     // i only learnt today (4/10/25) that when using a comma between initializing variables they arnt both set to the final value
     @Getter
