@@ -133,6 +133,11 @@ public class Animations extends Module {
         return new Vec3(sizeMultiplier * (unevenSize ? width : 1),  sizeMultiplier * (unevenSize ? height : 1), sizeMultiplier * (unevenSize ? depth : 1));
     }
 
+    public static boolean shouldHideHeldItem() {
+        return ModuleManager.isEnabled(Freecam.class) ||
+                (C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Zoom.class) && Zoom.hideHand);
+    }
+
     public static boolean fakeIsSwingInProgress = false;
     public static int fakeSwingProgressInt = 0;
     public static float prevFakeSwingProgress = 0;
@@ -146,10 +151,5 @@ public class Animations extends Module {
     @Override
     protected void onDisable() {
 
-    }
-
-    public static boolean shouldHideHeldItem() {
-        return ModuleManager.isEnabled(Freecam.class) ||
-                (C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Zoom.class) && Zoom.hideHand);
     }
 }

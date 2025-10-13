@@ -217,6 +217,8 @@ public class ModuleManager {
             int keybind = (int) Double.parseDouble(subModules.get("keybind").toString());
             if (keybind != -1)
                 KeybindHandler.registerKeybind(module, keybind);
+            else
+                KeybindHandler.removeKeybind(module);
 
             for (SubModule subModule : module.getChildren()) {
                 if (subModule.getField().getType() == SubCategory.class) continue;

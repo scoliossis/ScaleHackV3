@@ -121,6 +121,8 @@ public class Scaffold extends Module {
     private static boolean tellyBlockPlaced = true;
     private static int tellyForwardTicksCount = -1;
 
+    private static boolean lastJump = false;
+
     @SubscribeEvent
     public static void onKeyInput(MovementInputEvent event) {
         if (shouldScaffold) {
@@ -133,6 +135,8 @@ public class Scaffold extends Module {
             else {
                 event.movementInput.jump |= towerMode == TowerMode.Legit && shouldTower();
             }
+
+            lastJump = C.mc.gameSettings.keyBindJump.isKeyDown();
         }
     }
 
@@ -159,7 +163,7 @@ public class Scaffold extends Module {
 
         Vec3 positionToRotateFrom = C.p().getPositionVector();
         if (!shouldPlaceBlock()) {
-            Vec3 predictedNextPosition = getPredictedNextPosition(false);
+            Vec3 predictedNextPosition = getPredictedNextPosition();
             if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
         }
 
@@ -223,10 +227,10 @@ public class Scaffold extends Module {
     }
 
     // 1 second time travel hack
-    private static Vec3 getPredictedNextPosition(boolean preTick) {
+    private static Vec3 getPredictedNextPosition() {
         Vec3 pos = C.p().getPositionVector();
-        double velocityX = preTick ? C.p().motionX : C.p().posX - C.p().prevPosX;
-        double velocityZ = preTick ? C.p().motionZ : C.p().posZ - C.p().prevPosZ;
+        double velocityX = C.p().posX - C.p().prevPosX;
+        double velocityZ = C.p().posZ - C.p().prevPosZ;
 
         for (int i = 1; i <= 20; i++) {
             pos = pos.add(new Vec3(velocityX, 0, velocityZ));
@@ -273,7 +277,7 @@ public class Scaffold extends Module {
 
     private static boolean shouldTellyJump(boolean jumpDown) {
         return (tellyBlockPlaced && tellyForwardTicksCount >= tellyForwardTicks)
-                || (jumpDown && getPredictedNextPosition(true) == null)
+                || (jumpDown && !lastJump)
                 || tellyForwardTicks == 0;
     }
 
@@ -281,7 +285,7 @@ public class Scaffold extends Module {
     private static boolean shouldTower = false;
 
     private static boolean shouldKeepY() {
-        return !shouldTower() && defaultKeepY;
+        return !shouldTower() && defaultKeepY && !C.p().onGround;
     }
 
     private static boolean shouldTower() {
@@ -371,13 +375,14 @@ public class Scaffold extends Module {
     private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, RotationEvent event) {
         MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, PlayerUtil.lastRotation());
 
+        BlockPos currentBlock = blockHitResult.getBlockPos().offset(blockHitResult.sideHit);
+        BlockPos targetBlock = blockTarget.pos.offset(blockTarget.direction);
+
         // the previous blockpos is good, dont change.
-        if (!blockHitResult.getBlockPos().offset(blockHitResult.sideHit).equals(blockTarget.pos.offset(blockTarget.direction))) {
+        if (!currentBlock.equals(targetBlock)) {
             float closestPitch = 91;
             float closestYaw = 181;
             boolean foundRotation = false;
-
-            BlockPos targetBlock = blockTarget.pos.offset(blockTarget.direction);
 
             // searches for closest yaw + pitch change
             // <= Math.abs(closestYaw) to stop worthless loops!

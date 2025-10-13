@@ -42,7 +42,7 @@ public class FrameUtil {
             Canvas canvas = new Canvas();
 
             frame = new JFrame(Main.MOD_NAME + " " + Main.MOD_VERSION);
-            frame.setSize(Display.getWidth(), Display.getHeight() + 35);
+            frame.setSize(Display.getWidth(), Display.getHeight());
             frame.setLocation(Display.getX(), Display.getY());
             frame.addWindowListener(new WindowAdapter() {
                 @Override
@@ -57,6 +57,9 @@ public class FrameUtil {
             frame.setIconImage(image);
 
             frame.setVisible(true);
+
+            frame.setSize(frame.getWidth() + frame.getInsets().left, frame.getHeight() + frame.getInsets().top);
+            frame.setLocation(frame.getX() + frame.getInsets().right - frame.getInsets().left, frame.getY() + frame.getInsets().bottom);
 
             canvas.setBackground(Color.BLACK);
             frame.add(canvas);

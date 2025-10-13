@@ -101,7 +101,7 @@ public class KillAura extends Module {
         if (rotations == KillAuraRotations.None) {
             EntityLivingBase target = getTarget();
 
-            if (target != null) attack(target);
+            if (target != null && shouldAttackEntity(target)) attack(target);
             return;
         }
 

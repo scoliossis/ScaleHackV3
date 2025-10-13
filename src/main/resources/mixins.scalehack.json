@@ -10,6 +10,7 @@
     "net.minecraft.entity.EntityMixin",
     "net.minecraft.entity.player.EntityPlayerMixin",
     "net.minecraft.network.NetworkManagerMixin",
+    "net.minecraft.network.play.server.S12PacketEntityVelocityMixin",
     "net.minecraftforge.fml.common.network.handshake.FMLHandshakeMessage$ModListMixin"
   ],
   "client": [

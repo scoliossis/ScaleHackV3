@@ -16,7 +16,7 @@ public class WorldUtil {
     }
 
     public static boolean isOverAir() {
-        return C.w().getBlockState(new BlockPos(C.p().posX, C.p().posY - 1, C.p().posZ)).getBlock().equals(Blocks.air);
+        return isOverAir(C.p().getPositionVector());
     }
 
     public static boolean isOverAir(Vec3 vec3) {
