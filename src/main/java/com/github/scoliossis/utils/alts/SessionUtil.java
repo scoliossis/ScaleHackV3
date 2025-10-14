@@ -4,7 +4,6 @@ import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.util.SessionBridge;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.NetworkUtil;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.Session;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -17,9 +16,7 @@ import org.apache.http.impl.client.HttpClients;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Base64;
 
 // todo: rate limit accounts https://minecraft.wiki/w/Mojang_API#Verify_login_session_on_client
@@ -100,6 +97,10 @@ public class SessionUtil {
             return "Cannot change name, last name change was: " + lastChange;
         }
 
+        String invalidCharacters = newName.replaceAll(Login.VALID_NAME_CHARATERS_REGEX, "");
+        if (!invalidCharacters.isEmpty()) return "Name contains invalid characters: \"" + invalidCharacters + "\"";
+        if (newName.length() > 16) return "Name is " + newName.length() + " characters, 16 is the limit.";
+
         String nameAvailability = checkNameAvailability(accessToken, newName);
         switch (nameAvailability) {
             case "AVAILABLE":
@@ -109,6 +110,7 @@ public class SessionUtil {
             case "NOT_ALLOWED":
                 return "Name is BANNED by microsoft.";
             default:
+                // shouldnt appear, maybe if server doesnt respond? normally only replies if character limit reached or invalid charaters
                 return nameAvailability;
         }
 

@@ -1,9 +1,14 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.bridge.net.minecraft.client.entity.AbstractClientPlayerBridge;
+import com.github.scoliossis.modules.impl.client.Targets;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 
@@ -12,19 +17,42 @@ import java.util.List;
 
 public class TargetUtil {
     public static boolean isValidTarget(Entity entity) {
-        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead && !isBot(entity);
+        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead && !isBot(entity) && !isTeam(entity);
     }
 
-    // todo: fix
     public static boolean isBot(Entity entity) {
-        if (true) return false;
+        if (!Targets.antiBot || !(entity instanceof EntityPlayer)) return false;
+        if (!(entity instanceof AbstractClientPlayer)) return true;
 
-        if (!(entity instanceof EntityPlayer)) return false;
-        if (!(entity instanceof EntityPlayerMP)) return true;
+        NetworkPlayerInfo playerInfo = AbstractClientPlayerBridge.from(entity).bridge$getPlayerInfo();
+        if (playerInfo == null) return true;
 
-        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
+        return playerInfo.getResponseTime() <= Targets.botPingMode.ping;
+    }
 
-        return entityPlayerMP.ping <= 0;
+    public static boolean isTeam(Entity entity) {
+        if (!Targets.teamsCheck || !(entity instanceof EntityLivingBase)) return false;
+        EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
+
+        return Targets.clientCheck && C.p().isOnSameTeam(entityLivingBase)
+                || (Targets.colourTeams && getTeamColour(C.p()) == getTeamColour(entityLivingBase));
+    }
+
+    // stolen from net.minecraft.client.renderer.entity.RendererLivingEntity.setScoreTeamColor
+    private static int getTeamColour(EntityLivingBase entityLivingBaseIn) {
+        ScorePlayerTeam scoreplayerteam = (ScorePlayerTeam)entityLivingBaseIn.getTeam();
+
+        if (scoreplayerteam != null)
+        {
+            String s = FontRenderer.getFormatFromString(scoreplayerteam.getColorPrefix());
+
+            if (s.length() >= 2)
+            {
+                return C.mc.fontRendererObj.getColorCode(s.charAt(1));
+            }
+        }
+
+        return -1;
     }
 
     public static List<EntityLivingBase> getAllValidTargets() {

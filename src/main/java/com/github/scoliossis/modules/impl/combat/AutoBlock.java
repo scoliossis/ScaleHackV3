@@ -6,6 +6,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.EnumAction;
@@ -31,8 +32,17 @@ public class AutoBlock extends Module {
 
     @RegisterSubModule(name = "Autoblock Mode", description = "bypahh")
     public static AutoBlockMode autoblockMode = AutoBlockMode.Blink;
-    @RegisterSubModule(name = "Blink Ticks", description = "More blink ticks means more cps", parent = "Autoblock Mode", modeParentString = "Blink", min = 2, max = 6)
-    public static int maxBlinkTicks = 3;
+    @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
+    public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
+
+    @AllArgsConstructor
+    public enum Blink_Mode {
+        Hypixel(2),
+        Reduce(3),
+        Legit(4);
+
+        public final int blinkTicks;
+    }
 
     @Getter private static boolean isBlocking, isServerBlocking = false;
 
@@ -94,7 +104,7 @@ public class AutoBlock extends Module {
                     break;
             }
 
-            blinkTick = blinkTick == maxBlinkTicks ? 0 : blinkTick+1;
+            blinkTick = blinkTick == blinkMode.blinkTicks ? 0 : blinkTick+1;
         }
         else {
             setBlocking(true, true);

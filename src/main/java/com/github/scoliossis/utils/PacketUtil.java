@@ -10,6 +10,7 @@ public class PacketUtil {
     }
 
     public static void receivePacket(Packet<?> packet) {
+        if (packet == null || C.mc.getNetHandler().getNetworkManager() == null) return;
         NetworkManagerBridge.from(C.mc.getNetHandler().getNetworkManager()).bridge$processPacket((Packet<INetHandler>) packet);
     }
 }

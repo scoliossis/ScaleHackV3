@@ -31,7 +31,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,14 +42,21 @@ import java.util.concurrent.ForkJoinPool;
 public class Login {
     @AllArgsConstructor
     public enum AltTypes {
+        Cracked("Cracked", "&4", "Creates an account for cracked servers", () -> {
+            try {
+                loggingInCracked = true;
+            } catch (Exception e) {
+                setErrorMessage("Invalid clipboard data, please copy a session ID to clipboard!");
+            }
+        }),
         Session("Session", "&c", "gets session id from clipboard", () -> {
             try {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String data = (String) clipboard.getData(DataFlavor.stringFlavor);
 
-                Login.loginSession(data);
+                loginSession(data);
             } catch (Exception e) {
-                Login.setErrorMessage("Invalid clipboard data, please copy a session ID to clipboard!");
+                setErrorMessage("Invalid clipboard data, please copy a session ID to clipboard!");
             }
         }),
         Cookie("Cookie", "&a", "gets cookie files/file path from clipboard", () -> {
@@ -69,7 +75,7 @@ public class Login {
                     String filePath = ((String) clipboard.getData(DataFlavor.stringFlavor)).replaceAll("\"", "").trim();
                     Login.loginCookie(new File(filePath));
                 } catch (Exception ex) {
-                    Login.setErrorMessage("Please copy a file / file path to clipboard.");
+                    setErrorMessage("Please copy a file / file path to clipboard.");
                 }
             }
         }),
@@ -78,7 +84,7 @@ public class Login {
             try {
                 Desktop.getDesktop().open(altsPath.toFile());
             } catch (Exception e) {
-                Login.setErrorMessage("Invalid clipboard data, please copy email:password to clipboard!");
+                setErrorMessage("Invalid clipboard data, please copy email:password to clipboard!");
             }
         });
 
@@ -87,6 +93,8 @@ public class Login {
         public final String description;
         public final Runnable action;
     }
+
+    public static boolean loggingInCracked = false;
 
     public static Path altsPath = Paths.get(Main.extraSavedFeaturesPath + "alts");
 
@@ -297,6 +305,20 @@ public class Login {
         if (cookie == null) return;
 
         loginCookie(cookie);
+    }
+
+    protected static final String VALID_NAME_CHARATERS_REGEX = "[a-zA-Z0-9]";
+    protected static final String INVALID_NAME_CHARATERS_REGEX = "[^a-zA-Z0-9]";
+
+    public static void addCracked(String name) {
+        String invalidCharacters = name.replaceAll(VALID_NAME_CHARATERS_REGEX, "");
+        if (!invalidCharacters.isEmpty()) {
+            Login.setErrorMessage("Name contains invalid characters: \"" + invalidCharacters + "\" removing them");
+            name = name.replaceAll(INVALID_NAME_CHARATERS_REGEX, "");
+        }
+
+        MinecraftBridge.from(C.mc).bridge$setSession(SessionBridge.from(new Session(name, "6", "7", "lol")));
+        Login.addProgressReport("Username set to: &6" + name + "&f!");
     }
 
     public static boolean loginSession(String accessToken) {

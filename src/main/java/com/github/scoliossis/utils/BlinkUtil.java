@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BlinkUtil {
+    // todo: wipe on lobby change
     private final static Queue<Packet<?>> blinkedSentPackets = new ConcurrentLinkedQueue<>();
     private final static Queue<Packet<?>> blinkedRecievedPackets = new ConcurrentLinkedQueue<>();
 

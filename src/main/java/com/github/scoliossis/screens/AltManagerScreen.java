@@ -63,14 +63,20 @@ public class AltManagerScreen extends GuiScreen {
     private DynamicTexture pencilTexture;
 
     private final GuiTextField renameTextBox = new GuiTextField(0, C.mc.fontRendererObj, -1, -1, 200, (int) altFontHeight);
+    private final GuiTextField crackedLoginTextBox = new GuiTextField(0, C.mc.fontRendererObj, -1, -1, 200, (int) altFontHeight);
+
+    private static void initTextBox(GuiTextField textField) {
+        textField.setMaxStringLength(16);
+        textField.setCanLoseFocus(false);
+        textField.setFocused(true);
+        textField.setVisible(false);
+    }
 
     @Override
     public void initGui() {
         if (!Files.exists(Login.altsPath)) Login.altsPath.toFile().mkdirs();
-        renameTextBox.setMaxStringLength(16);
-        renameTextBox.setCanLoseFocus(false);
-        renameTextBox.setFocused(true);
-        renameTextBox.setVisible(false);
+        initTextBox(renameTextBox);
+        initTextBox(crackedLoginTextBox);
 
         try {
             binTexture = new DynamicTexture(ImageIO.read(Main.class.getResourceAsStream("/bin.png")));
@@ -118,6 +124,7 @@ public class AltManagerScreen extends GuiScreen {
         RenderUtil.drawRect(0, 0, sidebarWidth, C.res().getScaledHeight(), new Color(22,22,22, 100));
 
         GL11.glPushMatrix();
+
         for (Login.AltTypes altType : Login.AltTypes.values()) {
             float textX = sidebarWidth / 2;
             float height = FontUtil.getFontHeight(sidebarFont);
@@ -128,14 +135,20 @@ public class AltManagerScreen extends GuiScreen {
             Color stringColor = hovered ? new Color(255,255,255,255) : new Color(255,255,255,190);
 
             FontUtil.drawCenteredString(altType.name, textX, buttonY, sidebarFont, stringColor, true);
-            FontUtil.drawCenteredString(altType.description, textX, buttonY + height, sidebarFont/2, new Color(100,100,100), true);
+
+            if (Login.loggingInCracked && altType == Login.AltTypes.Cracked) {
+                FontUtil.drawCenteredString(crackedLoginTextBox.getText() + "_", textX, buttonY + height, sidebarFont/2, new Color(100,100,100), true);
+            }
+            else {
+                FontUtil.drawCenteredString(altType.description, textX, buttonY + height, sidebarFont/2, new Color(100,100,100), true);
+            }
 
             if (hovered && mouseButton == 0) {
                 altType.action.run();
                 mouseButton = -1;
             }
 
-            GL11.glTranslated(0, buttonY, 0);
+            GL11.glTranslated(0, height * 2, 0);
         }
         GL11.glPopMatrix();
 
@@ -378,13 +391,32 @@ public class AltManagerScreen extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (Login.loggingInCracked) {
+            renamedAlt = null;
+
+            if (keyCode == 1) {
+                Login.loggingInCracked = false;
+                crackedLoginTextBox.setText("");
+                return;
+            }
+            if (keyCode == 28) {
+                Login.loggingInCracked = false;
+                Login.addCracked(crackedLoginTextBox.getText());
+                crackedLoginTextBox.setText("");
+                return;
+            }
+
+            crackedLoginTextBox.textboxKeyTyped(typedChar, keyCode);
+        }
         if (renamedAlt != null) {
             if (keyCode == 1) {
                 renamedAlt = null;
+                renameTextBox.setText("");
                 return;
             }
             if (keyCode == 28) {
                 Login.addProgressReport(SessionUtil.changeName(renamedAlt.json.get("session"), renameTextBox.getText()));
+                renameTextBox.setText("");
                 return;
             }
             renameTextBox.textboxKeyTyped(typedChar, keyCode);
