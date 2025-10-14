@@ -3,6 +3,7 @@ package com.github.scoliossis.utils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 
@@ -11,7 +12,23 @@ import java.util.List;
 
 public class TargetUtil {
     public static boolean isValidTarget(Entity entity) {
-        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead;
+        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead && !isBot(entity);
+    }
+
+    // todo: fix
+    public static boolean isBot(Entity entity) {
+        if (true) return false;
+
+        if (!(entity instanceof EntityPlayer)) return false;
+        if (!(entity instanceof EntityPlayerMP)) return true;
+
+        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) entity;
+
+        return entityPlayerMP.ping <= 0;
+    }
+
+    public static List<EntityLivingBase> getAllValidTargets() {
+        return C.w().getEntities(EntityLivingBase.class, TargetUtil::isValidTarget);
     }
 
     public static List<EntityLivingBase> getPossibleTargets(double reach, boolean throughWalls, boolean rotate) {

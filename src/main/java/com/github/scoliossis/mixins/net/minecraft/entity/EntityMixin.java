@@ -2,9 +2,7 @@ package com.github.scoliossis.mixins.net.minecraft.entity;
 
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.MoveFlyingEvent;
-import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.client.MovementFix;
-import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.PlayerUtil;
 import com.github.scoliossis.utils.RotationUtil;
@@ -68,10 +66,5 @@ public abstract class EntityMixin {
                     currentRot
             ));
         }
-    }
-
-    @Inject(method = "isInvisible", at = @At("HEAD"), cancellable = true)
-    public void isInvisible(CallbackInfoReturnable<Boolean> cir) {
-        if (C.p() != null && this.entityId == C.p().getEntityId() && ModuleManager.isEnabled(Freecam.class)) cir.setReturnValue(true);
     }
 }

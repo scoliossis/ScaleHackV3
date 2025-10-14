@@ -24,6 +24,19 @@ public class PlayerUtil {
         return false;
     }
 
+    private static int lastUnblock = -1;
+    private static boolean wasBlocking = false;
+
+    public static int getLastUnblock() {
+        if (wasBlocking && !C.p().isUsingItem()) lastUnblock = MovementUtil.ticks;
+        return lastUnblock;
+    }
+
+    @SubscribeEvent
+    public static void updateLastBlocking(MotionEvent event) {
+        wasBlocking = C.p().isUsingItem();
+    }
+
     // i only learnt today (4/10/25) that when using a comma between initializing variables they arnt both set to the final value
     @Getter
     private static RotationEvent
@@ -54,6 +67,8 @@ public class PlayerUtil {
 
     public static Vec3 prevFakeCameraPos, fakeCameraPos, realPos;
     public static RotationUtil.Rotation fakeRotation, realRotation;
+
+    public static boolean isRenderingGuiInventory = false;
 
     @SubscribeEvent
     public static void onClientTickEvent(ClientTickEvent event) {

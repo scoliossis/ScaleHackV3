@@ -6,13 +6,11 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.C;
 import com.github.scoliossis.utils.EasingUtil;
 import com.github.scoliossis.utils.Render3dUtil;
 import com.github.scoliossis.utils.RenderUtil;
-import net.minecraft.entity.Entity;
+import com.github.scoliossis.utils.TargetUtil;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 
@@ -35,20 +33,16 @@ public class ESP extends Module {
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
-        for (Entity entity : C.w().loadedEntityList) {
-            if (!shouldESP(entity)) continue;
-
-            EntityLivingBase livingEntity = (EntityLivingBase) entity;
-
-            if (square) renderSquare(livingEntity, event.partialTicks);
-            if (healthBar) renderHealthBar(livingEntity, event.partialTicks);
+        for (EntityLivingBase entity : TargetUtil.getAllValidTargets()) {
+            if (square) renderSquare(entity, event.partialTicks);
+            if (healthBar) renderHealthBar(entity, event.partialTicks);
         }
     }
 
     private static void renderSquare(EntityLivingBase entity, float partialTicks) {
         GL11.glPushMatrix();
         RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
-        Render3dUtil.transform2Dto3D(false);
+        Render3dUtil.rotateToPlayer(false);
 
         RenderUtil.drawRectOutline(-0.5, 0, 1, entity.height, 1, squareColour);
 
@@ -58,7 +52,7 @@ public class ESP extends Module {
     private static void renderHealthBar(EntityLivingBase entity, float partialTicks) {
         GL11.glPushMatrix();
         RenderUtil.glTranslate(Render3dUtil.getRelativeEntityPos(entity, partialTicks));
-        Render3dUtil.transform2Dto3D(false);
+        Render3dUtil.rotateToPlayer(false);
 
         float healthPercent = Math.min(entity.getHealth() / entity.getMaxHealth(), 1);
         float extraHealthPercent = entity.getAbsorptionAmount() / entity.getMaxHealth();
@@ -83,10 +77,6 @@ public class ESP extends Module {
         RenderUtil.drawRect(entity.width+healthBarIndent, backgroundHeight-healthBarIndent-absorptionBarHeight, healthBarWidth, absorptionBarHeight, absorptionColour);
 
         GL11.glPopMatrix();
-    }
-
-    private static boolean shouldESP(Entity entity) {
-        return entity instanceof EntityPlayer && entity != C.p();
     }
 
     @Override

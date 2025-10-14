@@ -44,7 +44,8 @@ public class MovementFix extends Module {
                 && !ModuleManager.isEnabled(Freecam.class);
     }
 
-    @SubscribeEvent
+    // goes first to allow the inputs to be modified later
+    @SubscribeEvent(priority = 1)
     public static void onMovementInputEvent(MovementInputEvent event) {
         if (!shouldMoveFix(C.p())) return;
         if (moveFixMode == MoveFixMode.Vanilla) return;

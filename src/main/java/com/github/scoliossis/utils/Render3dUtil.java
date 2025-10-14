@@ -129,10 +129,13 @@ public class Render3dUtil {
     }
 
 
-    public static void transform2Dto3D(boolean pitch) {
+    public static void rotateToPlayer(boolean pitch) {
         GL11.glRotatef(-C.p().rotationYaw, 0,1,0);
-        if (C.mc.gameSettings.thirdPersonView == 2) GL11.glRotatef(180, 0,1,0);
-        if (pitch) GL11.glRotatef(C.p().rotationPitch, 1,0,0);
+        if (C.mc.gameSettings.thirdPersonView == 2) {
+            GL11.glRotatef(180, 0, 1, 0);
+            if (pitch) GL11.glRotatef(-C.p().rotationPitch, 1,0,0);
+        }
+        else if (pitch) GL11.glRotatef(C.p().rotationPitch, 1,0,0);
     }
 
     public static Vec3 getRelativeEntityPos(Entity entity, float partialTicks) {

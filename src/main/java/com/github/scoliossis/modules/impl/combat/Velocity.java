@@ -3,8 +3,8 @@ package com.github.scoliossis.modules.impl.combat;
 import com.github.scoliossis.bridge.net.minecraft.network.play.server.S12PacketEntityVelocityBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
+import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
@@ -21,9 +21,6 @@ import net.minecraft.util.Vec3;
         category = Category.COMBAT
 )
 public class Velocity extends Module {
-    private static int velocityTick = -1;
-    private static boolean shouldDelay = false;
-
     @RegisterSubModule(name = "0 Check")
     public static boolean zeroCheck = true;
 
@@ -49,8 +46,13 @@ public class Velocity extends Module {
     @RegisterSubModule(name = "Max Delay Ticks", parent = "Mode", modeParentString = {"Delay", "Dynamic"}, min = 1, max = 20)
     public static int maxDelayTicks = 5;
 
+    private static boolean shouldJump = false;
+
+    private static boolean shouldDelay = false;
+    private static int blinkStartTick = -1;
+
     @SubscribeEvent
-    public static void onPacketReceived(PacketEvent.Receive event) {
+    public static void handleVelocityPacket(PacketEvent.Receive event) {
         if (!(event.packet instanceof S12PacketEntityVelocity)) return;
 
         S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
@@ -59,7 +61,7 @@ public class Velocity extends Module {
         S12PacketEntityVelocityBridge accessiblePacket = S12PacketEntityVelocityBridge.from(packet);
         Vec3 originalVelocity = new Vec3(packet.getMotionX()/8000d, packet.getMotionY()/8000d, packet.getMotionZ()/8000d);
 
-        if (originalVelocity.xCoord == 0 && originalVelocity.zCoord == 0 && zeroCheck) return;
+        if (Math.abs(originalVelocity.xCoord) <= 0.1 && Math.abs(originalVelocity.zCoord) <= 0.1 && zeroCheck) return;
 
         switch (velocityMode) {
             case Vanilla:
@@ -75,44 +77,49 @@ public class Velocity extends Module {
                 break;
 
             case Jump_Reset:
-                velocityTick = MovementUtil.ticks;
-                break;
-
             case Dynamic:
-                if (C.p().onGround) {
-                    velocityTick = MovementUtil.ticks;
+                if (C.p().onGround || velocityMode == VelocityMode.Jump_Reset) {
+                    shouldJump |= C.p().onGround;
                     break;
                 }
             case Delay:
+                if (shouldDelay) break;
+
                 event.setCancelled(true);
                 BlinkUtil.pushBlink(false, true, event.packet);
 
                 shouldDelay = true;
-                velocityTick = MovementUtil.ticks;
+                blinkStartTick = MovementUtil.ticks;
                 break;
         }
     }
 
     @SubscribeEvent
-    public static void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (velocityTick != -1 && (velocityMode == VelocityMode.Jump_Reset || (velocityMode == VelocityMode.Dynamic && !shouldDelay))) {
-            if (C.p().onGround) C.p().jump();
+    public static void jumpReset(MovementInputEvent event) {
+        if (!shouldJump) return;
 
-            velocityTick = -1;
-        }
-    }
+        event.movementInput.jump |= C.p().onGround;
+        shouldJump = false;
 
-    private static boolean shouldStopBlink() {
-        return velocityTick != -1 && shouldDelay && MovementUtil.ticks - velocityTick > maxDelayTicks;
+        // todo: check if looking in the right direction and sprinting
     }
 
     @SubscribeEvent
-    public static void onClientTickEvent(ClientTickEvent event) {
+    public static void resetBlink(ClientTickEvent event) {
         if (!shouldStopBlink()) return;
 
+        stopBlink();
+    }
+
+    private static boolean shouldStopBlink() {
+        return blinkStartTick != -1 && shouldDelay && (MovementUtil.ticks - blinkStartTick > maxDelayTicks || (C.p().onGround && velocityMode == VelocityMode.Dynamic));
+    }
+
+    private static void stopBlink() {
         BlinkUtil.popBlink(false, true);
-        velocityTick = -1;
+        blinkStartTick = -1;
         shouldDelay = false;
+        shouldJump |= velocityMode == VelocityMode.Dynamic && C.p().onGround;
     }
 
     @Override
@@ -127,9 +134,6 @@ public class Velocity extends Module {
 
     @Override
     protected void onDisable() {
-        if (velocityTick == -1) return;
-
-        BlinkUtil.popBlink(false, true);
-        velocityTick = -1;
+        if (blinkStartTick != -1) stopBlink();
     }
 }

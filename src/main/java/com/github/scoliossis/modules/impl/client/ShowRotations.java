@@ -14,7 +14,6 @@ import net.minecraft.util.MathHelper;
         category = Category.CLIENT,
         enabledByDefault = true
 )
-// todo: rotations are shown in inventory too. blehhh.
 public class ShowRotations extends Module {
     @RegisterSubModule(name = "Head Rotation")
     public static boolean headRotations = true;
@@ -30,22 +29,9 @@ public class ShowRotations extends Module {
     }
 
     public static float getRotation(EntityLivingBase instance, float value, RotationPart rotationPart, boolean current) {
-        if (instance != C.p() || !ModuleManager.isEnabled(ShowRotations.class)) return value;
-
-        switch (rotationPart) {
-            case PITCH:
-                return pitchRotations
-                        ? (current ? PlayerUtil.currentRotation().pitch : PlayerUtil.lastRotation().pitch)
-                        : value;
-            case HEAD_YAW:
-                return headRotations
-                        ? (current ? PlayerUtil.currentRotation().yaw : PlayerUtil.lastRotation().yaw)
-                        : value;
-            default:
-                return bodyRotations
-                        ? (current ? PlayerUtil.serverRenderYawOffset : PlayerUtil.prevServerRenderYawOffset)
-                        : value;
-        }
+        return (instance != C.p() || !ModuleManager.isEnabled(ShowRotations.class) || PlayerUtil.isRenderingGuiInventory || !rotationPart.shouldAlterRotation())
+                ? value
+                : rotationPart.getServerRotation(current);
     }
 
     // net.minecraft.entity.EntityLivingBase.updateDistance
@@ -90,7 +76,22 @@ public class ShowRotations extends Module {
     }
 
     public enum RotationPart {
-        HEAD_YAW, BODY_YAW, PITCH
+        HEAD_YAW, BODY_YAW, PITCH;
+
+        public boolean shouldAlterRotation() {
+            return this == PITCH ? pitchRotations : this == HEAD_YAW ? headRotations : bodyRotations;
+        }
+
+        public float getServerRotation(boolean current) {
+            switch (this) {
+                case PITCH:
+                    return (current ? PlayerUtil.currentRotation().pitch : PlayerUtil.lastRotation().pitch);
+                case HEAD_YAW:
+                    return (current ? PlayerUtil.currentRotation().yaw : PlayerUtil.lastRotation().yaw);
+                default:
+                    return (current ? PlayerUtil.serverRenderYawOffset : PlayerUtil.prevServerRenderYawOffset);
+            }
+        }
     }
 
     @Override

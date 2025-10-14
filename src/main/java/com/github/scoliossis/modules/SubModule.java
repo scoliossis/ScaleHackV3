@@ -35,17 +35,20 @@ public class SubModule {
     public void set(Object object) {
         try {
             // todo: clean this up, it's a mess.
-            if (field.getType() == double.class || field.getType() == float.class || field.getType() == long.class || field.getType() == int.class) {
-                double value = Double.parseDouble(object.toString());
-                double roundedValue = MathUtil.toNearest(value, annotation.increment());
-                // rounded to the right amount of decimals to stop random .1000000002's
-                roundedValue = MathUtil.roundTo(roundedValue, String.valueOf(annotation.increment()).split("\\.")[1].length());
-                double clampedValue = MathHelper.clamp_double(roundedValue, annotation.min(), annotation.max());
+            if (isSlider()) {
+                double value = MathHelper.clamp_double(
+                        MathUtil.roundTo(
+                                MathUtil.toNearest(Double.parseDouble(object.toString()), annotation.increment()),
+                                String.valueOf(annotation.increment()).split("\\.")[1].length()
+                        ),
+                        annotation.min(),
+                        annotation.max()
+                );
 
-                if (field.getType() == double.class) field.set(parentModule, clampedValue);
-                else if (field.getType() == float.class) field.set(parentModule, (float) clampedValue);
-                else if (field.getType() == long.class) field.set(parentModule, (long) clampedValue);
-                else field.set(parentModule, (int) clampedValue);
+                if (field.getType() == double.class) field.set(parentModule, value);
+                else if (field.getType() == float.class) field.set(parentModule, (float) value);
+                else if (field.getType() == long.class) field.set(parentModule, (long) value);
+                else field.set(parentModule, (int) value);
             }
             else field.set(parentModule, object);
 

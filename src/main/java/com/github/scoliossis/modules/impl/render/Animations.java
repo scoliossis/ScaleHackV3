@@ -134,8 +134,10 @@ public class Animations extends Module {
     }
 
     public static boolean shouldHideHeldItem() {
-        return ModuleManager.isEnabled(Freecam.class) ||
-                (C.mc.gameSettings.thirdPersonView == 0 && ModuleManager.isEnabled(Zoom.class) && Zoom.hideHand);
+        return C.mc.gameSettings.thirdPersonView == 0
+                && (ModuleManager.isEnabled(Freecam.class)
+                || (ModuleManager.isEnabled(Zoom.class) && Zoom.hideHand)
+                || ModuleManager.isEnabled(Freelook.class));
     }
 
     public static boolean fakeIsSwingInProgress = false;

@@ -4,14 +4,8 @@ import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.BlinkUtil;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.MovementUtil;
-import com.github.scoliossis.utils.TargetUtil;
+import com.github.scoliossis.modules.*;
+import com.github.scoliossis.utils.*;
 import lombok.Getter;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.EnumAction;
@@ -43,12 +37,11 @@ public class AutoBlock extends Module {
     @Getter private static boolean isBlocking, isServerBlocking = false;
 
     public static boolean isBlockingSwing() {
-        return C.p().isUsingItem() || lastUnblock == MovementUtil.ticks;
+        return C.p().isUsingItem() || PlayerUtil.getLastUnblock() == MovementUtil.ticks;
     }
 
     private static ItemStack itemInUse = null;
 
-    private static int lastUnblock = -1;
     private static int blinkTick = 0;
     private static boolean isBlinking = false;
 
@@ -119,8 +112,6 @@ public class AutoBlock extends Module {
             else {
                 KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setPressed(false);
                 C.mc.playerController.onStoppedUsingItem(C.p());
-
-                lastUnblock = MovementUtil.ticks;
             }
         }
 
@@ -129,7 +120,7 @@ public class AutoBlock extends Module {
     }
 
     public static boolean canSwingWhileBlocking() {
-        return autoblockMode == AutoBlockMode.Vanilla;
+        return autoblockMode == AutoBlockMode.Vanilla && ModuleManager.isEnabled(AutoBlock.class) && isServerBlocking;
     }
 
     @Override

@@ -7,11 +7,10 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.*;
+import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.RotationUtil;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.*;
 
 @RegisterModule(
         name = "Freecam",
@@ -27,15 +26,11 @@ public class Freecam extends Module {
     @RegisterSubModule(name = "Allow Interact", description = "Allows you to interact with the world while in freecam")
     public static boolean allowInteract = false;
 
-    // draw real player pos, probably isnt hard to just render the real player, but oh well, lazy ig
+    private static int perspectiveBefore = 0;
+
     @SubscribeEvent
     public static void onRenderWorld(RenderWorldEvent event) {
-        if (PlayerUtil.realPos == null) return;
-
-        float playerWidth = C.p().width;
-        float playerHeight = C.p().height;
-
-        Render3dUtil.draw3dBox(PlayerUtil.realPos.xCoord-playerWidth/2, PlayerUtil.realPos.yCoord, PlayerUtil.realPos.zCoord-playerWidth/2, playerWidth, playerHeight, playerWidth, new Color(255,100,200, 100), event.partialTicks);
+        C.mc.gameSettings.thirdPersonView = 1;
     }
 
     @SubscribeEvent
@@ -71,6 +66,9 @@ public class Freecam extends Module {
             return;
         }
 
+        perspectiveBefore = C.mc.gameSettings.thirdPersonView;
+        C.mc.gameSettings.thirdPersonView = 1;
+
         // get ready to rumble
         PlayerUtil.setFakeCameraPos(C.p().getPositionVector());
         PlayerUtil.realPos = C.p().getPositionVector();
@@ -90,5 +88,6 @@ public class Freecam extends Module {
         PlayerUtil.noClipRender = false;
 
         C.mc.renderGlobal.loadRenderers();
+        C.mc.gameSettings.thirdPersonView = perspectiveBefore;
     }
 }

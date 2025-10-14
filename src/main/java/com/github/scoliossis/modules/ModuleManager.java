@@ -237,7 +237,7 @@ public class ModuleManager {
                 }
                 else if (subModule.getField().getType().equals(Color.class)) {
                     LinkedTreeMap<String, Object> colorMap = (LinkedTreeMap<String, Object>) value;
-                    subModule.set(new Color((int) Double.parseDouble(colorMap.get("value").toString())));
+                    subModule.set(new Color((int) Double.parseDouble(colorMap.get("value").toString()), true));
                 }
                 else {
                     subModule.set(value);

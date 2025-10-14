@@ -23,6 +23,7 @@
     "net.minecraft.client.gui.GuiMainMenuMixin",
     "net.minecraft.client.gui.GuiScreenMixin",
     "net.minecraft.client.gui.GuiSlotMixin",
+    "net.minecraft.client.gui.inventory.GuiInventoryMixin",
     "net.minecraft.client.particle.BarrierMixin",
     "net.minecraft.client.renderer.EntityRendererMixin",
     "net.minecraft.client.renderer.ItemRendererMixin",
