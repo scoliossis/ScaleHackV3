@@ -1,5 +1,6 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import net.minecraft.util.Vec3;
@@ -32,5 +33,19 @@ public class MovementUtil {
         C.p().prevPosX = vec3.xCoord;
         C.p().prevPosY = vec3.yCoord;
         C.p().prevPosZ = vec3.zCoord;
+    }
+
+    private static boolean overridingSprintDown = false;
+
+    public static void setSprintPressed(boolean sprint) {
+        KeyBindingBridge.from(C.mc.gameSettings.keyBindSprint).bridge$setPressed(sprint);
+        overridingSprintDown = true;
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(ClientTickEvent event) {
+        if (!overridingSprintDown) return;
+
+        setSprintPressed(C.mc.gameSettings.keyBindSprint.isKeyDown());
     }
 }

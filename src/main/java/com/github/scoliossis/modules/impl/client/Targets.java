@@ -18,6 +18,7 @@ public class Targets extends Module {
 
     @AllArgsConstructor
     public enum Bot_Mode {
+        // .ordinal -1, mb. keeping for later ig idk
         Negative(-1),
         Hypixel(0),
         Cracked(1);

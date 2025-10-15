@@ -5,6 +5,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
@@ -46,10 +47,15 @@ public class Velocity extends Module {
     @RegisterSubModule(name = "Max Delay Ticks", parent = "Mode", modeParentString = {"Delay", "Dynamic"}, min = 1, max = 20)
     public static int maxDelayTicks = 5;
 
+    @RegisterSubModule(name = "Force Sprint", parent = "Mode", modeParentString = {"Jump_Reset", "Dynamic"})
+    public static boolean forceSprint = true;
+
     private static boolean shouldJump = false;
 
     private static boolean shouldDelay = false;
     private static int blinkStartTick = -1;
+
+    private static Vec3 lastVelocity;
 
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
@@ -62,6 +68,8 @@ public class Velocity extends Module {
         Vec3 originalVelocity = new Vec3(packet.getMotionX()/8000d, packet.getMotionY()/8000d, packet.getMotionZ()/8000d);
 
         if (Math.abs(originalVelocity.xCoord) <= 0.1 && Math.abs(originalVelocity.zCoord) <= 0.1 && zeroCheck) return;
+
+        if (!shouldDelay) lastVelocity = originalVelocity;
 
         switch (velocityMode) {
             case Vanilla:
@@ -94,14 +102,26 @@ public class Velocity extends Module {
         }
     }
 
+    @SubscribeEvent(priority = 2000)
+    public static void fixRotationForJumpReset(RotationEvent event) {
+        if (!shouldJump || lastVelocity == null || !forceSprint) return;
+
+        event.rotation.yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
+    }
+
     @SubscribeEvent
     public static void jumpReset(MovementInputEvent event) {
         if (!shouldJump) return;
 
+        if (forceSprint) {
+            event.movementInput.moveForward = event.movementInput.sneak ? (float) 0.3D : 1;
+            event.movementInput.moveStrafe = 0;
+
+            MovementUtil.setSprintPressed(true);
+        }
+
         event.movementInput.jump |= C.p().onGround;
         shouldJump = false;
-
-        // todo: check if looking in the right direction and sprinting
     }
 
     @SubscribeEvent
@@ -109,6 +129,11 @@ public class Velocity extends Module {
         if (!shouldStopBlink()) return;
 
         stopBlink();
+    }
+
+    private static float getYawFromVelocity(double x, double z) {
+        float yaw = (float) (Math.toDegrees(Math.atan2(x + z, x - z)) + 45);
+        return yaw > 180 ? yaw - 360 : yaw;
     }
 
     private static boolean shouldStopBlink() {

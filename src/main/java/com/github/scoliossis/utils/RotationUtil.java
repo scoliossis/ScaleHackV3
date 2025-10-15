@@ -1,5 +1,7 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
@@ -20,6 +22,9 @@ public class RotationUtil {
         double f = C.mc.gameSettings.mouseSensitivity * (double) 0.6F + (double) 0.2F;
         double sens = (f * f * f) * (double) 8.0F;
 
+        // fix AimModulo360 flag on grim
+        targetRotation.yaw = applyWrap360(currentRotation.yaw, targetRotation.yaw);
+
         Rotation difference = targetRotation.difference(currentRotation);
 
         float yawDelta = (float) MathUtil.toNearest(difference.yaw / 0.15d, sens) * 0.15F;
@@ -29,6 +34,15 @@ public class RotationUtil {
                 MathHelper.clamp_float(currentRotation.pitch - pitchDelta, -90, 90),
                 currentRotation.yaw - yawDelta
         );
+    }
+
+    public static float applyWrap360(float currentYaw, float targetYaw) {
+        float delta = targetYaw - currentYaw;
+
+        while (delta <= -180) delta += 360;
+        while (delta > 180) delta -= 360;
+
+        return currentYaw + delta;
     }
 
     public static Rotation getRotation(Vec3 to) {
@@ -81,6 +95,11 @@ public class RotationUtil {
         float yawDelta = rotationDifference.yaw / smoothing;
 
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
+    }
+
+    @SubscribeEvent(priority = 9999)
+    public static void onRotationTAIL(RotationEvent event) {
+        applyGcd(PlayerUtil.lastRotation(), event.rotation);
     }
 
     @AllArgsConstructor
