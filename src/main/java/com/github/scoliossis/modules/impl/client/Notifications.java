@@ -114,7 +114,7 @@ public class Notifications extends Module {
             float x = C.res().getScaledWidth() - w;
             float y = C.res().getScaledHeight() - h - gapBetweenNotifications;
 
-            Color[] colorsFade = RenderUtil.getColorsFade(x, w, RenderUtil.ThemeColours.Gay.colours, 3f);
+            Color[] colorsFade = RenderUtil.getColorsFade(x, w, RenderUtil.ThemeColours.Gay.getColours(), 3f);
 
             RenderUtil.glScissor(x, y, w, h);
 

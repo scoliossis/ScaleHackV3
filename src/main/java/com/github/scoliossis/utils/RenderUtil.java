@@ -1,6 +1,8 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.modules.impl.client.ThemeModule;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -522,47 +524,20 @@ public class RenderUtil {
 
     @AllArgsConstructor
     public enum ThemeColours {
-        Ocean(new Color[] { new Color(0x2BFF72), new Color(0x4FFFFF) }),
-        Sunrise(new Color[] { new Color(0xAA94CE), new Color(0xF4BE92) }),
-        Sunset(new Color[] { new Color(0xFF0010), new Color(0xFF7F1F) }),
-        Summer(new Color[] { new Color(0xFFD149), new Color(0xFF00D4) }),
-        Mystic(new Color[] { new Color(0x7041DD), new Color(0x56DEFC) }),
-        Green_Apple(new Color[] { new Color(0xC9DBD0), new Color(0x82F977) }),
-        Mushroom(new Color[] { new Color(0xD8000A), new Color(0xFFFFFF) }),
-        Twilight(new Color[] { new Color(0xD28DD6), new Color(0xC3F4BA) }),
-        Sky(new Color[] { new Color(0x658AD3), new Color(0x6AD2F2) }),
-        Hot_Pink(new Color[] { new Color(0x9823D1), new Color(0xF50087) }),
-        Lolipop(new Color[] { new Color(0x43ACCC), new Color(0xF23E47) }),
-        Hyper(new Color[] { new Color(0xCC00FF), new Color(0x3BC5EF) }),
-        Pastel(new Color[] { new Color(0xFFBAEC), new Color(0xC7D4ED) }),
-        Femboy(new Color[] { new Color(0xFFBAEC), new Color(0xC49AEA) }),
-        Mint(new Color[] { new Color(0x84FFB9), new Color(0xA0B8E8) }),
-        Emo(new Color[] { new Color(0x515151), new Color(0xFFFFFF) }),
-        Blossom(new Color[] { new Color(0xFF00BF), new Color(0xFFA0EF) }),
-        Peach(new Color[] { new Color(0xF1FF87), new Color(0xFF9D50) }),
-        Pinky(new Color[] { new Color(0xFFFCFC), new Color(0xFFADC1) }),
-        Blood(new Color[] {new Color(94, 2, 25), new Color(30, 1, 6)}),
-        Bright(new Color[] {new Color(0xa4036f), new Color(0x048ba8), new Color(0x16db93), new Color(0xefea5a), new Color(0xf29e4c)}),
-        Cool_Blue(new Color[] {new Color(0xcfe8ef), new Color(0xc6dbf0), new Color(0xaed1e6), new Color(0xa0c4e2), new Color(0x85c7de)}),
-        Pretty(new Color[] {new Color(0xFF6666), new Color(0xFF2891), new Color(0x872BFC), new Color(0xD27EFF), new Color(0xFFBBBB)}),
         Gay(new Color[] {new Color(255, 0, 0), new Color(255, 145, 0), new Color(255, 255, 0), new Color(0, 255, 0), new Color(0, 0, 255), new Color(150, 0, 255)}),
         Trans(new Color[] {new Color(91, 206, 250), new Color(245, 169, 184), new Color(255, 255, 255), new Color(245, 169, 184)}),
         Lesbian(new Color[] {new Color(213, 45, 0), new Color(239, 118, 39), new Color(255, 154, 86), new Color(255, 255, 255), new Color(209, 98, 164), new Color(181, 86, 144), new Color(163, 2, 98)}),
-        Pan(new Color[] {new Color(7, 141, 112), new Color(38, 206, 170), new Color(152, 232, 193), new Color(255, 255, 255), new Color(123, 173, 226), new Color(80, 73, 204), new Color(61, 26, 120),}),
-        Bi(new Color[] {new Color(214, 2, 112), new Color(214, 2, 112), new Color(155, 79, 150), new Color(0, 56, 168), new Color(0, 56, 168),});
+        Bi(new Color[] {new Color(214, 2, 112), new Color(214, 2, 112), new Color(155, 79, 150), new Color(0, 56, 168), new Color(0, 56, 168),}),
+        Custom(new Color[] {}) {
+            @Override
+            public Color[] getColours() {
+                return new Color[] {ThemeModule.customColour1, ThemeModule.customColour2};
+            }
+        };
 
-        public final Color[] colours;
+        @Getter
+        private final Color[] colours;
     }
-
-    public static Color[] HSLcolours = new Color[] {
-            new Color(255, 0, 0),
-            new Color(255, 255, 0),
-            new Color(0, 255, 0),
-            new Color(0, 255, 255),
-            new Color(0, 0, 255),
-            new Color(255, 0, 255),
-            new Color(255, 0, 0),
-    };
 
     public static Color interpolateColors(Color color1, Color color2, double percent) {
         return new Color(
@@ -573,37 +548,30 @@ public class RenderUtil {
         );
     }
 
-    public static int getColorsFadeSingle(int num1, int num2, double fadeNumber) {
-        // get dif from start to end
-        int numDif = num2 - num1;
+    public static double getColorsFadeValue(double value, Color[] colours, double fadeSpeed) {
+        double time = System.currentTimeMillis() * fadeSpeed * 0.001;
+        double fadeValue = value * -0.001;
 
-        // start color + (difference between start n end · percent down screen)
-        return (int) (num1 + (numDif * fadeNumber));
+        return (time + fadeValue) % colours.length;
     }
 
-    public static Color getColorsFade(double startNumber, Color[] colors, double fadeSpeed) {
-        // idk why the 0.001s are here. i wrote this LONG ago.
-        double number = (System.currentTimeMillis() * fadeSpeed * 0.001 + startNumber * 0.001 * colors.length);
+    public static Color getColorsFade(double value, Color[] colours, double fadeSpeed) {
+        double fadeTimeStart = getColorsFadeValue(value, colours, fadeSpeed);
 
-        // finding which color we are fading from and into
-        int num1 = (int) (number % colors.length);
-        int num2 = ((num1 + 1) % colors.length);
-
-        return new Color(
-                getColorsFadeSingle(colors[num1].getRed(), colors[num2].getRed(), number % 1),
-                getColorsFadeSingle(colors[num1].getGreen(), colors[num2].getGreen(), number % 1),
-                getColorsFadeSingle(colors[num1].getBlue(), colors[num2].getBlue(), number % 1),
-                getColorsFadeSingle(colors[num1].getAlpha(), colors[num2].getAlpha(), number % 1)
+        return interpolateColors(
+                colours[(int) fadeTimeStart],
+                colours[((int) fadeTimeStart + 1) % colours.length],
+                fadeTimeStart % 1
         );
     }
 
-    public static Color[] getColorsFade(double startNumber, double endNumber, Color[] colors, double fadeSpeed) {
-        // right to left, i HATE left to right >:)
-        startNumber *= -1;
-        endNumber *= -1;
-
-        return new Color[] {getColorsFade(startNumber, colors, fadeSpeed), getColorsFade(startNumber+endNumber, colors, fadeSpeed)};
+    public static Color[] getColorsFade(double start, double width, Color[] colours, double fadeSpeed) {
+        return new Color[] {
+                getColorsFade(start, colours, fadeSpeed),
+                getColorsFade(start+width, colours, fadeSpeed)
+        };
     }
+
 
     public static Color getOppositeColour(Color colour) {
         return new Color(255-colour.getRed(), 255-colour.getGreen(), 255-colour.getBlue(), colour.getAlpha());

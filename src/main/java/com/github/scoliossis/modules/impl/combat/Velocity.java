@@ -107,6 +107,9 @@ public class Velocity extends Module {
         if (!shouldJump || lastVelocity == null || !forceSprint) return;
 
         event.rotation.yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
+
+        // todo: autoblock still blocks, figure out a smarter way than just not letting ab block
+        MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindUseItem, false);
     }
 
     @SubscribeEvent
@@ -116,8 +119,7 @@ public class Velocity extends Module {
         if (forceSprint) {
             event.movementInput.moveForward = event.movementInput.sneak ? (float) 0.3D : 1;
             event.movementInput.moveStrafe = 0;
-
-            MovementUtil.setSprintPressed(true);
+            MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindSprint, true);
         }
 
         event.movementInput.jump |= C.p().onGround;

@@ -29,7 +29,7 @@ public class BlockBarrierMixin extends Block {
 
     @Override
     public EnumWorldBlockLayer getBlockLayer() {
-        // allows transparent/translucent textures
+        // allows transparent/translucent textures (solid does not)
         return EnumWorldBlockLayer.TRANSLUCENT;
     }
 

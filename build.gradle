@@ -113,6 +113,7 @@ jar {
     )
 }
 
+// todo: rewrite this, it isnt fire.
 // this was a simple way to make an event bus I thought, its also O(m) time complexity where m is number of different events i believe!
 void createEventBus() {
     ArrayList<Event> events = gatherEvents("")

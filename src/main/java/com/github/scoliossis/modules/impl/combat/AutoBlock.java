@@ -1,7 +1,5 @@
 package com.github.scoliossis.modules.impl.combat;
 
-import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
-import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
@@ -113,16 +111,7 @@ public class AutoBlock extends Module {
 
     private static void setBlocking(boolean clientSide, boolean serverSide) {
         if (serverSide != isServerBlocking) {
-            isServerBlocking = serverSide;
-
-            if (serverSide) {
-                KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setPressed(true);
-                MinecraftBridge.from(C.mc).bridge$rightClickMouse();
-            }
-            else {
-                KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setPressed(false);
-                C.mc.playerController.onStoppedUsingItem(C.p());
-            }
+            PlayerUtil.rightClick(isServerBlocking = serverSide);
         }
 
         isBlocking = clientSide;

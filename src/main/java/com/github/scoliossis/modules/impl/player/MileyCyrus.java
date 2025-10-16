@@ -23,7 +23,7 @@ public class MileyCyrus extends Module {
     @SubscribeEvent
     public static void onPlayerUpdateEvent(PlayerUpdateEvent event) {
         if (!serverSide)
-            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setPressed(C.p().ticksExisted % 2 == 0);
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(C.p().ticksExisted % 2 == 0);
     }
 
     @SubscribeEvent
@@ -39,6 +39,6 @@ public class MileyCyrus extends Module {
 
     @Override
     protected void onDisable() {
-        KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setPressed(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
+        KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
     }
 }

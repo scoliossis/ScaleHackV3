@@ -1,5 +1,7 @@
 package com.github.scoliossis.utils;
 
+import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
+import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
@@ -129,5 +131,12 @@ public class PlayerUtil {
     // shut up intellij, this shouldn't be inverted, because the name would be longer and its alr too long!
     public static boolean shouldInteractFromFakePos() {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
+    }
+
+    public static void rightClick(boolean down) {
+        KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setDown(down);
+
+        if (down) MinecraftBridge.from(C.mc).bridge$rightClickMouse();
+        else C.mc.playerController.onStoppedUsingItem(C.p());
     }
 }

@@ -113,7 +113,7 @@ public class ArrayListModule extends Module {
             if (animation != -1) GL11.glTranslated(width * (1 - animation), height * (1 - animation), 0);
             else animation = 1;
 
-            Color[] colours = dontUseTheme ? customColour.colours : ThemeModule.getThemeColours();
+            Color[] colours = dontUseTheme ? customColour.getColours() : ThemeModule.getThemeColours();
             Color colour = colours[i % colours.length];
             if (pulsingColour) colour = RenderUtil.getColorsFade(yTranslation*pulseMulti, height*pulseMulti, colours, pulseSpeed)[0];
 

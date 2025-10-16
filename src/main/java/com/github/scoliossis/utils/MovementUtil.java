@@ -1,9 +1,12 @@
 package com.github.scoliossis.utils;
 
-import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
+import lombok.Getter;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.Vec3;
+
+import java.util.HashMap;
 
 public class MovementUtil {
     public static int ticks = 0;
@@ -35,17 +38,15 @@ public class MovementUtil {
         C.p().prevPosZ = vec3.zCoord;
     }
 
-    private static boolean overridingSprintDown = false;
+    @Getter
+    private static final HashMap<KeyBinding, Boolean> overriddenKeybinds = new HashMap<>();
 
-    public static void setSprintPressed(boolean sprint) {
-        KeyBindingBridge.from(C.mc.gameSettings.keyBindSprint).bridge$setPressed(sprint);
-        overridingSprintDown = true;
+    public static void oneTickKeybind(KeyBinding keyBinding, boolean to) {
+        overriddenKeybinds.put(keyBinding, to);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = 999)
     public static void onClientTick(ClientTickEvent event) {
-        if (!overridingSprintDown) return;
-
-        setSprintPressed(C.mc.gameSettings.keyBindSprint.isKeyDown());
+        overriddenKeybinds.clear();
     }
 }

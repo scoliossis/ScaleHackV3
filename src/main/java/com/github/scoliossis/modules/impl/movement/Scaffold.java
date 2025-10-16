@@ -9,6 +9,7 @@ import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
@@ -95,16 +96,48 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Only When Jumping", description = "Only telly bridge if space held down", parent = "Bridging Mode", modeParentString = "Telly")
     public static boolean spaceDownOnly = true;
 
-    @RegisterSubModule(name = "Smooth Rotation", description = "Doesn't snap back to placing blocks", parent = "Bridging Mode", modeParentString = "Telly")
+    @RegisterSubModule(name = "Telly Mode", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    public static Telly_Mode tellyMode = Telly_Mode.Hypixel;
+    @AllArgsConstructor
+    public enum Telly_Mode {
+        Hypixel(true, 1, 4, 1),
+        Grim(false, 1, 0, 0),
+        Custom(false, -1, -1, -1) {
+            @Override
+            public boolean isSmoothRotationTelly() {
+                return Scaffold.smoothRotationTelly;
+            }
+            @Override
+            public int getTellyTicks() {
+                return Scaffold.tellyTicks;
+            }
+            @Override
+            public int getTellyPlaceDelay() {
+                return Scaffold.tellyPlaceDelay;
+            }
+            @Override
+            public int getTellyForwardTicks() {
+                return Scaffold.tellyForwardTicks;
+            }
+        };
+
+        @Getter public final boolean smoothRotationTelly;
+        @Getter public final int tellyTicks;
+        @Getter public final int tellyPlaceDelay;
+        @Getter public final int tellyForwardTicks;
+    }
+
+
+    @RegisterSubModule(name = "Smooth Rotation", description = "Doesn't snap back to placing blocks", parent = "Telly Mode", modeParentString = "Custom")
     public static boolean smoothRotationTelly = true;
 
-    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Telly Mode", modeParentString = "Custom")
     public static int tellyTicks = 1;
 
-    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
-    public static int tellyPlaceDelay = 3;
+    @RegisterSubModule(name = "Telly Place Delay", description = "Ticks Before Placing After Snapping Back", max = 5, parent = "Telly Mode", modeParentString = "Custom")
+    public static int tellyPlaceDelay = 4;
 
-    @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Telly Mode", modeParentString = "Custom")
     public static int tellyForwardTicks = 1;
 
     private static boolean shouldScaffold = false;
@@ -170,13 +203,13 @@ public class Scaffold extends Module {
         BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
 
-        if (shouldTelly() && C.p().onGround && (tellyBlockPlaced || tellyForwardTicks == 0)) {
+        if (shouldTelly() && C.p().onGround && (tellyBlockPlaced || tellyMode.getTellyForwardTicks() == 0)) {
             tellyTicksCounter = 0;
             tellyPlaceDelayCounter = 0;
         }
 
         tellyTicksCounter++;
-        if (tellyTicksCounter <= tellyTicks) return;
+        if (tellyTicksCounter <= tellyMode.getTellyTicks()) return;
 
         tellyPlaceDelayCounter++;
 
@@ -189,7 +222,7 @@ public class Scaffold extends Module {
 
         if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
 
-        if (shouldTelly() && tellyPlaceDelayCounter < tellyPlaceDelay) return;
+        if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay()) return;
 
         MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
@@ -276,9 +309,9 @@ public class Scaffold extends Module {
     }
 
     private static boolean shouldTellyJump(boolean jumpDown) {
-        return (tellyBlockPlaced && tellyForwardTicksCount >= tellyForwardTicks)
+        return (tellyBlockPlaced && tellyForwardTicksCount >= tellyMode.getTellyForwardTicks())
                 || (jumpDown && !lastJump)
-                || tellyForwardTicks == 0;
+                || tellyMode.getTellyForwardTicks() == 0;
     }
 
     // todo: mess.
@@ -444,12 +477,12 @@ public class Scaffold extends Module {
 
     private static boolean shouldSmoothRotate() {
         return shouldTelly()
-                && tellyPlaceDelayCounter < tellyPlaceDelay
-                && smoothRotationTelly;
+                && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay()
+                && tellyMode.isSmoothRotationTelly();
     }
 
     private static float getSmoothRotateFactor() {
-        return tellyPlaceDelay-tellyPlaceDelayCounter;
+        return tellyMode.getTellyPlaceDelay()-tellyPlaceDelayCounter;
     }
 
     private static int previousPerspective = 0;

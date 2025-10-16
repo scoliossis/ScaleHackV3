@@ -91,12 +91,16 @@ public class FontUtil {
 
     public static Random fontRandom = new Random();
 
+    public static void drawString(String string, float x, float y, int size, Color colour1, boolean shadow) {
+        drawString(string, x, y, size, new Color[] {colour1,colour1}, 3f, 1f, shadow);
+    }
+
     // todo: according to profiler, the issue is the finishRendering() function, mainly that it calls getTessalator().draw()
     //  so to optimize this i will somehow need to draw each character in order at the end of a frame? because i believe you cant just change texture mid render.
-    public static void drawString(String string, float x, float y, int size, Color colour, boolean shadow) {
+    public static void drawString(String string, float x, float y, int size, Color[] colours, double fadeSpeed, double fadeSpread, boolean shadow) {
         GL11.glPushMatrix();
 
-        Color originalColour = colour;
+        Color[] originalColours = colours;
 
         int scaleFactor = C.res().getScaleFactor();
         GL11.glScaled(1d / scaleFactor, 1d / scaleFactor, 1);
@@ -131,7 +135,10 @@ public class FontUtil {
                     underline = false;
                     bold = false;
                     strikethrough = false;
-                    colour = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), originalColour.getAlpha()/255d);
+
+                    for (int j = 0; j < colours.length; j++) {
+                        colours[j] = RenderUtil.setOpacity(new Color(C.mc.fontRendererObj.getColorCode(character)), originalColours[j].getAlpha()/255d);
+                    }
                 }
                 switch (character) {
                     case 'k':
@@ -151,7 +158,7 @@ public class FontUtil {
                         break;
 
                     case 'r':
-                        colour = originalColour;
+                        System.arraycopy(originalColours, 0, colours, 0, colours.length);
                         obfuscated = false;
                         underline = false;
                         bold = false;
@@ -187,12 +194,20 @@ public class FontUtil {
                 character = c1;
             }
 
+            Texture texture = textures.get(character);
+
+            float width = texture != null ? texture.width : C.mc.fontRendererObj.getCharWidth(character) * (size/10);
+
+            Color[] fadeColours = rainbow
+                    ? RenderUtil.getColorsFade(x, width, RenderUtil.ThemeColours.Gay.getColours(), fadeSpeed)
+                    : RenderUtil.getColorsFade(x*fadeSpread, width*fadeSpread, colours, fadeSpeed);
+
             if (FontUtil.isSpecialChar(character)) {
                 GL11.glPushMatrix();
                 GL11.glTranslated(x, y + size/3f, 0);
                 GL11.glScaled(0.1*size, 0.1*size, 1);
 
-                int width = C.mc.fontRendererObj.drawString(String.valueOf(character), 0, 0, colour.getRGB()) * (size/10);
+                C.mc.fontRendererObj.drawString(String.valueOf(character), 0, 0, fadeColours[0].getRGB());
                 if (width != 0) {
                     x += width;
                 }
@@ -201,23 +216,17 @@ public class FontUtil {
                 continue;
             }
 
-            Texture texture = textures.get(character);
             if (texture == null) continue;
-
-            float width = texture.width;
             float height = texture.height;
 
-            Color[] colours = new Color[] {colour, colour};
-            if (rainbow) colours = RenderUtil.getColorsFade(x, width, RenderUtil.ThemeColours.Gay.colours, 3f);
-
-            if (shadow) RenderUtil.drawRectTexturedColor(x + boldOffset, y + boldOffset, width, height, new Color(20,20,20, colours[0].getAlpha()), new Color(20,20,20, colours[1].getAlpha()), texture.dynamicTexture);
-            if (bold) RenderUtil.drawRectTexturedColor(x - boldOffset, y, width, height, colours[0], colours[1], texture.dynamicTexture);
+            if (shadow) RenderUtil.drawRectTexturedColor(x + boldOffset, y + boldOffset, width, height, new Color(20,20,20, fadeColours[0].getAlpha()), new Color(20,20,20, colours[1].getAlpha()), texture.dynamicTexture);
+            if (bold) RenderUtil.drawRectTexturedColor(x - boldOffset, y, width, height, fadeColours[0], fadeColours[1], texture.dynamicTexture);
 
             // draw letter!
-            RenderUtil.drawRectTexturedColor(x, y, width, height, colours[0], colours[1], texture.dynamicTexture);
+            RenderUtil.drawRectTexturedColor(x, y, width, height, fadeColours[0], fadeColours[1], texture.dynamicTexture);
 
-            if (strikethrough) RenderUtil.drawGradientLR(x, y + (height/1.7f), width, height/20f, colours[0], colours[1]);
-            if (underline) RenderUtil.drawGradientLR(x, y + (height / 1.2f), width, height/20f, colours[0], colours[1]);
+            if (strikethrough) RenderUtil.drawGradientLR(x, y + (height/1.7f), width, height/20f, fadeColours[0], fadeColours[1]);
+            if (underline) RenderUtil.drawGradientLR(x, y + (height / 1.2f), width, height/20f, fadeColours[0], fadeColours[1]);
 
             x += width;
         }

@@ -196,7 +196,7 @@ public class AltManagerScreen extends GuiScreen {
             boolean headHovered = ScreenUtil.isMouseOver(altX + headIndent, altY + headIndent, headSize, headSize, mX, mY);
             RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, headHovered ? Color.WHITE.darker() : Color.WHITE, texture);
 
-            Color[] colorsFade = RenderUtil.getColorsFade(translation[0]+altX, width, RenderUtil.ThemeColours.Gay.colours, 1);
+            Color[] colorsFade = RenderUtil.getColorsFade(translation[0]+altX, width, RenderUtil.ThemeColours.Gay.getColours(), 1);
             RenderUtil.drawGradientLR(altX, altY, width, 1, colorsFade[0], colorsFade[1]);
 
             FontUtil.drawString(altName, altX + xOffset, altY, altsFont, stringColor, true);

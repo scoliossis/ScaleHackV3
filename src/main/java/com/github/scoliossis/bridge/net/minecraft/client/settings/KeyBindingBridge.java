@@ -5,5 +5,5 @@ public interface KeyBindingBridge {
         return (KeyBindingBridge) instance;
     }
 
-    void bridge$setPressed(boolean pressed);
+    void bridge$setDown(boolean pressed);
 }

@@ -16,17 +16,24 @@ import java.awt.*;
         enabledByDefault = true
 )
 public class ThemeModule extends Module {
-    @RegisterSubModule(name = "Theme Colour")
+    @RegisterSubModule(name = "Client")
+    public static SubCategory client = new SubCategory();
+    @RegisterSubModule(name = "Font", parent = "Client")
+    public static FontUtil.Fonts font = FontUtil.Fonts.Atkinson;
+
+    @RegisterSubModule(name = "Theme Colour", parent = "Client")
     public static RenderUtil.ThemeColours themeColour = RenderUtil.ThemeColours.Gay;
+    @RegisterSubModule(name = "Custom Colour 1", parent = "Theme Colour", modeParentString = "Custom")
+    public static Color customColour1 = new Color(255,255,255);
+    @RegisterSubModule(name = "Custom Colour 2", parent = "Theme Colour", modeParentString = "Custom")
+    public static Color customColour2 = new Color(0, 0, 0);
 
-    @RegisterSubModule(name = "Replace Minecraft Font", description = "Replaces the minecraft font")
+    @RegisterSubModule(name = "Minecraft")
+    public static SubCategory minecraft = new SubCategory();
+    @RegisterSubModule(name = "Replace Minecraft Font", description = "Replaces the minecraft font", parent = "Minecraft")
     public static boolean globalFont = false;
-
     @RegisterSubModule(name = "Minecraft Font Size", parent = "Replace Minecraft Font", min = 5, max = 20)
     public static int minecraftFontSize = 10;
-
-    @RegisterSubModule(name = "Font")
-    public static FontUtil.Fonts font = FontUtil.Fonts.Atkinson;
 
     private static FontUtil.Fonts previousFont = null;
 
@@ -41,7 +48,7 @@ public class ThemeModule extends Module {
     }
 
     public static Color[] getThemeColours() {
-        return themeColour.colours;
+        return themeColour.getColours();
     }
 
     // force reload font

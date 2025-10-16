@@ -83,7 +83,8 @@ public class KillAura extends Module {
     private static EntityLivingBase lastTarget = null;
     private static int switchTargetIndex = 0;
 
-    @SubscribeEvent
+    // goes before scaffold because its less important imo
+    @SubscribeEvent(priority = 999)
     public static void onRotationEvent(RotationEvent event) {
         if (!shouldRotate()) return;
 
