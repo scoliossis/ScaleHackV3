@@ -10,9 +10,9 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.BlinkUtil;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.MovementUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.BlinkUtil;
+import com.github.scoliossis.utils.minecraft.MovementUtil;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.util.Vec3;
 

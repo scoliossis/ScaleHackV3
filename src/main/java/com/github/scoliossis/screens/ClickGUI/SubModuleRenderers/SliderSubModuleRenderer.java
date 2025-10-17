@@ -3,9 +3,9 @@ package com.github.scoliossis.screens.ClickGUI.SubModuleRenderers;
 import com.github.scoliossis.modules.SubModule;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
 import com.github.scoliossis.screens.ClickGUI.SubModuleRenderer;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
-import com.github.scoliossis.utils.ScreenUtil;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 

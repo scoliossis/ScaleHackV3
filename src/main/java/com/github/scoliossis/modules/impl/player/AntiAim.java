@@ -5,9 +5,9 @@ import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.utils.MathUtil;
-import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.client.MathUtil;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.RotationUtil;
 
 @RegisterModule(
         name = "Anti Aim",

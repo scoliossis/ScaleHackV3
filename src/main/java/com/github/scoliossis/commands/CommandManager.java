@@ -2,8 +2,8 @@ package com.github.scoliossis.commands;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 import lombok.Getter;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;

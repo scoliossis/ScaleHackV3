@@ -1,6 +1,7 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.Main;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.util.ChatComponentText;
 
 public class ChatUtil {

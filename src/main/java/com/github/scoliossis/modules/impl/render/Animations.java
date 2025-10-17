@@ -1,8 +1,8 @@
 package com.github.scoliossis.modules.impl.render;
 
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.EasingUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.render.EasingUtil;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.Vec3;
 import org.lwjgl.opengl.GL11;

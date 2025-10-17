@@ -1,6 +1,7 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.render;
 
 import com.github.scoliossis.Main;
+import com.github.scoliossis.utils.client.C;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import net.minecraft.client.renderer.texture.DynamicTexture;

@@ -4,9 +4,9 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.render.Freecam;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.MathUtil;
-import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.MathUtil;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import lombok.AllArgsConstructor;
 import net.minecraft.entity.Entity;
 

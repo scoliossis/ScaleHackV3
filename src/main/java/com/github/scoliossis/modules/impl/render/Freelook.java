@@ -3,9 +3,9 @@ package com.github.scoliossis.modules.impl.render;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.RotationUtil;
 
 @RegisterModule(
         name = "Freelook",

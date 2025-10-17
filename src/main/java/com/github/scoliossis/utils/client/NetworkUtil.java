@@ -1,4 +1,4 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.client;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

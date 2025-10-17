@@ -1,7 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.screens.MainMenuScreen;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;

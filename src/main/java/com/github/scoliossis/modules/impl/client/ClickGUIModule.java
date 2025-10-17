@@ -1,11 +1,13 @@
 package com.github.scoliossis.modules.impl.client;
 
-import com.github.scoliossis.Main;
-import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.Category;
+import com.github.scoliossis.modules.Module;
+import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.EasingUtil;
-import com.github.scoliossis.utils.ScreenUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
 
 @RegisterModule(
         name = "Click GUI",

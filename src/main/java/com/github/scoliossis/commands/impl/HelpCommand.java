@@ -3,7 +3,7 @@ package com.github.scoliossis.commands.impl;
 import com.github.scoliossis.Main;
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.commands.CommandManager;
-import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 
 import java.util.stream.Collectors;
 

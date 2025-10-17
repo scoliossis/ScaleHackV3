@@ -1,11 +1,11 @@
 package com.github.scoliossis.screens;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
-import com.github.scoliossis.utils.ScreenUtil;
-import com.github.scoliossis.utils.panorama.PanoramaRenderer;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
+import com.github.scoliossis.utils.render.panorama.PanoramaRenderer;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;

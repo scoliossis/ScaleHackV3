@@ -1,4 +1,4 @@
-package com.github.scoliossis.utils.panorama;
+package com.github.scoliossis.utils.render.panorama;
 
 import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import net.minecraft.client.Minecraft;

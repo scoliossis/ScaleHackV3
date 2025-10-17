@@ -3,7 +3,11 @@ package com.github.scoliossis.modules.impl.combat;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.*;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.BlinkUtil;
+import com.github.scoliossis.utils.minecraft.MovementUtil;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.TargetUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.entity.EntityLivingBase;
@@ -91,7 +95,8 @@ public class AutoBlock extends Module {
         if (autoblockMode == AutoBlockMode.Blink) {
             switch (blinkTick) {
                 case 0:
-                    setBlocking(true, true);
+                    if (!setBlocking(true, true)) return;
+
                     BlinkUtil.popBlink(true, false);
                     isBlinking = false;
                     break;
@@ -109,13 +114,17 @@ public class AutoBlock extends Module {
         }
     }
 
-    private static void setBlocking(boolean clientSide, boolean serverSide) {
+    private static boolean setBlocking(boolean clientSide, boolean serverSide) {
         if (serverSide != isServerBlocking) {
-            PlayerUtil.rightClick(isServerBlocking = serverSide);
+            boolean blockSuccess = PlayerUtil.rightClick(isServerBlocking = serverSide);
+
+            if (!blockSuccess) return false;
         }
 
         isBlocking = clientSide;
         itemInUse = C.p().getHeldItem();
+
+        return true;
     }
 
     public static boolean canSwingWhileBlocking() {

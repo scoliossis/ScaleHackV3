@@ -1,4 +1,4 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.client;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;

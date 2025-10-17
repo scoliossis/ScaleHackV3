@@ -3,8 +3,8 @@ package com.github.scoliossis.modules.impl.client;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 
 import java.awt.*;
 

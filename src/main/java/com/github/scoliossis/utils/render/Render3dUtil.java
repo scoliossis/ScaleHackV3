@@ -1,5 +1,6 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.render;
 
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockPos;

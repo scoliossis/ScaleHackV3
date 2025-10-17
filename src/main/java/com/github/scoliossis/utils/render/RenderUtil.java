@@ -1,6 +1,7 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.render;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
+import com.github.scoliossis.utils.client.C;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.client.renderer.GlStateManager;

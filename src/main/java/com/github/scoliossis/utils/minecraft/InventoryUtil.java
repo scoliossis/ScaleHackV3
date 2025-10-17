@@ -1,5 +1,6 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;

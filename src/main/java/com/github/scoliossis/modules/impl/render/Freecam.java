@@ -7,9 +7,9 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.RotationUtil;
 import org.lwjgl.input.Keyboard;
 
 @RegisterModule(

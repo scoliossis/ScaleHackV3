@@ -5,10 +5,11 @@ import com.github.scoliossis.modules.SubModule;
 import com.github.scoliossis.modules.impl.client.ClickGUIModule;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
 import com.github.scoliossis.screens.ClickGUI.SubModuleRenderer;
-import com.github.scoliossis.utils.EasingUtil;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.ScreenUtil;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
+import com.github.scoliossis.utils.render.FontUtil;
 import org.lwjgl.opengl.GL11;
+
 import java.awt.*;
 
 public class SubCategoryRenderer extends SubModuleRenderer {

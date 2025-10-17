@@ -1,7 +1,8 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.bridge.net.minecraft.client.entity.AbstractClientPlayerBridge;
 import com.github.scoliossis.modules.impl.client.Targets;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.network.NetworkPlayerInfo;

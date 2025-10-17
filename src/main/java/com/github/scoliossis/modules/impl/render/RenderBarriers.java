@@ -3,8 +3,8 @@ package com.github.scoliossis.modules.impl.render;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 
 @RegisterModule(
         name = "Render Barriers",

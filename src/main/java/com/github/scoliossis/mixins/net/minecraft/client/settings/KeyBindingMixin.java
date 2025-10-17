@@ -1,7 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.settings;
 
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
-import com.github.scoliossis.utils.MovementUtil;
+import com.github.scoliossis.utils.minecraft.MovementUtil;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.IntHashMap;
 import org.spongepowered.asm.mixin.Final;

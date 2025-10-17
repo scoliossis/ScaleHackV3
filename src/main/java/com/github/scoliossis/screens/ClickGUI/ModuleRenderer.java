@@ -2,7 +2,11 @@ package com.github.scoliossis.screens.ClickGUI;
 
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.impl.client.ClickGUIModule;
-import com.github.scoliossis.utils.*;
+import com.github.scoliossis.utils.client.KeybindHandler;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 

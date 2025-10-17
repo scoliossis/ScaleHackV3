@@ -1,7 +1,9 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.MathUtil;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;

@@ -1,6 +1,7 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
+import com.github.scoliossis.utils.client.C;
 
 import java.util.ArrayList;
 

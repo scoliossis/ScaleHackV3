@@ -2,8 +2,8 @@ package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

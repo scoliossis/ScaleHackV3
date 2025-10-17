@@ -1,7 +1,7 @@
 package com.github.scoliossis.events.impl;
 
 import com.github.scoliossis.events.Event;
-import com.github.scoliossis.utils.RotationUtil;
+import com.github.scoliossis.utils.minecraft.RotationUtil;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

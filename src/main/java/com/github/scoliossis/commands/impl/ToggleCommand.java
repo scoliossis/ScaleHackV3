@@ -2,7 +2,7 @@ package com.github.scoliossis.commands.impl;
 
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.utils.FuzzySearchUtil;
+import com.github.scoliossis.utils.client.FuzzySearchUtil;
 
 public class ToggleCommand extends Command {
     @Override

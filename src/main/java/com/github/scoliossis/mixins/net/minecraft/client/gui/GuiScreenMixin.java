@@ -3,7 +3,7 @@ package com.github.scoliossis.mixins.net.minecraft.client.gui;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.DrawScreenEvent;
 import com.github.scoliossis.screens.MainMenuScreen;
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

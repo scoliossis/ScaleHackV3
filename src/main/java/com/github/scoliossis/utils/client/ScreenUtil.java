@@ -1,9 +1,11 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.client;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.utils.render.RenderUtil;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiScreen;
+import org.lwjgl.input.Mouse;
 
 public class ScreenUtil {
     @Setter
@@ -17,7 +19,15 @@ public class ScreenUtil {
         }
     }
 
-    public static int[] fixMousePos(float mouseX, float mouseY) {
+    public static double getMouseX() {
+        return (double) Mouse.getX() / C.res().getScaleFactor();
+    }
+
+    public static double getMouseY() {
+        return (double) (C.mc.displayHeight - Mouse.getY()) / C.res().getScaleFactor();
+    }
+
+    public static int[] fixMousePos(double mouseX, double mouseY) {
         float[] translations = RenderUtil.getCurrentTranslation();
 
         mouseX -= translations[0];
@@ -29,7 +39,7 @@ public class ScreenUtil {
         return new int[] {(int) mouseX, (int) mouseY};
     }
 
-    public static boolean isMouseOver(float x, float y, float width, float height, int mouseX, int mouseY) {
+    public static boolean isMouseOver(double x, double y, double width, double height, double mouseX, double mouseY) {
         int[] mousePos = fixMousePos(mouseX, mouseY);
 
         return mousePos[0] >= x && mousePos[1] >= y && mousePos[0] <= x + width && mousePos[1] <= y + height;

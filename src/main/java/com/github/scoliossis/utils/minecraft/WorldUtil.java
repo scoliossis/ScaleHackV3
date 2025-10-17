@@ -1,5 +1,6 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
+import com.github.scoliossis.utils.client.C;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import net.minecraft.entity.Entity;

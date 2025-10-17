@@ -2,9 +2,8 @@ package com.github.scoliossis.screens.ClickGUI;
 
 import com.github.scoliossis.modules.SubCategory;
 import com.github.scoliossis.modules.SubModule;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.ScreenUtil;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.FontUtil;
 
 import java.awt.*;
 

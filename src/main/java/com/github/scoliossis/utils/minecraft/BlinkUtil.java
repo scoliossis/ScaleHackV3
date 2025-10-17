@@ -1,8 +1,9 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.INetHandlerPlayServer;

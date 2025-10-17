@@ -3,8 +3,8 @@ package com.github.scoliossis.modules.impl.client;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 

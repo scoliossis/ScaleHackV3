@@ -2,8 +2,8 @@ package com.github.scoliossis.commands.impl;
 
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FuzzySearchUtil;
+import com.github.scoliossis.utils.client.FuzzySearchUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 
 import java.util.Arrays;

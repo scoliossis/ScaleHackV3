@@ -1,9 +1,9 @@
 package com.github.scoliossis.commands.impl;
 
 import com.github.scoliossis.commands.Command;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
 import com.github.scoliossis.utils.alts.SessionUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 
 public class ChangeCommand extends Command {
 

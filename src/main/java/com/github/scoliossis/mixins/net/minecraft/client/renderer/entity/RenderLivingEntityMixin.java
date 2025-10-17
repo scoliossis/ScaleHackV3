@@ -2,9 +2,9 @@ package com.github.scoliossis.mixins.net.minecraft.client.renderer.entity;
 
 import com.github.scoliossis.modules.impl.client.ShowRotations;
 import com.github.scoliossis.modules.impl.render.Nametags;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.PlayerUtil;
-import com.github.scoliossis.utils.Render3dUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.render.Render3dUtil;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;

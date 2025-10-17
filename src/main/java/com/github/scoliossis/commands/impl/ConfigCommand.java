@@ -4,8 +4,8 @@ import com.github.scoliossis.Main;
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FuzzySearchUtil;
+import com.github.scoliossis.utils.client.FuzzySearchUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 
 import java.io.File;
 import java.util.List;

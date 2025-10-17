@@ -2,9 +2,8 @@ package com.github.scoliossis;
 
 import com.github.scoliossis.commands.CommandManager;
 import com.github.scoliossis.modules.ModuleManager;
-import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
-import com.github.scoliossis.utils.FontUtil;
 import com.github.scoliossis.utils.alts.microsoft.AuthServer;
+import com.github.scoliossis.utils.render.FontUtil;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -38,7 +37,6 @@ public class Main {
 
         ModuleManager.init();
         CommandManager.init();
-        ClickGUIScreen.loadCategoryPositions();
 
         new AuthServer();
     }

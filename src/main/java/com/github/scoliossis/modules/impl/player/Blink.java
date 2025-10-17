@@ -3,8 +3,8 @@ package com.github.scoliossis.modules.impl.player;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.BlinkUtil;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.BlinkUtil;
 
 @RegisterModule(
         name = "Blink",

@@ -1,4 +1,4 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.render;
 
 import lombok.AllArgsConstructor;
 

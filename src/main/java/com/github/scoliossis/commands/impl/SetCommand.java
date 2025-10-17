@@ -4,8 +4,8 @@ import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.commands.CommandManager;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.SubModule;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FuzzySearchUtil;
+import com.github.scoliossis.utils.client.FuzzySearchUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 import me.xdrop.fuzzywuzzy.model.ExtractedResult;
 import net.minecraft.util.MathHelper;
 

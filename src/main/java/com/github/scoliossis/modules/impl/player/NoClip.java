@@ -3,7 +3,7 @@ package com.github.scoliossis.modules.impl.player;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
 
 @RegisterModule(
         name = "No Clip",

@@ -1,4 +1,4 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
@@ -10,6 +10,7 @@ import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.render.Freecam;
+import com.github.scoliossis.utils.client.C;
 import lombok.Getter;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Vec3;
@@ -133,10 +134,15 @@ public class PlayerUtil {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
     }
 
-    public static void rightClick(boolean down) {
+    public static boolean rightClick(boolean down) {
+        if (down && MovementUtil.getOverriddenKeybinds().containsKey(C.mc.gameSettings.keyBindUseItem) && !MovementUtil.getOverriddenKeybinds().get(C.mc.gameSettings.keyBindUseItem))
+            return false;
+
         KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setDown(down);
 
         if (down) MinecraftBridge.from(C.mc).bridge$rightClickMouse();
         else C.mc.playerController.onStoppedUsingItem(C.p());
+
+        return true;
     }
 }

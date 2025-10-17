@@ -1,6 +1,6 @@
 package com.github.scoliossis.modules;
 
-import com.github.scoliossis.utils.EasingUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
 
 import java.awt.*;
 

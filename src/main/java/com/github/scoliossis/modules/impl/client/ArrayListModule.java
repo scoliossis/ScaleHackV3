@@ -4,10 +4,10 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ModuleStateChangeEvent;
 import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.EasingUtil;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.render.EasingUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;

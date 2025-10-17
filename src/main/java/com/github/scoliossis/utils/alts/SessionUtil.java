@@ -2,8 +2,8 @@ package com.github.scoliossis.utils.alts;
 
 import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.util.SessionBridge;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.NetworkUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.NetworkUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.util.Session;
 import org.apache.http.client.methods.CloseableHttpResponse;

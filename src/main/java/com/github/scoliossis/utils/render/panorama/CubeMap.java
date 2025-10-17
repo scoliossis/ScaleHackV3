@@ -1,6 +1,6 @@
-package com.github.scoliossis.utils.panorama;
+package com.github.scoliossis.utils.render.panorama;
 
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;

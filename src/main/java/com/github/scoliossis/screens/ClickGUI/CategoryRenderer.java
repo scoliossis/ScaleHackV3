@@ -2,11 +2,12 @@ package com.github.scoliossis.screens.ClickGUI;
 
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.impl.client.ClickGUIModule;
-import com.github.scoliossis.utils.EasingUtil;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.ScreenUtil;
+import com.github.scoliossis.utils.client.ScreenUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
+import com.github.scoliossis.utils.render.FontUtil;
 import net.minecraft.util.EnumChatFormatting;
 import org.lwjgl.opengl.GL11;
+
 import java.awt.*;
 
 public class CategoryRenderer {

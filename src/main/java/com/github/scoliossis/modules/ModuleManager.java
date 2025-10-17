@@ -1,10 +1,12 @@
 package com.github.scoliossis.modules;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.KeybindHandler;
+import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.KeybindHandler;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.draggable.DraggableRenderer;
 import com.google.gson.internal.LinkedTreeMap;
 import org.apache.commons.io.FileUtils;
 
@@ -62,6 +64,8 @@ public class ModuleManager {
         }
 
         loadConfig(Main.baseConfig);
+        DraggableRenderer.loadDraggingPositions();
+        ClickGUIScreen.loadCategoryPositions();
     }
 
     public static boolean isEnabled(Class<? extends Module> clazz) {

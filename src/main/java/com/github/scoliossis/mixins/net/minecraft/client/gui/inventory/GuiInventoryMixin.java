@@ -1,6 +1,6 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui.inventory;
 
-import com.github.scoliossis.utils.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.EntityLivingBase;
 import org.spongepowered.asm.mixin.Mixin;

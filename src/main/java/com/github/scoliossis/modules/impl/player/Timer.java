@@ -6,7 +6,7 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.TimerUtil;
+import com.github.scoliossis.utils.minecraft.TimerUtil;
 
 @RegisterModule(
         name = "Timer",

@@ -1,9 +1,9 @@
 package com.github.scoliossis.utils.alts.microsoft;
 
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.NetworkUtil;
 import com.github.scoliossis.utils.alts.Login;
 import com.github.scoliossis.utils.alts.SessionUtil;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.NetworkUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

@@ -4,7 +4,7 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 
 @RegisterModule(
         name = "No Slow",

@@ -1,9 +1,9 @@
 package com.github.scoliossis.modules;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.EasingUtil;
-import com.github.scoliossis.utils.MathUtil;
+import com.github.scoliossis.utils.client.MathUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

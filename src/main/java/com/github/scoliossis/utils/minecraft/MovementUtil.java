@@ -1,7 +1,8 @@
-package com.github.scoliossis.utils;
+package com.github.scoliossis.utils.minecraft;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
+import com.github.scoliossis.utils.client.C;
 import lombok.Getter;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.Vec3;

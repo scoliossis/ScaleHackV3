@@ -4,7 +4,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MoveFlyingEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.render.Freecam;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 import org.lwjgl.input.Keyboard;
 
 @RegisterModule(

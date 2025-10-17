@@ -1,7 +1,7 @@
 package com.github.scoliossis.modules.impl.movement;
 
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 
 @RegisterModule(
         name = "V-Clip",

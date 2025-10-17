@@ -3,9 +3,9 @@ package com.github.scoliossis.commands.impl;
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.impl.client.Notifications;
-import com.github.scoliossis.utils.ChatUtil;
-import com.github.scoliossis.utils.FuzzySearchUtil;
-import com.github.scoliossis.utils.KeybindHandler;
+import com.github.scoliossis.utils.client.FuzzySearchUtil;
+import com.github.scoliossis.utils.client.KeybindHandler;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 
 import java.util.List;
 import java.util.Map;

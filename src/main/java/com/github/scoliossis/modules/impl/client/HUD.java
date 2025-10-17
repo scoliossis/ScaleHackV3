@@ -1,18 +1,12 @@
 package com.github.scoliossis.modules.impl.client;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.RenderTickEvent;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.C;
-import com.github.scoliossis.utils.FontUtil;
-import com.github.scoliossis.utils.RenderUtil;
-import lombok.AllArgsConstructor;
+import com.github.scoliossis.modules.*;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.render.FontUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
+import com.github.scoliossis.utils.render.draggable.Draggable;
 import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 
@@ -25,6 +19,10 @@ import java.awt.*;
 public class HUD extends Module {
     @RegisterSubModule(name = "Watermark", parent = "Square")
     public static Watermark_Mode watermarkMode = Watermark_Mode.Gamesense;
+    public enum Watermark_Mode {
+        Gamesense,
+        Scale_Hack
+    }
 
     @RegisterSubModule(name = "GameSense Colour", parent = "Watermark", modeParentString = "Gamesense")
     public static Color senseColour = new Color(248, 97, 97);
@@ -48,48 +46,48 @@ public class HUD extends Module {
 
     private static final float GAMESENSE_BOX_HEIGHT = 12;
 
-    @AllArgsConstructor
-    public enum Watermark_Mode {
-        Gamesense(() -> {
-            String server = C.mc.isSingleplayer() ? "singleplayer" : C.mc.getCurrentServerData() != null ? C.mc.getCurrentServerData().serverIP : "unknown";
-            String remainingHudText = " " + Main.MOD_VERSION + " | " + Minecraft.getDebugFPS() + " fps | " + server;
+    public static Draggable gamesenseWatermark = new Draggable(
+            "Gamesense",
+            () -> {
+                String server = C.mc.isSingleplayer() ? "singleplayer" : C.mc.getCurrentServerData() != null ? C.mc.getCurrentServerData().serverIP : "unknown";
+                String remainingHudText = " " + Main.MOD_VERSION + " | " + Minecraft.getDebugFPS() + " fps | " + server;
 
-            float clientNameWidth = FontUtil.getStringWidth(CLIENT_NAME, GAMESENSE_FONT_SIZE);
-            float gamesenseWidth = FontUtil.getStringWidth(GAMESENSE_TAG, GAMESENSE_FONT_SIZE);
-            float remainingWidth = FontUtil.getStringWidth(remainingHudText, GAMESENSE_FONT_SIZE);
+                float clientNameWidth = FontUtil.getStringWidth(CLIENT_NAME, GAMESENSE_FONT_SIZE);
+                float gamesenseWidth = FontUtil.getStringWidth(GAMESENSE_TAG, GAMESENSE_FONT_SIZE);
+                float remainingWidth = FontUtil.getStringWidth(remainingHudText, GAMESENSE_FONT_SIZE);
 
-            float boxWidth = clientNameWidth + gamesenseWidth + remainingWidth + 4;
+                float boxWidth = clientNameWidth + gamesenseWidth + remainingWidth + 4;
 
-            RenderUtil.drawRect(0, 0, boxWidth+8, GAMESENSE_BOX_HEIGHT+8, new Color(60, 60, 60));
-            RenderUtil.drawRect(1, 1, boxWidth+6, GAMESENSE_BOX_HEIGHT+6, new Color(40, 40, 40));
-            RenderUtil.drawRect(2, 2, boxWidth+4, GAMESENSE_BOX_HEIGHT+4, new Color(60, 60, 60));
-            RenderUtil.drawRect(3, 3, boxWidth+2, GAMESENSE_BOX_HEIGHT+2, new Color(22, 22, 22));
+                RenderUtil.drawRect(0, 0, boxWidth+8, GAMESENSE_BOX_HEIGHT+8, new Color(60, 60, 60));
+                RenderUtil.drawRect(1, 1, boxWidth+6, GAMESENSE_BOX_HEIGHT+6, new Color(40, 40, 40));
+                RenderUtil.drawRect(2, 2, boxWidth+4, GAMESENSE_BOX_HEIGHT+4, new Color(60, 60, 60));
+                RenderUtil.drawRect(3, 3, boxWidth+2, GAMESENSE_BOX_HEIGHT+2, new Color(22, 22, 22));
 
-            FontUtil.drawString(CLIENT_NAME, 5, 4, GAMESENSE_FONT_SIZE, new Color(255,255,255), false);
-            FontUtil.drawString(GAMESENSE_TAG, 5 + clientNameWidth, 4, GAMESENSE_FONT_SIZE, senseColour, false);
-            FontUtil.drawString(remainingHudText, 5 + clientNameWidth + gamesenseWidth, 4, GAMESENSE_FONT_SIZE, new Color(255,255,255), false);
+                FontUtil.drawString(CLIENT_NAME, 5, 4, GAMESENSE_FONT_SIZE, new Color(255,255,255), false);
+                FontUtil.drawString(GAMESENSE_TAG, 5 + clientNameWidth, 4, GAMESENSE_FONT_SIZE, senseColour, false);
+                FontUtil.drawString(remainingHudText, 5 + clientNameWidth + gamesenseWidth, 4, GAMESENSE_FONT_SIZE, new Color(255,255,255), false);
 
-            Color[] colorsFade = straightBar
-                    ? new Color[] {senseColour, senseColour}
-                    : RenderUtil.getColorsFade(0, boxWidth, RenderUtil.ThemeColours.Gay.getColours(), 3f);
-            RenderUtil.drawGradientLR(3, 3, boxWidth+2, 1, colorsFade[0], colorsFade[1]);
-        }),
-        Scale_Hack(() -> {
-            FontUtil.drawString(CLIENT_NAME, 0, 0, fontSize, ThemeModule.getThemeColours(), watermarkFadeSpeed, watermarkFadeSpread, true);
-        });
+                Color[] colorsFade = straightBar
+                        ? new Color[] {senseColour, senseColour}
+                        : RenderUtil.getColorsFade(0, boxWidth, RenderUtil.ThemeColours.Gay.getColours(), 3f);
+                RenderUtil.drawGradientLR(3, 3, boxWidth+2, 1, colorsFade[0], colorsFade[1]);
 
-        public final Runnable drawing;
-    }
+                return new double[] {boxWidth+8, GAMESENSE_BOX_HEIGHT+8};
+            },
+            e -> ModuleManager.isEnabled(HUD.class) && watermarkMode == Watermark_Mode.Gamesense,
+            e -> true
+    );
 
-    @SubscribeEvent
-    public static void onRender2D(RenderTickEvent event) {
-        GL11.glPushMatrix();
-        GL11.glTranslated(WATERMARK_X, WATERMARK_Y, 0);
+    public static Draggable scalehakeWatermark = new Draggable(
+            "ScaleHakeWatermark2025Punjabi",
+            () -> {
+                FontUtil.drawString(CLIENT_NAME, 0, 0, fontSize, ThemeModule.getThemeColours(), watermarkFadeSpeed, watermarkFadeSpread, true);
 
-        watermarkMode.drawing.run();
-
-        GL11.glPopMatrix();
-    }
+                return new double[] {FontUtil.getStringWidth(CLIENT_NAME, fontSize), FontUtil.getFontHeight(fontSize)};
+            },
+            e -> ModuleManager.isEnabled(HUD.class) && watermarkMode == Watermark_Mode.Scale_Hack,
+            e -> true
+    );
 
     @Override
     protected void onEnable() {

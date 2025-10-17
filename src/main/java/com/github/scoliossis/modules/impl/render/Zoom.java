@@ -4,7 +4,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.events.impl.MouseScrolledEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.C;
+import com.github.scoliossis.utils.client.C;
 import net.minecraft.util.MathHelper;
 
 @RegisterModule(

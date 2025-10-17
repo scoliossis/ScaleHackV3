@@ -1,6 +1,6 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
-import com.github.scoliossis.utils.RenderUtil;
+import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.Tessellator;
 import org.spongepowered.asm.mixin.Mixin;
