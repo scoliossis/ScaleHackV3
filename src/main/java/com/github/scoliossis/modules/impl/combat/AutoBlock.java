@@ -116,9 +116,10 @@ public class AutoBlock extends Module {
 
     private static boolean setBlocking(boolean clientSide, boolean serverSide) {
         if (serverSide != isServerBlocking) {
-            boolean blockSuccess = PlayerUtil.rightClick(isServerBlocking = serverSide);
+            boolean blockSuccess = PlayerUtil.rightClick(serverSide);
 
             if (!blockSuccess) return false;
+            isServerBlocking = serverSide;
         }
 
         isBlocking = clientSide;
