@@ -19,6 +19,7 @@
     "net.minecraft.client.entity.AbstractClientPlayerMixin",
     "net.minecraft.client.entity.EntityPlayerSPMixin",
     "net.minecraft.client.gui.FontRendererMixin",
+    "net.minecraft.client.gui.GuiChatMixin",
     "net.minecraft.client.gui.GuiDisconnectedMixin",
     "net.minecraft.client.gui.GuiMainMenuMixin",
     "net.minecraft.client.gui.GuiScreenMixin",

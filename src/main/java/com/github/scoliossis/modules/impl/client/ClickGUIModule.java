@@ -1,9 +1,8 @@
 package com.github.scoliossis.modules.impl.client;
 
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.ClientTickEvent;
+import com.github.scoliossis.modules.*;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.ScreenUtil;
@@ -21,16 +20,23 @@ public class ClickGUIModule extends Module {
     @RegisterSubModule(name = "Open", parent = "Animations")
     public static EasingUtil.EasingFunctions openAnimation = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Open Length", parent = "Animations", max = 5000, increment = 100)
+    @RegisterSubModule(name = "Open Length", parent = "Animations", max = 5000, increment = 50)
     public static long openAnimationLength = 100;
 
     @RegisterSubModule(name = "Close", parent = "Animations")
     public static EasingUtil.EasingFunctions closeAnimation = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Close Length", parent = "Animations", max = 5000, increment = 100)
+    @RegisterSubModule(name = "Close Length", parent = "Animations", max = 5000, increment = 50)
     public static long closeAnimationLength = 100;
 
     private static final ClickGUIScreen screen = new ClickGUIScreen();
+
+    @SubscribeEvent
+    public static void onClientTick(ClientTickEvent event) {
+        if (!(C.mc.currentScreen instanceof ClickGUIScreen)) {
+            ModuleManager.getModule(ClickGUIModule.class).setEnabled(false);
+        }
+    }
 
     @Override
     protected void onEnable() {

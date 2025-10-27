@@ -24,7 +24,6 @@ import java.util.List;
         category = Category.COMBAT,
         dangerous = true
 )
-// todo add blink for blink mode
 public class AutoBlock extends Module {
     @RegisterSubModule(name = "Range", max = 6)
     public static double autoblockRange = 3;

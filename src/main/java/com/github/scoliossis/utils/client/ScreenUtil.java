@@ -40,6 +40,15 @@ public class ScreenUtil {
     }
 
     public static boolean isMouseOver(double x, double y, double width, double height, double mouseX, double mouseY) {
+        if (width < 0) {
+            width = -width;
+            x -= width;
+        }
+        if (height < 0) {
+            height = -height;
+            y -= height;
+        }
+
         int[] mousePos = fixMousePos(mouseX, mouseY);
 
         return mousePos[0] >= x && mousePos[1] >= y && mousePos[0] <= x + width && mousePos[1] <= y + height;

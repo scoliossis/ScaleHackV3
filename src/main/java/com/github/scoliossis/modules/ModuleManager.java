@@ -54,6 +54,20 @@ public class ModuleManager {
 
                 Class<? extends Module> moduleClazz = (Class<? extends Module>) clazz;
 
+                // dumb code ig. adds the extra settings to modules
+                SubModule general = new SubModule(m, moduleClazz.getField("general"));
+                SubModule hide = new SubModule(m, moduleClazz.getField("hide"));
+                SubModule keyOnly = new SubModule(m, moduleClazz.getField("keyOnly"));
+
+                general.getChildren().add(hide); general.getChildren().add(keyOnly);
+                hide.setParent(general); keyOnly.setParent(general);
+                // default to hiding render modules from arraylist
+                hide.set(annotation.category() == Category.RENDER || annotation.category() == Category.CLIENT);
+
+                m.getChildren().add(general);
+                m.getChildren().add(hide);
+                m.getChildren().add(keyOnly);
+
                 m.setAnnotation(annotation);
                 modules.put(moduleClazz, m);
                 m.setEnabled(annotation.enabledByDefault());

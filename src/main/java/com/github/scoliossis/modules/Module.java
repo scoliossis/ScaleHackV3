@@ -5,6 +5,7 @@ import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.ModuleStateChangeEvent;
 import lombok.Getter;
 import lombok.Setter;
+import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,8 @@ public abstract class Module {
     }
 
     public void setEnabled(boolean flag) {
+        flag = keybind != -1 && keyOnly ? Keyboard.isKeyDown(keybind) : flag;
+
         if (enabled != flag) {
             enabled = flag;
 
@@ -59,6 +62,15 @@ public abstract class Module {
     private List<SubModule> getVisibleSubModules() {
         return this.getChildren().stream().filter(SubModule::shouldRender).collect(Collectors.toList());
     }
+
+    @RegisterSubModule(name = "General")
+    public SubCategory general = new SubCategory();
+
+    @RegisterSubModule(name = "Hide", description = "Hides this module from the array list")
+    public boolean hide = false;
+
+    @RegisterSubModule(name = "Key Only", description = "Module enables if the keybind is held down")
+    public boolean keyOnly = false;
 
     protected abstract void onEnable();
     protected abstract void onDisable();

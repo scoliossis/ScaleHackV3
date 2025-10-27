@@ -19,6 +19,8 @@ public class KeybindHandler {
 
     @SubscribeEvent
     public static void onKeyPressed(KeyPressedEvent event) {
+        List<Module> modules = keybindsMap.get(event.keyCode);
+
         if (event.pressed) {
             if (listeningModule != null) {
                 registerKeybind(listeningModule, event.keyCode);
@@ -26,15 +28,17 @@ public class KeybindHandler {
                 Notifications.addNotification("Keybind", "&cSuccessfully bound &f" + listeningModule.getAnnotation().name() + " &cto &f" + getCharacter(event.keyCode));
 
                 listeningModule = null;
-            }
-            else {
-                List<Module> modules = keybindsMap.get(event.keyCode);
-
-                if (modules != null) {
-                    for (Module module : modules) module.toggle();
-                }
+                return;
             }
         }
+
+        if (modules != null) {
+            for (Module module : modules) {
+                if (module.keyOnly) module.setEnabled(event.pressed);
+                else if (event.pressed) module.toggle();
+            }
+        }
+
     }
 
     public static void registerKeybind(Module module, int keyCode) {
