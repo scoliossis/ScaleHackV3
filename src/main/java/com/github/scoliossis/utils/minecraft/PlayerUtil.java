@@ -16,8 +16,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
+    public static boolean canAttack() {
+        return !AutoBlock.isBlockingSwing() || AutoBlock.canSwingWhileBlocking();
+    }
+
     public static boolean attack(Entity target) {
-        if (!AutoBlock.isBlockingSwing() || AutoBlock.canSwingWhileBlocking()) {
+        if (canAttack()) {
             C.p().swingItem();
             C.mc.playerController.attackEntity(C.p(), target);
 
@@ -42,9 +46,7 @@ public class PlayerUtil {
 
     // i only learnt today (4/10/25) that when using a comma between initializing variables they arnt both set to the final value
     @Getter
-    private static RotationEvent
-            previousRotationEvent = new RotationEvent(new RotationUtil.Rotation(0,0)),
-            currentRotationEvent = previousRotationEvent;
+    private static RotationEvent previousRotationEvent, currentRotationEvent = new RotationEvent(new RotationUtil.Rotation(0,0));
 
     public static void setRotationEvent(RotationEvent event) {
         previousRotationEvent = currentRotationEvent;
@@ -53,7 +55,12 @@ public class PlayerUtil {
     }
 
     public static RotationUtil.Rotation lastRotation() {
-        return previousRotationEvent.rotation;
+        return previousRotationEvent == null ? currentRotationEvent.rotation : previousRotationEvent.rotation;
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(ClientTickEvent event) {
+        previousRotationEvent = null;
     }
 
     public static RotationUtil.Rotation currentRotation() {

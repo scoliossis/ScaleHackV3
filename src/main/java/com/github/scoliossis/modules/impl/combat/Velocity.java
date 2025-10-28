@@ -12,8 +12,11 @@ import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.BlinkUtil;
+import com.github.scoliossis.utils.minecraft.ChatUtil;
 import com.github.scoliossis.utils.minecraft.MovementUtil;
+import net.minecraft.item.EnumAction;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
+import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.Vec3;
 
 @RegisterModule(
@@ -25,10 +28,12 @@ public class Velocity extends Module {
     @RegisterSubModule(name = "0 Check")
     public static boolean zeroCheck = true;
 
+    @RegisterSubModule(name = "Ignore Teleport")
+    public static boolean ignoreTeleport = true;
+
     @RegisterSubModule(name = "Mode")
     public static VelocityMode velocityMode = VelocityMode.Dynamic;
 
-    // todo: add mode that delays velocity in air until land, lazy
     public enum VelocityMode {
         Vanilla,
         Keep,
@@ -57,12 +62,25 @@ public class Velocity extends Module {
 
     private static Vec3 lastVelocity;
 
+    private static boolean isDamage = false;
+
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
+        if (event.packet instanceof S19PacketEntityStatus) {
+            isDamage |= ((S19PacketEntityStatus) event.packet).getEntity(C.w()).getEntityId() != C.p().getEntityId();
+            return;
+        }
+
         if (!(event.packet instanceof S12PacketEntityVelocity)) return;
 
         S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
         if (packet.getEntityID() != C.p().getEntityId()) return;
+
+        if (ignoreTeleport && !isDamage) {
+            ChatUtil.prefixMessage("not damage taken");
+            return;
+        }
+        isDamage = false;
 
         S12PacketEntityVelocityBridge accessiblePacket = S12PacketEntityVelocityBridge.from(packet);
         Vec3 originalVelocity = new Vec3(packet.getMotionX()/8000d, packet.getMotionY()/8000d, packet.getMotionZ()/8000d);
@@ -108,8 +126,10 @@ public class Velocity extends Module {
 
         event.rotation.yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
 
-        // todo: autoblock still blocks, figure out a smarter way than just not letting ab block
-        MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindUseItem, false);
+        // eating is arguably very important, and would be annoying if cancelled.
+        if (C.p().getHeldItem() != null && (C.p().getHeldItem().getItemUseAction() != EnumAction.EAT || !C.p().isEating())) {
+            MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindUseItem, false);
+        }
     }
 
     @SubscribeEvent
@@ -128,7 +148,7 @@ public class Velocity extends Module {
 
     @SubscribeEvent
     public static void resetBlink(ClientTickEvent event) {
-        if (!shouldStopBlink()) return;
+        if (!BlinkUtil.isBlinking(false, true) || !shouldStopBlink()) return;
 
         stopBlink();
     }

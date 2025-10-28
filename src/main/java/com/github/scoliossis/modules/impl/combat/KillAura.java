@@ -119,7 +119,7 @@ public class KillAura extends Module {
     }
 
     private static boolean shouldAttack() {
-        return shouldAura() && MovementUtil.ticks >= nextAttackTick;
+        return shouldAura() && MovementUtil.ticks >= nextAttackTick && PlayerUtil.canAttack();
     }
 
     private static EntityLivingBase getTarget() {

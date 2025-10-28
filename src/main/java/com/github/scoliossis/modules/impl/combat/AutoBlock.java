@@ -36,12 +36,23 @@ public class AutoBlock extends Module {
     @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
     public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
 
+    @RegisterSubModule(name = "Legit Blink", description = "Unblocks randomly to look legit", parent = "Autoblock Mode", modeParentString = "Blink")
+    public static boolean legitBlink = true;
+    @RegisterSubModule(name = "Block Ratio", parent = "Legit Blink")
+    public static double blockRatio = 0.5;
+
     @AllArgsConstructor
     public enum Blink_Mode {
         Hypixel(2),
         Reduce(3),
-        Legit(4);
+        Random(-1) {
+            @Override
+            public int getBlinkTicks() {
+                return ((int) (Math.random() * 3) + 2);
+            }
+        };
 
+        @Getter
         public final int blinkTicks;
     }
 
@@ -54,6 +65,7 @@ public class AutoBlock extends Module {
     private static ItemStack itemInUse = null;
 
     private static int blinkTick = 0;
+    private static int nextBlinkTicks = 2;
     private static boolean isBlinking = false;
 
     private static AutoBlockMode lastAutoblockMode;
@@ -97,16 +109,21 @@ public class AutoBlock extends Module {
                     if (!setBlocking(true, true)) return;
 
                     BlinkUtil.popBlink(true, false);
-                    isBlinking = false;
+
+                    isBlinking = !legitBlink || Math.random() <= blockRatio;
+                    BlinkUtil.pushBlink(isBlinking, false);
                     break;
                 case 1:
-                    isBlinking = true;
-                    BlinkUtil.pushBlink(true, false);
                     setBlocking(true, false);
                     break;
             }
 
-            blinkTick = blinkTick == blinkMode.blinkTicks ? 0 : blinkTick+1;
+            blinkTick++;
+
+            if (blinkTick > nextBlinkTicks) {
+                blinkTick = 0;
+                nextBlinkTicks = blinkMode.getBlinkTicks();
+            }
         }
         else {
             setBlocking(true, true);

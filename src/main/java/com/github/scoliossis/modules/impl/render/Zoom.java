@@ -1,9 +1,11 @@
 package com.github.scoliossis.modules.impl.render;
 
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.events.impl.MouseScrolledEvent;
-import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.Category;
+import com.github.scoliossis.modules.Module;
+import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.util.MathHelper;
 
@@ -30,16 +32,6 @@ public class Zoom extends Module {
 
     @RegisterSubModule(name = "Smooth Look")
     public static boolean smoothLook = true;
-
-    @SubscribeEvent
-    public static void onKeyRelease(KeyPressedEvent event) {
-        if (!event.pressed) {
-            Module thiz = ModuleManager.getModule(Zoom.class);
-            if (event.keyCode == thiz.getKeybind()) {
-                thiz.setEnabled(false);
-            }
-        }
-    }
 
     private static float normalFOV = 0;
     private boolean wasSmoothLook = false;

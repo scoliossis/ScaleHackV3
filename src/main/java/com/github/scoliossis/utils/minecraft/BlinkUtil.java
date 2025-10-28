@@ -42,6 +42,10 @@ public class BlinkUtil {
         }
     }
 
+    public static boolean isBlinking(boolean sent, boolean recieved) {
+        return (sent && !blinkedSentPackets.isEmpty()) || (recieved && !blinkedRecievedPackets.isEmpty());
+    }
+
     public static void pushBlink(boolean sent, boolean recieved) {
         pushBlink(sent, recieved, null);
     }
