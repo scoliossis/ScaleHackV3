@@ -26,11 +26,6 @@ public class Main {
     public static final String configExtension = ".cfg";
     public static final String extraSavedFeaturesPath = baseFolderPath + "extras/";
 
-    static {
-        // load font here so it can be used immediately!!
-        FontUtil.loadFont(0);
-    }
-
     @EventHandler
     public void onInit(FMLInitializationEvent event) {
         Display.setTitle(MOD_NAME + " " + MOD_VERSION);

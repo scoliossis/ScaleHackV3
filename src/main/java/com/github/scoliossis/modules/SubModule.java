@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 @Getter
-// todo: add unique key
+// todo: add text submodule
 public class SubModule {
     private final Module parentModule;
 
@@ -143,7 +143,6 @@ public class SubModule {
         return this.parentModule.getUniqueKey(this.getAnnotation().name() + this.getAnnotation().description());
     }
 
-    // todo: this is dumb
     public ColorSettingValues colorSettingValues = new ColorSettingValues(false, 0, 0, 0);
 
     @AllArgsConstructor

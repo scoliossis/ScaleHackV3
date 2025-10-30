@@ -1,5 +1,7 @@
 package com.github.scoliossis.utils.render;
 
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.client.C;
 import lombok.AllArgsConstructor;
@@ -19,6 +21,13 @@ import java.nio.FloatBuffer;
 
 public class RenderUtil {
     public static RenderSide renderSide = RenderSide.Tick;
+
+    public static int ticks = 0;
+
+    @SubscribeEvent
+    public static void onRenderTick(RenderTickEvent event) {
+        ticks++;
+    }
 
     public enum RenderSide {
         GUI,
@@ -233,10 +242,10 @@ public class RenderUtil {
         drawGradient(x, y, w, h, bottomColour, topColour, bottomColour, topColour);
     }
 
-    public static void drawRectTextured(float x, float y, float w, float h, Color color, DynamicTexture texture) {
+    public static void drawRectTextured(float x, float y, float w, float h, Color color, int textureID) {
         beginRender();
         GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(texture.getGlTextureId());
+        GlStateManager.bindTexture(textureID);
         RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         glColor(color);
 
@@ -247,11 +256,10 @@ public class RenderUtil {
 
         finishRender();
     }
-
-    public static void drawRectTexturedColor(float x, float y, float w, float h, Color color1, Color color2, DynamicTexture texture) {
+    public static void drawRectTexturedColor(float x, float y, float w, float h, Color color1, Color color2, int textureID) {
         beginRender();
         GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(texture.getGlTextureId());
+        GlStateManager.bindTexture(textureID);
         RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
         addVertexTextureColor(x, y+h, color1, 0, 1);

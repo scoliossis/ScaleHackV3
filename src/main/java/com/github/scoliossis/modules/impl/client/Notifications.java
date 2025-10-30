@@ -65,7 +65,7 @@ public class Notifications extends Module {
 
     @SubscribeEvent
     public static void onModuleStateChangedEvent(ModuleStateChangeEvent event) {
-        addNotification("Module Toggled", event.module.getAnnotation().name() + (event.state ? " &aEnabled" : " &cDisabled"));
+        addNotification("Module Toggled", event.module.getAnnotation().name() + (event.state ? " §aEnabled" : " §cDisabled"));
     }
 
 

@@ -32,7 +32,7 @@ public abstract class Module {
     }
 
     public void setEnabled(boolean flag) {
-        flag = keybind != -1 && keyOnly ? Keyboard.isKeyDown(keybind) : flag;
+        flag = keybind != -1 && holdKeybind ? Keyboard.isKeyDown(keybind) : flag;
 
         if (enabled != flag) {
             enabled = flag;
@@ -69,8 +69,8 @@ public abstract class Module {
     @RegisterSubModule(name = "Hide", description = "Hides this module from the array list")
     public boolean hide = false;
 
-    @RegisterSubModule(name = "Key Only", description = "Module enables if the keybind is held down")
-    public boolean keyOnly = false;
+    @RegisterSubModule(name = "Hold Keybind", description = "Module enables if the keybind is held down")
+    public boolean holdKeybind = false;
 
     protected abstract void onEnable();
     protected abstract void onDisable();

@@ -1,7 +1,10 @@
 package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.ClientTickEvent;
+import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.BlinkUtil;
@@ -35,6 +38,9 @@ public class AutoBlock extends Module {
     public static AutoBlockMode autoblockMode = AutoBlockMode.Blink;
     @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
     public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
+
+    @RegisterSubModule(name = "Blink Pre", parent = "Autoblock Mode", modeParentString = "Blink", dangerous = true)
+    public static boolean blinkPre = false;
 
     @RegisterSubModule(name = "Legit Blink", description = "Unblocks randomly to look legit", parent = "Autoblock Mode", modeParentString = "Blink")
     public static boolean legitBlink = true;
@@ -70,9 +76,8 @@ public class AutoBlock extends Module {
 
     private static AutoBlockMode lastAutoblockMode;
 
-    // ticks before killaura
     @SubscribeEvent(priority = 999)
-    public static void onPlayerUpdateEvent(PlayerUpdateEvent event) {
+    public static void tickAutoBlock(PlayerUpdateEvent event) {
         if (C.p().getHeldItem() != itemInUse || autoblockMode != lastAutoblockMode) {
             stopBlocking();
         }
@@ -92,13 +97,14 @@ public class AutoBlock extends Module {
     }
 
     public static void stopBlocking() {
+        setBlocking(false, false);
+
         if (isBlinking) {
             blinkTick = 0;
             isBlinking = false;
             BlinkUtil.popBlink(true, false);
         }
 
-        setBlocking(false, false);
     }
 
 
@@ -110,10 +116,18 @@ public class AutoBlock extends Module {
 
                     BlinkUtil.popBlink(true, false);
 
-                    isBlinking = !legitBlink || Math.random() <= blockRatio;
-                    BlinkUtil.pushBlink(isBlinking, false);
+                    if (blinkPre) {
+                        isBlinking = !legitBlink || Math.random() <= blockRatio;
+                        BlinkUtil.pushBlink(isBlinking, false);
+                    }
+                    else isBlinking = false;
                     break;
                 case 1:
+                    if (!blinkPre) {
+                        isBlinking = !legitBlink || Math.random() <= blockRatio;
+                        BlinkUtil.pushBlink(isBlinking, false);
+                    }
+
                     setBlocking(true, false);
                     break;
             }
@@ -126,7 +140,7 @@ public class AutoBlock extends Module {
             }
         }
         else {
-            setBlocking(true, true);
+            setBlocking(true, autoblockMode == AutoBlockMode.Vanilla);
         }
     }
 

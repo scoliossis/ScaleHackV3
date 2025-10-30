@@ -24,7 +24,7 @@ public class ArrayListModule extends Module {
     public SubCategory colour = new SubCategory();
 
     @RegisterSubModule(name = "Don't Use Theme", parent = "Colour")
-    public static boolean dontUseTheme = false;
+    public static boolean dontUseTheme = true;
 
     @RegisterSubModule(name = "Colour Mode", parent = "Don't Use Theme")
     public static RenderUtil.ThemeColours customColour = RenderUtil.ThemeColours.Trans;
@@ -105,10 +105,10 @@ public class ArrayListModule extends Module {
                     float height = FontUtil.getFontHeight(fontSize) + gapY;
 
                     GL11.glPushMatrix();
-                    RenderUtil.glScissor(-C.res().getScaledWidth(), 0, C.res().getScaledWidth() * 4, height);
+                    RenderUtil.glScissor(x, 0, width, height);
 
                     double animation = EasingUtil.getAnimation(module.getUniqueKey("arraylist"));
-                    if (animation != -1) GL11.glTranslated(width * (1 - animation), height * (1 - animation), 0);
+                    if (animation != -1) GL11.glTranslated(pointingRight ? -width * (1 - animation) : width * (1 - animation), height * (1 - animation), 0);
                     else animation = 1;
 
                     Color[] colours = dontUseTheme ? customColour.getColours() : ThemeModule.getThemeColours();
@@ -137,7 +137,7 @@ public class ArrayListModule extends Module {
         if (noCapitals) name = name.toLowerCase();
         if (noSpaces) name = name.replaceAll(" ", "");
         String arrayListExtraInfo = module.arrayListExtraInfo();
-        return name + (arrayListExtraInfo.isEmpty() || !showMode ? "" : " &8[" + arrayListExtraInfo + "]");
+        return name + (arrayListExtraInfo.isEmpty() || !showMode ? "" : " §8[" + arrayListExtraInfo + "]");
     }
 
     @Override

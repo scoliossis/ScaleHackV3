@@ -66,8 +66,8 @@ public class Velocity extends Module {
 
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
-        if (event.packet instanceof S19PacketEntityStatus) {
-            isDamage |= ((S19PacketEntityStatus) event.packet).getEntity(C.w()).getEntityId() != C.p().getEntityId();
+        if (event.packet instanceof S19PacketEntityStatus && C.isInGame()) {
+            isDamage |= ((S19PacketEntityStatus) event.packet).getEntity(C.w()).getEntityId() == C.p().getEntityId();
             return;
         }
 
@@ -76,10 +76,7 @@ public class Velocity extends Module {
         S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
         if (packet.getEntityID() != C.p().getEntityId()) return;
 
-        if (ignoreTeleport && !isDamage) {
-            ChatUtil.prefixMessage("not damage taken");
-            return;
-        }
+        if (ignoreTeleport && !isDamage) return;
         isDamage = false;
 
         S12PacketEntityVelocityBridge accessiblePacket = S12PacketEntityVelocityBridge.from(packet);
@@ -111,8 +108,8 @@ public class Velocity extends Module {
             case Delay:
                 if (shouldDelay) break;
 
-                event.setCancelled(true);
                 BlinkUtil.pushBlink(false, true, event.packet);
+                event.setCancelled(true);
 
                 shouldDelay = true;
                 blinkStartTick = MovementUtil.ticks;

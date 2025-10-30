@@ -35,7 +35,6 @@ public abstract class FontRendererMixin {
     @Shadow
     protected abstract String bidiReorder(String p_bidiReorder_1_);
 
-    // todo: 3d text rendering is wrong, it isnt culled, you can see signs through walls.
     @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;resetStyles()V", shift = At.Shift.AFTER), cancellable = true)
     public void onDrawString(String text, float x, float y, int colourInt, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
         if (text == null || text.isEmpty()) return;
@@ -63,8 +62,7 @@ public abstract class FontRendererMixin {
             // i dont know why the scoreboard always has the colour 20FFFFFF, which is transparent.
             Color colour = new Color(colourInt, colourInt != 0x20FFFFFF);
 
-            FontUtil.drawString(text2, x, y - (ThemeModule.minecraftFontSize - 7), ThemeModule.minecraftFontSize, colour, dropShadow);
-            cir.setReturnValue((int) (x + FontUtil.getStringWidth(text2, ThemeModule.minecraftFontSize)) + (dropShadow ? 1 : 0));
+            cir.setReturnValue((int) (x + (int) FontUtil.drawString(text2, x, y - (ThemeModule.minecraftFontSize - 7), ThemeModule.minecraftFontSize, colour, dropShadow)));
         }
         else if (!text.equals(text2)) {
             cir.setReturnValue(this.drawString(text2, x, y, colourInt, dropShadow));

@@ -34,7 +34,7 @@ public class KeybindHandler {
 
         if (modules != null) {
             for (Module module : modules) {
-                if (module.keyOnly) module.setEnabled(event.pressed);
+                if (module.holdKeybind) module.setEnabled(event.pressed);
                 else if (event.pressed) module.toggle();
             }
         }

@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// todo: search bar
 public class ClickGUIScreen extends GuiScreen {
     public static final int fontSize = 10;
     public static int GUI_TAB_WIDTH = 125;

@@ -15,7 +15,6 @@ import java.awt.*;
         description = "Displays text on the screen with various degrees of helpfulness",
         category = Category.CLIENT
 )
-// todo: drag around
 public class HUD extends Module {
     @RegisterSubModule(name = "Watermark", parent = "Square")
     public static Watermark_Mode watermarkMode = Watermark_Mode.Gamesense;
@@ -81,7 +80,7 @@ public class HUD extends Module {
     public static Draggable scalehakeWatermark = new Draggable(
             "ScaleHakeWatermark2025Punjabi",
             () -> {
-                FontUtil.drawString(CLIENT_NAME, 0, 0, fontSize, ThemeModule.getThemeColours(), watermarkFadeSpeed, watermarkFadeSpread, true);
+                FontUtil.drawStringFade(CLIENT_NAME, 0, 0, fontSize, ThemeModule.getThemeColours(), watermarkFadeSpeed, watermarkFadeSpread, true);
 
                 return new double[] {FontUtil.getStringWidth(CLIENT_NAME, fontSize), FontUtil.getFontHeight(fontSize)};
             },

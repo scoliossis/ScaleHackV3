@@ -40,9 +40,7 @@ public class ThemeModule extends Module {
     @SubscribeEvent
     public static void onClientTickEvent(ClientTickEvent event) {
         if (font != previousFont) {
-            FontUtil.unloadFont();
-            FontUtil.setFontName(font.name);
-            FontUtil.loadFont(0);
+            FontUtil.setCurrentFont(font);
             previousFont = font;
         }
     }
@@ -54,9 +52,7 @@ public class ThemeModule extends Module {
     // force reload font
     @Override
     protected void onEnable() {
-        FontUtil.unloadFont();
-        FontUtil.setFontName(font.name);
-        FontUtil.loadFont(0);
+        FontUtil.setCurrentFont(font);
         previousFont = font;
     }
 

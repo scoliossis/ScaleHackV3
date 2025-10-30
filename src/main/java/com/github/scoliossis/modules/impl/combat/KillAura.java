@@ -1,6 +1,7 @@
 package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
@@ -97,7 +98,7 @@ public class KillAura extends Module {
     }
 
     @SubscribeEvent
-    public static void onPlayerUpdate(PlayerUpdateEvent event) {
+    public static void tryAttackTarget(PlayerUpdateEvent event) {
         if (!shouldAttack()) return;
 
         if (rotations == KillAuraRotations.None) {
@@ -129,6 +130,7 @@ public class KillAura extends Module {
                         rotations != KillAuraRotations.None
                 )
                 .stream()
+                .sorted(Comparator.comparingDouble(TargetUtil::getDistanceToEntity))
                 .sorted(Comparator.comparingDouble(entity -> {
                     if (killAuraTarget == KillAuraTargeting.Switch) return entity.getEntityId();
 

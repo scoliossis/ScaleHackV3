@@ -39,7 +39,8 @@ public class PlayerUtil {
         return lastUnblock;
     }
 
-    @SubscribeEvent
+    // run after blocking set
+    @SubscribeEvent(priority = 9000)
     public static void updateLastBlocking(MotionEvent event) {
         wasBlocking = C.p().isUsingItem();
     }

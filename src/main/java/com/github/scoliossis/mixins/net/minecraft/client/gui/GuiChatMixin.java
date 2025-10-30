@@ -1,6 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
 import com.github.scoliossis.commands.CommandManager;
+import com.github.scoliossis.utils.render.draggable.DraggableRenderer;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,5 +26,10 @@ public class GuiChatMixin {
     @Inject(method = "initGui", at = @At("HEAD"))
     public void initGui(CallbackInfo ci) {
         CommandManager.resetTabProgress();
+    }
+
+    @Inject(method = "onGuiClosed", at = @At("TAIL"))
+    public void onGuiClosed(CallbackInfo ci) {
+        DraggableRenderer.saveDraggables();
     }
 }

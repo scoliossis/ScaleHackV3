@@ -169,9 +169,9 @@ public class AltManagerScreen extends GuiScreen {
             boolean nameChange = canNameChange(alt);
 
             String altName = (renamedAlt != null && renamedAlt == alt) ? renameTextBox.getText() + "_" : alt.name;
-            String info = (alt.type.colour + alt.type.name + " &f| " +
-                    (banned ? "&cBanned" : "&aUnbanned") + " &f| " +
-                    (nameChange ? "&a" : "&c") + "Name &f| ");
+            String info = (alt.type.colour + alt.type.name + " §f| " +
+                    (banned ? "§cBanned" : "§aUnbanned") + " §f| " +
+                    (nameChange ? "§a" : "§c") + "Name §f| ");
             float infoStringWidth = FontUtil.getStringWidth(info, altInformationFont);
 
             float width = Math.max(FontUtil.getStringWidth(altName, altsFont), infoStringWidth + iconDiameter*2) + textX + xOffset;
@@ -194,7 +194,7 @@ public class AltManagerScreen extends GuiScreen {
             RenderUtil.drawRect(altX, altY, width, height, new Color(22,22,22, 100));
 
             boolean headHovered = ScreenUtil.isMouseOver(altX + headIndent, altY + headIndent, headSize, headSize, mX, mY);
-            RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, headHovered ? Color.WHITE.darker() : Color.WHITE, texture);
+            RenderUtil.drawRectTextured(altX + headIndent, altY + headIndent, headSize, headSize, headHovered ? Color.WHITE.darker() : Color.WHITE, texture.getGlTextureId());
 
             Color[] colorsFade = RenderUtil.getColorsFade(translation[0]+altX, width, RenderUtil.ThemeColours.Gay.getColours(), 1);
             RenderUtil.drawGradientLR(altX, altY, width, 1, colorsFade[0], colorsFade[1]);
@@ -205,8 +205,8 @@ public class AltManagerScreen extends GuiScreen {
             boolean binHovered = ScreenUtil.isMouseOver(altX + xOffset + infoStringWidth, altY + altFontHeight, iconDiameter, iconDiameter, mX, mY);
             boolean pencilHovered = ScreenUtil.isMouseOver(altX + xOffset + infoStringWidth + iconDiameter, altY + altFontHeight, iconDiameter, iconDiameter, mX, mY);
 
-            RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth, altY + altFontHeight, iconDiameter, iconDiameter, binHovered ? Color.LIGHT_GRAY : Color.WHITE, binTexture);
-            RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth + iconDiameter, altY + altFontHeight, iconDiameter, iconDiameter, pencilHovered ? Color.LIGHT_GRAY : Color.WHITE, pencilTexture);
+            RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth, altY + altFontHeight, iconDiameter, iconDiameter, binHovered ? Color.LIGHT_GRAY : Color.WHITE, binTexture.getGlTextureId());
+            RenderUtil.drawRectTextured(altX + xOffset + infoStringWidth + iconDiameter, altY + altFontHeight, iconDiameter, iconDiameter, pencilHovered ? Color.LIGHT_GRAY : Color.WHITE, pencilTexture.getGlTextureId());
 
             // i hate this codebase, too lazy to restart.
             if (headHovered) {
@@ -226,8 +226,8 @@ public class AltManagerScreen extends GuiScreen {
                     try {
                         Files.delete(Login.getAccountPath(alt.uuid));
                         AltManagerScreen.alts.remove(alt);
-                        Files.delete(Paths.get(Login.altsPath + "\\skins\\" + alt.uuid + ".png"));
-                        Login.addProgressReport("Removed alt: &6" + alt.name);
+                        Files.delete(Paths.get(Login.altsPath + "/skins/" + alt.uuid + ".png"));
+                        Login.addProgressReport("Removed alt: §6" + alt.name);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -239,10 +239,10 @@ public class AltManagerScreen extends GuiScreen {
                     if (nameChange) {
                         renamedAlt = alt;
                         renameTextBox.setText("");
-                        Login.addProgressReport("Type in a new name for account: &6" + alt.name + "&f.");
+                        Login.addProgressReport("Type in a new name for account: §6" + alt.name + "§f.");
                     }
                     else {
-                        Login.setErrorMessage("Cannot name change account: &6" + alt.name + "&f.");
+                        Login.setErrorMessage("Cannot name change account: §6" + alt.name + "§f.");
                     }
 
                     mouseButton = -1;
@@ -347,10 +347,9 @@ public class AltManagerScreen extends GuiScreen {
             String unbanDate = alt.json.get("unbanDate");
 
             if (unbanDate.equals("now")) return "";
-            if (unbanDate.equals("never")) return "&4Banned PERMANENTLY";
+            if (unbanDate.equals("never")) return "§4Banned PERMANENTLY";
 
-            // todo: format date.
-            return "Banned until: &c" + formatInstant(Instant.parse(unbanDate));
+            return "Banned until: §c" + formatInstant(Instant.parse(unbanDate));
         }
 
         else if (info.contains("Name") && alt.json.containsKey("nameChangeDate")) {
@@ -359,7 +358,7 @@ public class AltManagerScreen extends GuiScreen {
             if (nameChangeDate.equals("ALLOWED")) return "";
             if (nameChangeDate.contains("path")) return "Failed to get name change date.";
 
-            return "Cannot change name until: &c" + formatInstant(Instant.parse(nameChangeDate).plusSeconds(2592000));
+            return "Cannot change name until: §c" + formatInstant(Instant.parse(nameChangeDate).plusSeconds(2592000));
         }
 
         return "";

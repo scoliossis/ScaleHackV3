@@ -42,14 +42,14 @@ import java.util.concurrent.ForkJoinPool;
 public class Login {
     @AllArgsConstructor
     public enum AltTypes {
-        Cracked("Cracked", "&4", "Creates an account for cracked servers", () -> {
+        Cracked("Cracked", "§4", "Creates an account for cracked servers", () -> {
             try {
                 loggingInCracked = true;
             } catch (Exception e) {
                 setErrorMessage("Invalid clipboard data, please copy a session ID to clipboard!");
             }
         }),
-        Session("Session", "&c", "gets session id from clipboard", () -> {
+        Session("Session", "§c", "gets session id from clipboard", () -> {
             try {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String data = (String) clipboard.getData(DataFlavor.stringFlavor);
@@ -59,7 +59,7 @@ public class Login {
                 setErrorMessage("Invalid clipboard data, please copy a session ID to clipboard!");
             }
         }),
-        Cookie("Cookie", "&a", "gets cookie files/file path from clipboard", () -> {
+        Cookie("Cookie", "§a", "gets cookie files/file path from clipboard", () -> {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
             try {
@@ -79,8 +79,8 @@ public class Login {
                 }
             }
         }),
-        Microsoft("Microsoft", "&2", "opens microsoft oauth link in browser", Login::loginMicrosoft),
-        Open_Folder("Open Folder", "&4", "opens the alts folder", () -> {
+        Microsoft("Microsoft", "§2", "opens microsoft oauth link in browser", Login::loginMicrosoft),
+        Open_Folder("Open Folder", "§4", "opens the alts folder", () -> {
             try {
                 Desktop.getDesktop().open(altsPath.toFile());
             } catch (Exception e) {
@@ -318,7 +318,7 @@ public class Login {
         }
 
         MinecraftBridge.from(C.mc).bridge$setSession(SessionBridge.from(new Session(name, "6", "7", "lol")));
-        Login.addProgressReport("Username set to: &6" + name + "&f!");
+        Login.addProgressReport("Username set to: §6" + name + "§f!");
     }
 
     public static boolean loginSession(String accessToken) {
@@ -336,7 +336,7 @@ public class Login {
 
     public static void loginSession(Session session) {
         MinecraftBridge.from(C.mc).bridge$setSession(SessionBridge.from(session));
-        Login.addProgressReport("Successfully logged in to account: &6" + C.mc.getSession().getUsername() + "&f!");
+        Login.addProgressReport("Successfully logged in to account: §6" + C.mc.getSession().getUsername() + "§f!");
         saveAccount(AltTypes.Session, null, session);
     }
 
@@ -367,12 +367,12 @@ public class Login {
     }
 
     public static void setErrorMessage(String message) {
-        Notifications.addNotification("&4Error", message);
+        Notifications.addNotification("§4Error", message);
         System.err.println(message);
     }
 
     public static void addProgressReport(String message) {
-        Notifications.addNotification("&aLogin", message);
+        Notifications.addNotification("§aLogin", message);
         System.out.println(message);
     }
 

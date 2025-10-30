@@ -57,16 +57,16 @@ public class ModuleManager {
                 // dumb code ig. adds the extra settings to modules
                 SubModule general = new SubModule(m, moduleClazz.getField("general"));
                 SubModule hide = new SubModule(m, moduleClazz.getField("hide"));
-                SubModule keyOnly = new SubModule(m, moduleClazz.getField("keyOnly"));
+                SubModule holdKeybind = new SubModule(m, moduleClazz.getField("holdKeybind"));
 
-                general.getChildren().add(hide); general.getChildren().add(keyOnly);
-                hide.setParent(general); keyOnly.setParent(general);
+                general.getChildren().add(hide); general.getChildren().add(holdKeybind);
+                hide.setParent(general); holdKeybind.setParent(general);
                 // default to hiding render modules from arraylist
                 hide.set(annotation.category() == Category.RENDER || annotation.category() == Category.CLIENT);
 
                 m.getChildren().add(general);
                 m.getChildren().add(hide);
-                m.getChildren().add(keyOnly);
+                m.getChildren().add(holdKeybind);
 
                 m.setAnnotation(annotation);
                 modules.put(moduleClazz, m);

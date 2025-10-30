@@ -51,12 +51,7 @@ public class DraggableRenderer {
                         draggable.y = (int) (ScreenUtil.getMouseY() - draggingCoords.height);
                     }
 
-                    if (Mouse.isButtonDown(0)) {
-                        dragging = dragging == null && ScreenUtil.isMouseOver(0, 0, size[0], size[1], ScreenUtil.getMouseX(), ScreenUtil.getMouseY()) ? draggable : dragging;
-                    } else if (dragging != null) {
-                        saveDragging(draggable);
-                        dragging = null;
-                    }
+                    dragging = Mouse.isButtonDown(0) ? dragging == null && ScreenUtil.isMouseOver(0, 0, size[0], size[1], ScreenUtil.getMouseX(), ScreenUtil.getMouseY()) ? draggable : dragging : null;
                 }
 
                 GL11.glPopMatrix();
@@ -70,7 +65,7 @@ public class DraggableRenderer {
         return C.mc.currentScreen instanceof GuiChat;
     }
 
-    private static void saveDragging(Draggable draggable) {
+    public static void saveDraggables() {
         HashMap<String, int[]> draggingJSON = new HashMap<>();
 
         File file = new File(draggablesPath + "/" + draggablesFile);
@@ -83,8 +78,9 @@ public class DraggableRenderer {
             }
         }
 
-        draggingJSON.remove(draggable.id);
-        draggingJSON.put(draggable.id, new int[] {draggable.x, draggable.y});
+        for (Draggable draggable : draggables) {
+            draggingJSON.put(draggable.id, new int[] {draggable.x, draggable.y});
+        }
 
         try {
             Files.createDirectories(Paths.get(draggablesPath));

@@ -59,6 +59,6 @@ public class Zoom extends Module {
         C.mc.gameSettings.fovSetting = normalFOV;
         C.mc.gameSettings.smoothCamera = wasSmoothLook;
 
-        C.mc.renderGlobal.loadRenderers();
+        //C.mc.renderGlobal.loadRenderers();
     }
 }

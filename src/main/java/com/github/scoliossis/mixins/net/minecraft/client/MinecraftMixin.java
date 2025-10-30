@@ -83,6 +83,8 @@ public abstract class MinecraftMixin implements MinecraftBridge {
 
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 7))
     public boolean onAttemptClick(KeyBinding instance) {
+        if (!PlayerUtil.canAttack()) return false;
+
         boolean isPressed = instance.isPressed();
 
         if (isPressed && AutoBlock.canSwingWhileBlocking()) {
