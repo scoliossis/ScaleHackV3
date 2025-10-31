@@ -408,6 +408,8 @@ public class Scaffold extends Module {
 
     // todo: take next block into account.
     // maybe doing the block searching in here would be smarter but idk
+
+    // todo: use the same sorta thing as killaura rotations, this is an fps killer.
     private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, RotationEvent event) {
         MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, PlayerUtil.lastRotation());
 

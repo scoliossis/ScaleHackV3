@@ -46,7 +46,7 @@ public class BooleanSubModuleRenderer extends SubModuleRenderer {
                 (boolean) subModule.get() ? subModule.getParentModule().getAnnotation().category().color : Color.WHITE
         );
 
-        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, SUBMODULE_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, getSubmoduleTextY(), ClickGUIScreen.fontSize, Color.WHITE, true);
         GL11.glTranslated(0, SUBMODULE_HEIGHT, 0);
     }
 }

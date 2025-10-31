@@ -15,7 +15,6 @@ import java.awt.*;
 public class ModuleRenderer extends Module {
     private final int MODULE_HEIGHT = 17;
     private final float MODULE_TEXT_INDENT_X = 5;
-    private final float MODULE_TEXT_Y = ClickGUIScreen.BASE_Y + MODULE_HEIGHT / 2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize) / 2f + 1f;
     private final Color MODULE_COLOUR = new Color(37, 37, 37);
 
     public void render(Module module, int mouseX, int mouseY) {
@@ -45,10 +44,11 @@ public class ModuleRenderer extends Module {
         );
 
         float moduleNameTextX = ClickGUIScreen.BASE_X + ClickGUIScreen.GUI_TAB_WIDTH - MODULE_TEXT_INDENT_X - FontUtil.getStringWidth(moduleName, ClickGUIScreen.fontSize);
-        FontUtil.drawString(moduleName, moduleNameTextX, MODULE_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        float moduleNameTextY = ClickGUIScreen.BASE_Y + MODULE_HEIGHT / 2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize) / 2f + 1f;
+        FontUtil.drawString(moduleName, moduleNameTextX, moduleNameTextY, ClickGUIScreen.fontSize, Color.WHITE, true);
 
         String keybindName = KeybindHandler.listeningModule == module ? "[LISTENING]" : module.getKeybind() != -1 ? "[" + Keyboard.getKeyName(module.getKeybind()) + "]" : "";
-        FontUtil.drawString(keybindName, ClickGUIScreen.BASE_X + MODULE_TEXT_INDENT_X, MODULE_TEXT_Y, ClickGUIScreen.fontSize, ClickGUIScreen.secondaryColor, true);
+        FontUtil.drawString(keybindName, ClickGUIScreen.BASE_X + MODULE_TEXT_INDENT_X, moduleNameTextY, ClickGUIScreen.fontSize, ClickGUIScreen.secondaryColor, true);
 
         GL11.glTranslated(0, MODULE_HEIGHT, 0);
     }

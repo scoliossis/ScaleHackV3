@@ -14,7 +14,6 @@ import java.awt.*;
 
 public class SubCategoryRenderer extends SubModuleRenderer {
     public final int SUBCATEGORY_HEIGHT = 17;
-    public final float SUBCATEGORY_TEXT_Y = ClickGUIScreen.BASE_Y + SUBCATEGORY_HEIGHT/2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize)/2f;
 
     @Override
     public void handleMouse(int mouseX, int mouseY, SubModule subModule) {
@@ -38,7 +37,10 @@ public class SubCategoryRenderer extends SubModuleRenderer {
     public void render(int mouseX, int mouseY, SubModule subModule) {
         super.render(mouseX, mouseY, subModule);
 
-        FontUtil.drawCenteredString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X + ClickGUIScreen.GUI_TAB_WIDTH/2f, SUBCATEGORY_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        float subCategoryTextX = SUBMODULE_TEXT_X + ClickGUIScreen.GUI_TAB_WIDTH/2f;
+        float subCategoryTextY = ClickGUIScreen.BASE_Y + SUBCATEGORY_HEIGHT/2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize)/2f;
+
+        FontUtil.drawCenteredString(subModule.getAnnotation().name(), subCategoryTextX, subCategoryTextY, ClickGUIScreen.fontSize, Color.WHITE, true);
         GL11.glTranslated(0, SUBMODULE_HEIGHT, 0);
         ClickGUIScreen.drawGuiBackground(SUBCATEGORY_HEIGHT-SUBMODULE_HEIGHT, subModule.getParentModule().getAnnotation().category());
         GL11.glTranslated(0, SUBCATEGORY_HEIGHT-SUBMODULE_HEIGHT, 0);

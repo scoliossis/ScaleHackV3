@@ -7,12 +7,12 @@ import net.minecraft.network.Packet;
 
 public class PacketUtil {
     public static void sendPacket(Packet<?> packet) {
-        if (packet == null || C.mc.getNetHandler().getNetworkManager() == null) return;
+        if (C.mc.getNetHandler() == null) return;
         C.mc.getNetHandler().addToSendQueue(packet);
     }
 
     public static void receivePacket(Packet<?> packet) {
-        if (packet == null || C.mc.getNetHandler().getNetworkManager() == null || C.w() == null) return;
+        if (C.mc.getNetHandler() == null) return;
         NetworkManagerBridge.from(C.mc.getNetHandler().getNetworkManager()).bridge$processPacket((Packet<INetHandler>) packet);
     }
 }

@@ -121,7 +121,7 @@ public class ColourModuleRenderer extends SubModuleRenderer {
                 currentColour
         );
 
-        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, SUBMODULE_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, getSubmoduleTextY(), ClickGUIScreen.fontSize, Color.WHITE, true);
 
         GL11.glTranslated(0,SUBMODULE_HEIGHT,0);
 

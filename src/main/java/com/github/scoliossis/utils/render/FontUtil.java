@@ -1,299 +1,328 @@
 package com.github.scoliossis.utils.render;
 
 import com.github.scoliossis.Main;
-import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.events.impl.RenderTickEvent;
-import com.github.scoliossis.modules.impl.client.HUD;
-import com.github.scoliossis.modules.impl.client.ThemeModule;
+import com.github.scoliossis.bridge.net.minecraft.client.gui.FontRendererBridge;
 import com.github.scoliossis.utils.client.C;
-import com.github.scoliossis.utils.minecraft.ChatUtil;
-import com.github.scoliossis.utils.minecraft.MovementUtil;
 import lombok.AllArgsConstructor;
-import lombok.Setter;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.util.EnumChatFormatting;
-import org.lwjgl.opengl.Display;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 public class FontUtil {
-    @Setter
-    private static Fonts currentFont = ThemeModule.font;
+    private static Fonts currentFont;
+
+    private static final HashMap<Integer, FontTexture> fontTextures = new HashMap<>();
+
+    private final static BufferedImage DUMMY_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+    private final static Graphics2D DUMMY_GRAPHICS = setAntiAliasing(DUMMY_IMAGE.createGraphics());
+
+    @AllArgsConstructor
+    private static class FontID {
+        public int size;
+        public int modifiers;
+    }
+
+    @AllArgsConstructor
+    private static class FontTexture {
+        public int textureID;
+        public HashMap<Character, CharacterInfo> charBounds;
+        public int width;
+        public int height;
+    }
+
+    @AllArgsConstructor
+    private static class UnrenderedCharacter {
+        public char character;
+        public int x;
+        public Color colour;
+    }
+
+    @AllArgsConstructor
+    private static class CharacterInfo {
+        public double u;
+        public double uw;
+        public int width;
+    }
+
+    public static void setCurrentFont(Fonts font) {
+        fontTextures.clear();
+        currentFont = font;
+    }
+
+    private static FontTexture getFontTexture(int size) {
+        FontTexture fontTexture = fontTextures.get(size);
+        if (fontTexture != null) return fontTexture;
+
+        Font resizedFont = currentFont.font.deriveFont((float) size);
+
+        fontTexture = createFontTexture(resizedFont, getFontTextureBounds(resizedFont, LETTERS));
+        fontTextures.put(size, fontTexture);
+
+        return fontTexture;
+    }
 
     // list by minecraft in FontRenderer.renderChar, removed all glyphs.
-    private static final String letters = "ÀÁÂÈÊËÍÓÔÕÚßãõğİıŒœŞşŴŵž !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»πμΩ∞±≥≤÷≈°∙·√²\u0000";
-    private static final String colourCodes = "0123456789abcdef";
+    private static final String LETTERS = "ÀÁÂÈÊËÍÓÔÕÚßãõğİıŒœŞşŴŵž !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»πμΩ∞±≥≤÷≈°∙·√²\u0000";
+    private static final String COLOUR_CODES = "0123456789abcdef";
 
-    private static final Graphics2D graphics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
-    static {
+    private static final int X_SPACING = 4;
+    private static FontTexture createFontTexture(Font font, Rectangle stringBounds) {
+        int textureWidth = stringBounds.width + (LETTERS.length() * X_SPACING);
+
+        BufferedImage texture = new BufferedImage(textureWidth, stringBounds.height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = setAntiAliasing(texture.createGraphics());
+        graphics.setColor(Color.WHITE);
+        graphics.drawRect(0, 0, 1, 1);
+
+        graphics.setFont(font);
+
+        HashMap<Character, CharacterInfo> charBounds = new HashMap<>();
+        double x = X_SPACING;
+        for (char c : LETTERS.toCharArray()) {
+            double width = getFontTextureBounds(font, String.valueOf(c)).getWidth();
+
+            double u = x / textureWidth;
+            double uw = (x + width) / textureWidth;
+            charBounds.put(c, new CharacterInfo(u, uw, (int) width));
+
+            graphics.drawString(String.valueOf(c), (int) x, font.getSize());
+
+            x += width + X_SPACING;
+        }
+
+        graphics.dispose();
+
+        return new FontTexture(new DynamicTexture(texture).getGlTextureId(), charBounds, stringBounds.width, stringBounds.height);
+    }
+
+    private static Rectangle getFontTextureBounds(Font font, String string) {
+        DUMMY_GRAPHICS.setFont(font);
+        // getStringBounds takes into account the antialiasing i think.
+        return DUMMY_GRAPHICS.getFontMetrics().getStringBounds(string, DUMMY_GRAPHICS).getBounds();
+    }
+
+    private static Graphics2D setAntiAliasing(Graphics2D graphics) {
         graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        return graphics;
     }
 
-    // remove unused parts of cache after 1 render tick event
-    private static final ConcurrentHashMap<String, int[]> texturesCache = new ConcurrentHashMap<>();
-
-    // java.awt.Font is op !!!!
-    // generates a buffered image for a given string / character
-    private static int getStringTextureID(String string, Font font) {
-        int[] textureValues = texturesCache.get(string + font.getSize());
-
-        if (textureValues == null) {
-            Rectangle stringBounds = getStringBounds(string, font.getSize());
-            BufferedImage image = new BufferedImage(Math.max(1, graphics.getFontMetrics().getStringBounds(string, graphics).getBounds().width), Math.max(1, stringBounds.height), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D graphics = image.createGraphics();
-
-            // improves it a lot.
-            graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            graphics.setFont(font);
-            graphics.drawString(string, 0, font.getSize());
-
-            DynamicTexture dynamicTexture = new DynamicTexture(image);
-            texturesCache.put(string + font.getSize(), new int[] {dynamicTexture.getGlTextureId(), RenderUtil.ticks});
-            return new DynamicTexture(image).getGlTextureId();
-        }
-
-        textureValues[1] = RenderUtil.ticks;
-        texturesCache.put(string + font.getSize(), textureValues);
-        return textureValues[0];
-    }
-
-    // delete unneeded textures.
-    @SubscribeEvent
-    public static void onRenderTickEvent(RenderTickEvent e) {
-        for (String textureValues : texturesCache.keySet()) {
-            int[] textureValuesArray = texturesCache.get(textureValues);
-
-            if (textureValuesArray[1] + 1 < RenderUtil.ticks) {
-                TextureUtil.deleteTexture(textureValuesArray[0]);
-                texturesCache.remove(textureValues);
-            }
-        }
-    }
-
-    public static float drawStringFade(String string, double x, double y, float size, Color[] colour, double fadeSpeed, double fadeSpread, boolean dropShadow) {
+    public static float drawStringFade(String string, float x, float y, int size, Color[] colour, double fadeSpeed, double fadeSpread, boolean dropShadow) {
         if (string.isEmpty()) return 0;
 
-        int stringWidth = 0;
-
         float scaleFactor = getScaleFactor();
-        x = (int) x; y = (int) y; size *= scaleFactor;
+        size = (int) (size * scaleFactor);
 
-        Font font = currentFont.font.deriveFont(size);
-        GL11.glPushMatrix();
+        FontTexture fontTexture = getFontTexture(size);
+
+        x = Math.round(x); y = Math.round(y);
+        int fontHeight = fontTexture.height;
+
+        RenderUtil.beginRender();
+        GlStateManager.enableTexture2D();
+        GlStateManager.bindTexture(fontTexture.textureID);
+        RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         GL11.glTranslated(x, y, 0);
-        GL11.glScalef(1f/scaleFactor, 1f/scaleFactor, 1);
+        double downScale = 1d/scaleFactor;
+        GL11.glScaled(downScale, downScale, 1);
 
-        boolean obfuscated = false, bold = false, strikethrough = false, underline = false, italic = false;
+        ArrayList<UnrenderedCharacter> unrenderedCharacters = new ArrayList<>();
 
-        int index;
-        while ((index = string.indexOf("§")) != -1) {
-            if (index + 1 >= string.length()) break;
+        boolean randomStyle = false, boldStyle = false, strikethroughStyle = false, underlineStyle = false, italicStyle = false;
 
-            String colourlessPart = string.substring(0, index);
-            int partWidth = drawStringParts(colourlessPart, font, colour, fadeSpeed, fadeSpread, stringWidth, size, obfuscated, dropShadow, bold, strikethrough, underline, italic);
-            stringWidth += partWidth;
+        int totalWidth = 0;
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
 
-            // updating colour codes
-            String colourCodeString = string.substring(index + 1, index + 2);
-            char colourCode = colourCodeString.charAt(0);
-            if (colourCodes.contains(colourCodeString)) {
-                Color colourCodeColour = new Color(C.mc.fontRendererObj.getColorCode(colourCode));
-                for (int i = 0; i < colour.length; i++) colour[i] = new Color(colourCodeColour.getRed(), colourCodeColour.getGreen(), colourCodeColour.getBlue(), colour[i].getAlpha());
-                obfuscated = bold = strikethrough = underline = italic = false;
-            }
-            else {
-                switch (colourCode) {
-                    case 'k':
-                        obfuscated = true;
-                        break;
-                    case 'l':
-                        bold = true;
-                        break;
-                    case 'm':
-                        strikethrough = true;
-                        break;
-                    case 'n':
-                        underline = true;
-                        break;
-                    case 'o':
-                        italic = true;
-                        break;
-
-                    case 'r':
-                        for (int i = 0; i < colour.length; i++) colour[i] = new Color(255,255,255,colour[i].getAlpha());
-                        obfuscated = bold = strikethrough = underline = italic = false;
-                        break;
+            if (c == '§') {
+                String colourCodeString = string.substring(i + 1, i + 2);
+                char colourCode = colourCodeString.charAt(0);
+                if (COLOUR_CODES.contains(colourCodeString)) {
+                    Color colourCodeColour = new Color(C.mc.fontRendererObj.getColorCode(colourCode));
+                    for (int j = 0; j < colour.length; j++) colour[j] = new Color(colourCodeColour.getRed(), colourCodeColour.getGreen(), colourCodeColour.getBlue(), colour[j].getAlpha());
+                    randomStyle = boldStyle = strikethroughStyle = underlineStyle = italicStyle = false;
                 }
+                else {
+                    switch (colourCode) {
+                        case 'k':
+                            randomStyle = true;
+                            break;
+                        case 'l':
+                            boldStyle = true;
+                            break;
+                        case 'm':
+                            strikethroughStyle = true;
+                            break;
+                        case 'n':
+                            underlineStyle = true;
+                            break;
+                        case 'o':
+                            italicStyle = true;
+                            break;
+
+                        default:
+                            for (int j = 0; j < colour.length; j++) colour[j] = new Color(255,255,255,colour[j].getAlpha());
+                            randomStyle = boldStyle = strikethroughStyle = underlineStyle = italicStyle = false;
+                            break;
+                    }
+                }
+
+                i++;
+                continue;
             }
 
-            // remove already drawn part of string
-            string = string.substring(Math.min(string.length(), index + 2));
+            if (randomStyle) c = scrambleCharacter(c);
+
+            CharacterInfo characterBounds = fontTexture.charBounds.get(c);
+
+            if (characterBounds == null) {
+                int characterWidth = getMinecraftCharWidth(c, size);
+                Color colourFade = RenderUtil.getColorsFade((x + totalWidth)*fadeSpread, colour, fadeSpeed);
+
+                unrenderedCharacters.add(new UnrenderedCharacter(c, (int) (totalWidth / scaleFactor), colourFade));
+                totalWidth += characterWidth;
+                continue;
+            }
+
+            float u = (float) characterBounds.u;
+            float uw = (float) characterBounds.uw;
+            int characterWidth = characterBounds.width;
+
+            Color[] colourFade = RenderUtil.getColorsFade((x + totalWidth)*fadeSpread, characterWidth*fadeSpread, colour, fadeSpeed);
+
+            if (dropShadow) {
+                // fun fact: to draw the shadow, the font colour is set to:
+                //  colour = (colour & 16579836) >> 2 | colour & -16777216;
+                // for white, this simplifies down to new Color(126, 126, 126)
+                // which is close to Color.GRAY!
+                Color[] shadowColours = new Color[] {
+                        new Color((colourFade[0].getRGB() & 16579836) >> 2 | colourFade[0].getRGB() & -16777216),
+                        new Color((colourFade[1].getRGB() & 16579836) >> 2 | colourFade[1].getRGB() & -16777216)
+                };
+                drawCharacter(totalWidth + 2, 3, characterWidth, fontHeight, shadowColours, u, uw);
+            }
+            drawCharacter(totalWidth, 0, characterWidth, fontHeight, colourFade, u, uw);
+            if (boldStyle) drawCharacter(totalWidth + 1, 0, characterWidth, fontHeight, colourFade, u, uw);
+
+            float filledTextureUW = 1f / fontTexture.width;
+            if (underlineStyle) drawCharacter(totalWidth, fontHeight, characterWidth, 1, colourFade, 0, filledTextureUW);
+            if (strikethroughStyle) drawCharacter(totalWidth, fontHeight/2f, characterWidth, 1, colourFade, 0, filledTextureUW);
+
+            // todo: impl italics, sounds like effort and they dont look good anyway.
+
+            totalWidth += characterWidth;
+        }
+        RenderUtil.finishRender();
+
+        for (UnrenderedCharacter unrenderedCharacter : unrenderedCharacters) {
+            drawMinecraftString(String.valueOf(unrenderedCharacter.character), x + unrenderedCharacter.x, y, size / scaleFactor, unrenderedCharacter.colour, dropShadow);
         }
 
-        stringWidth += drawStringParts(string, font, colour, fadeSpeed, fadeSpread, stringWidth, size, obfuscated, dropShadow, bold, strikethrough, underline, italic);
-        GL11.glPopMatrix();
-
-        return stringWidth / scaleFactor;
+        return totalWidth / scaleFactor;
     }
 
-    public static float drawString(String string, double x, double y, float size, Color colour, boolean dropShadow) {
+    private static void drawCharacter(float x, float y, float w, float h, Color[] colours, float u, float uw) {
+        RenderUtil.addVertexTextureColor(x, h, colours[0], u, 1);
+        RenderUtil.addVertexTextureColor(x + w, h, colours[1], uw, 1);
+        RenderUtil.addVertexTextureColor(x + w, y, colours[1], uw, 0);
+        RenderUtil.addVertexTextureColor(x, y, colours[0], u, 0);
+    }
+
+    public static float drawString(String string, float x, float y, int size, Color colour, boolean dropShadow) {
         return drawStringFade(string, x, y, size, new Color[] {colour}, 0, 0, dropShadow);
     }
 
     public static Random fontRandom = new Random();
-    private static String scramblePart(String part) {
-        String scrambled = "";
+    private static char scrambleCharacter(char c) {
+        int characterWidth = getCharWidth(c, 5);
 
-        for (int i = 0; i < part.length(); i++) {
-            // code from minecraft, multimillion dorra company, i assume there isnt a faster way to do this, im not gonna cache charater width
-            int k = getStringWidth(part.substring(i, i+1), 5, false);
-            String c1;
+        char scrambledCharacter;
+        while (getCharWidth((scrambledCharacter = LETTERS.charAt(fontRandom.nextInt(LETTERS.length()))), 5) != characterWidth) {}
 
-            while (true)
-            {
-                int j = fontRandom.nextInt(letters.length());
-                c1 = letters.substring(j, j+1);
-
-                if (k == (int) getStringWidth(part.substring(i, i+1), 5, false))
-                {
-                    break;
-                }
-            }
-
-            scrambled += c1;
-        }
-
-        return scrambled;
+        return scrambledCharacter;
     }
 
-    public static void drawCenteredString(String string, double x, double y, float size, Color color, boolean dropShadow) {
+    public static void drawCenteredString(String string, float x, float y, int size, Color color, boolean dropShadow) {
         drawString(string, x - getStringWidth(string, size) / 2f, y, size, color, dropShadow);
     }
 
-    private static int drawStringParts(String colourlessPart, Font font, Color[] colour, double fadeSpeed, double fadeSpread, int stringPos, double size, boolean obfuscated, boolean dropShadow, boolean bold, boolean strikethrough, boolean underline, boolean italic) {
-        int partsWidth = 0;
+    public static int getCharWidth(char c, int fontSize) {
+        float scaleFactor = getScaleFactor();
+        fontSize = (int) (fontSize * scaleFactor);
 
-        ArrayList<String> parts = new ArrayList<>();
-        ArrayList<String> glyphs = new ArrayList<>();
+        FontTexture fontTexture = getFontTexture(fontSize);
+        if (fontTexture.charBounds.get(c) == null) return C.mc.fontRendererObj.getCharWidth(c);
+        return (int) (fontTexture.charBounds.get(c).width / scaleFactor);
+    }
 
-        String nonGlyph = "";
+    public static int getStringWidth(String string, int fontSize) {
+        float scaleFactor = getScaleFactor();
+        fontSize = (int) (fontSize * scaleFactor);
 
-        for (int i = 0; i < colourlessPart.length(); i++) {
-            if (isSpecialChar(colourlessPart.charAt(i))) {
-                glyphs.add(colourlessPart.substring(i, i + 1));
+        int width = 0;
+        FontTexture fontTexture = getFontTexture(fontSize);
 
-                parts.add(nonGlyph);
-                nonGlyph = "";
-            } else nonGlyph += colourlessPart.charAt(i);
-        }
-        parts.add(nonGlyph);
+        HashMap<Character, CharacterInfo> charBounds = fontTexture.charBounds;
 
-        int currentPart = 0;
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
 
-        // drawing the parts
-        while (currentPart < parts.size() || currentPart < glyphs.size()) {
-            if (currentPart < parts.size()) {
-                String part = parts.get(currentPart);
-                if (obfuscated) part = scramblePart(part);
-
-                int partWidth = drawStringPart(part, font, colour, fadeSpeed, fadeSpread, stringPos, dropShadow, bold, strikethrough, underline, italic);
-
-                GL11.glTranslated(partWidth, 0, 0);
-                partsWidth += partWidth;
-            }
-
-            if (currentPart < glyphs.size()) {
-                String glyph = glyphs.get(currentPart);
-                if (obfuscated) glyph = scramblePart(glyph);
-
-                GL11.glPushMatrix();
-                GL11.glScaled(0.1 * size, 0.1 * size, 1);
-
-                Color colourFade = RenderUtil.getColorsFade(stringPos*fadeSpread, colour, fadeSpeed);
-
-                int glyphWidth = (int) (C.mc.fontRendererObj.drawString(glyph, 0, 3, colourFade.getRGB()) * 0.1 * size);
-
-                if (underline) RenderUtil.drawRect(0, 0.1 * size, glyphWidth, 1, colourFade);
-                if (strikethrough) RenderUtil.drawRect(0, 0.05 * size, glyphWidth, 1, colourFade);
-
-                GL11.glPopMatrix();
-
-                GL11.glTranslated(glyphWidth, 0, 0);
-
-                partsWidth += glyphWidth;
-            }
-
-            currentPart++;
+            CharacterInfo characterRect = charBounds.get(c);
+            if (c == '§')  i++;
+            else if (characterRect == null) width += getMinecraftCharWidth(c, fontSize);
+            else width += characterRect.width;
         }
 
-        return partsWidth;
+        return (int) (width / scaleFactor);
     }
 
-    // fun fact: to draw the shadow, the font colour is set to:
-    //  colour = (colour & 16579836) >> 2 | colour & -16777216;
-    // for white, this simplifies down to new Color(126, 126, 126)
-    // which is close to Color.GRAY!
+    public static int getFontHeight(int fontSize) {
+        float scaleFactor = getScaleFactor();
+        fontSize = (int) (fontSize * scaleFactor);
 
-    private static int drawStringPart(String string, Font font, Color[] colour, double fadeSpeed, double fadeSpread, int stringPos, boolean dropShadow, boolean bold, boolean strikethrough, boolean underline, boolean italic) {
-        int fontType = (bold && italic) ? Font.BOLD | Font.ITALIC : bold ? Font.BOLD : italic ? Font.ITALIC : Font.PLAIN;
-        Rectangle stringBounds = getStringBounds(string, font.getSize()).getBounds();
-        int textureID = getStringTextureID(string, font.deriveFont(fontType));
-
-        Color[] colourFade = RenderUtil.getColorsFade(stringPos*fadeSpread, stringBounds.width*fadeSpread, colour, fadeSpeed);
-
-        if (dropShadow) RenderUtil.drawRectTextured(1, 1, stringBounds.width, stringBounds.height, new Color(22,22,22, colourFade[0].getAlpha()), textureID);
-        RenderUtil.drawRectTexturedColor(0, 0, stringBounds.width, stringBounds.height, colourFade[0], colourFade[1], textureID);
-
-        if (underline) RenderUtil.drawGradientLR(0, stringBounds.height * 0.8f, stringBounds.width, 1, colour[0], colour[1]);
-        if (strikethrough) RenderUtil.drawGradientLR(0, stringBounds.height / 2f, stringBounds.width, 1, colour[0], colour[1]);
-
-        return stringBounds.width;
-    }
-
-    // todo: glyph characters arnt accounted for, doesnt really matter ig
-    public static int getStringWidth(String string, float fontSize, boolean stripColorCodes) {
-        return getStringBounds(stripColorCodes ? string.replaceAll("[§&].", "") : string, fontSize).width;
-    }
-
-    public static int getStringWidth(String string, float fontSize) {
-        return getStringWidth(string, fontSize, true);
-    }
-    public static int getFontHeight(float fontSize) {
-        return getStringBounds("", fontSize).height;
-    }
-
-    public static Rectangle getStringBounds(String string, float fontSize) {
-        graphics.setFont(currentFont.font.deriveFont(fontSize));
-        return graphics.getFontMetrics().getStringBounds(string, graphics).getBounds();
-    }
-
-    public static boolean isSpecialChar(char character) {
-        return !letters.contains(String.valueOf(character));
+        FontTexture fontTexture = getFontTexture(fontSize);
+        return (int) (fontTexture.height / scaleFactor);
     }
 
     private static float getScaleFactor() {
-        if (RenderUtil.renderSide != RenderUtil.RenderSide.World) {
-            float[] scaleFactor = RenderUtil.getCurrentTranslation();
+        return RenderUtil.renderSide != RenderUtil.RenderSide.World ? C.res().getScaleFactor() : 1;
+    }
 
-            return Math.max(scaleFactor[3], scaleFactor[4]) * C.res().getScaleFactor();
+    private static int getMinecraftCharWidth(char string, double size) {
+        return (int) (C.mc.fontRendererObj.getCharWidth(string) * 0.1 * size);
+    }
+
+    private static int getMinecraftStringWidth(String string, double size) {
+        return (int) (C.mc.fontRendererObj.getStringWidth(string) * 0.1 * size);
+    }
+
+    private static int drawMinecraftString(String string, float x, float y, double size, Color colour, boolean dropShadow) {
+        GL11.glPushMatrix();
+        GL11.glTranslated(x, y + size / 3, 1);
+        GL11.glScaled(0.1 * size, 0.1 * size, 1);
+
+        GlStateManager.enableAlpha();
+
+        FontRendererBridge fontRendererBridge = FontRendererBridge.from(C.mc.fontRendererObj);
+        fontRendererBridge.bridge$resetStyles();
+        int i;
+        if (dropShadow) {
+            i = fontRendererBridge.bridge$renderString(string, 1.0F, 1.0F, colour.getRGB(), true);
+            i = Math.max(i, fontRendererBridge.bridge$renderString(string, 0, 0, colour.getRGB(), false));
+        } else {
+            i = fontRendererBridge.bridge$renderString(string, 0, 0, colour.getRGB(), false);
         }
 
-        return 1;
+        GL11.glPopMatrix();
+
+        return i;
     }
 
     public enum Fonts {
@@ -306,25 +335,18 @@ public class FontUtil {
         Thug_Font("thugfont.otf");
 
         public final Font font;
-        public final Font bold;
-        public final Font italic;
 
         Fonts(String name) {
             Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 0);
-            Font bold = new Font(Font.SANS_SERIF, Font.BOLD, 0);
-            Font italic = new Font(Font.SANS_SERIF, Font.ITALIC, 0);
+
             try {
                 font =  Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(Main.class.getResourceAsStream("/fonts/" + name)));
-                bold = font.deriveFont(Font.BOLD);
-                italic = font.deriveFont(Font.ITALIC);
             } catch (Exception e) {
                 System.err.println("Failed to load font: " + e.getMessage());
                 e.printStackTrace();
             }
 
             this.font = font;
-            this.bold = bold;
-            this.italic = italic;
         }
     }
 

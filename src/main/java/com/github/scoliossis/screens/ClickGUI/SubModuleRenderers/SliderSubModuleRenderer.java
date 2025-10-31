@@ -41,11 +41,11 @@ public class SliderSubModuleRenderer extends SubModuleRenderer {
 
         RenderUtil.drawRect(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y, width, SUBMODULE_HEIGHT, subModule.getParentModule().getAnnotation().category().color);
 
-        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, SUBMODULE_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, getSubmoduleTextY(), ClickGUIScreen.fontSize, Color.WHITE, true);
         FontUtil.drawString(
                 subModule.get().toString(),
                 ClickGUIScreen.BASE_X + ClickGUIScreen.GUI_TAB_WIDTH - FontUtil.getStringWidth(subModule.get().toString(), ClickGUIScreen.fontSize) - this.LEFT_OFFSET,
-                SUBMODULE_TEXT_Y,
+                getSubmoduleTextY(),
                 ClickGUIScreen.fontSize,
                 ClickGUIScreen.secondaryColor,
                 true

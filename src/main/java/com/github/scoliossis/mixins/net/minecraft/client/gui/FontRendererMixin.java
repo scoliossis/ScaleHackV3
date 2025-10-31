@@ -1,5 +1,6 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
+import com.github.scoliossis.bridge.net.minecraft.client.gui.FontRendererBridge;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
 import com.github.scoliossis.utils.render.FontUtil;
@@ -18,7 +19,7 @@ import java.awt.*;
 // its misnamed, this.blue = (float)(p_renderString_4_ >> 8 & 255) / 255.0F; which is the green part.
 
 @Mixin(FontRenderer.class)
-public abstract class FontRendererMixin {
+public abstract class FontRendererMixin implements FontRendererBridge {
     @Shadow public abstract int getStringWidth(final String p0);
 
     @Unique private boolean FontRenderer$shouldUseCustomFont() {
@@ -35,12 +36,25 @@ public abstract class FontRendererMixin {
     @Shadow
     protected abstract String bidiReorder(String p_bidiReorder_1_);
 
+    @Shadow
+    protected abstract void resetStyles();
+
+    @Shadow
+    protected abstract int renderString(String p_renderString_1_, float p_renderString_2_, float p_renderString_3_, int p_renderString_4_, boolean p_renderString_5_);
+
+    @Override
+    public void bridge$resetStyles() {
+        this.resetStyles();
+    }
+
+    @Override
+    public int bridge$renderString(String p_renderString_1_, float p_renderString_2_, float p_renderString_3_, int p_renderString_4_, boolean p_renderString_5_) {
+        return this.renderString(p_renderString_1_, p_renderString_2_, p_renderString_3_, p_renderString_4_, p_renderString_5_);
+    }
+
     @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;resetStyles()V", shift = At.Shift.AFTER), cancellable = true)
     public void onDrawString(String text, float x, float y, int colourInt, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
         if (text == null || text.isEmpty()) return;
-
-        // special chars are always drawn by the default font renderer
-        if (text.length() == 1 && FontUtil.isSpecialChar(text.charAt(0))) return;
 
         // fix text to hide disgusting words.
         String text2 = NickHider.fixText(text);

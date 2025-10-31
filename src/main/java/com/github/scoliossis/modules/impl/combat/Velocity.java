@@ -2,10 +2,7 @@ package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.bridge.net.minecraft.network.play.server.S12PacketEntityVelocityBridge;
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.events.impl.MovementInputEvent;
-import com.github.scoliossis.events.impl.PacketEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
@@ -14,6 +11,7 @@ import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.BlinkUtil;
 import com.github.scoliossis.utils.minecraft.ChatUtil;
 import com.github.scoliossis.utils.minecraft.MovementUtil;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.EnumAction;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
@@ -66,8 +64,11 @@ public class Velocity extends Module {
 
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
-        if (event.packet instanceof S19PacketEntityStatus && C.isInGame()) {
-            isDamage |= ((S19PacketEntityStatus) event.packet).getEntity(C.w()).getEntityId() == C.p().getEntityId();
+        if (event.packet instanceof S19PacketEntityStatus && C.p() != null && C.w() != null) {
+            Entity entity = ((S19PacketEntityStatus) event.packet).getEntity(C.w());
+            if (entity == null) return;
+
+            isDamage = entity.getEntityId() == C.p().getEntityId();
             return;
         }
 
@@ -144,10 +145,17 @@ public class Velocity extends Module {
     }
 
     @SubscribeEvent
-    public static void resetBlink(ClientTickEvent event) {
+    public static void finishDynamicVelocity(ClientTickEvent event) {
         if (!BlinkUtil.isBlinking(false, true) || !shouldStopBlink()) return;
 
-        stopBlink();
+        BlinkUtil.popBlink(false, true);
+        shouldJump |= velocityMode == VelocityMode.Dynamic && C.p().onGround;
+        resetVelocity();
+    }
+
+    @SubscribeEvent
+    public static void resetVelocity(RespawnEvent event) {
+        resetVelocity();
     }
 
     private static float getYawFromVelocity(double x, double z) {
@@ -159,11 +167,9 @@ public class Velocity extends Module {
         return blinkStartTick != -1 && shouldDelay && (MovementUtil.ticks - blinkStartTick > maxDelayTicks || (C.p().onGround && velocityMode == VelocityMode.Dynamic));
     }
 
-    private static void stopBlink() {
-        BlinkUtil.popBlink(false, true);
+    private static void resetVelocity() {
         blinkStartTick = -1;
         shouldDelay = false;
-        shouldJump |= velocityMode == VelocityMode.Dynamic && C.p().onGround;
     }
 
     @Override
@@ -178,6 +184,9 @@ public class Velocity extends Module {
 
     @Override
     protected void onDisable() {
-        if (blinkStartTick != -1) stopBlink();
+        if (blinkStartTick != -1 && C.isInGame()) {
+            BlinkUtil.popBlink(false, true);
+            resetVelocity();
+        }
     }
 }

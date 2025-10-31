@@ -3,10 +3,15 @@ package com.github.scoliossis.utils.minecraft;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
+import com.github.scoliossis.events.impl.RespawnEvent;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.INetHandlerPlayServer;
+import net.minecraft.network.play.client.C09PacketHeldItemChange;
+import net.minecraft.network.play.server.S01PacketJoinGame;
+import net.minecraft.network.play.server.S07PacketRespawn;
+import net.minecraft.network.play.server.S40PacketDisconnect;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -35,9 +40,16 @@ public class BlinkUtil {
         }
     }
 
-    @SubscribeEvent(priority = 999)
-    public static void onClientTickEvent(ClientTickEvent event) {
-        if (C.w() == null) {
+    @SubscribeEvent(priority = 0)
+    public static void resetBlink(RespawnEvent event) {
+        while (isBlinking(true, true)) {
+            popBlink(true, true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void resetBlink(ClientTickEvent event) {
+        if (!C.isInGame()) {
             disableBlink(true, true);
         }
     }
@@ -70,7 +82,11 @@ public class BlinkUtil {
             Packet<?> packet;
 
             while ((packet = blinkedSentPackets.poll()) != null) {
-                PacketUtil.sendPacket(packet);
+                try {
+                    PacketUtil.sendPacket(packet);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -78,7 +94,11 @@ public class BlinkUtil {
             Packet<?> packet;
 
             while ((packet = blinkedReceivedPackets.poll()) != null) {
-                PacketUtil.receivePacket(packet);
+                try {
+                    PacketUtil.receivePacket(packet);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

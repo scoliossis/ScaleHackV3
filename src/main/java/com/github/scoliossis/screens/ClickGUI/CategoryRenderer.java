@@ -16,11 +16,10 @@ public class CategoryRenderer {
     private float categoryDragStartX = -1;
     private float categoryDragStartY = -1;
 
-    private final float textX = ClickGUIScreen.BASE_X + 2;
-    private final float textY = ClickGUIScreen.BASE_Y + CATEGORY_HEIGHT / 2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize) / 2f + 1f;
-
-
     public void render(Category category) {
+        float textX = ClickGUIScreen.BASE_X + 2;
+        float textY = ClickGUIScreen.BASE_Y + CATEGORY_HEIGHT / 2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize) / 2f + 1f;
+
         ClickGUIScreen.drawGuiBackground(CATEGORY_HEIGHT, category);
 
         String categoryName = EnumChatFormatting.BOLD + category.name().replaceAll("_", "").toLowerCase();

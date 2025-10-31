@@ -4,15 +4,16 @@ import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.events.impl.MotionEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.client.C;
 import lombok.Getter;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.play.server.S01PacketJoinGame;
+import net.minecraft.network.play.server.S07PacketRespawn;
+import net.minecraft.network.play.server.S40PacketDisconnect;
 import net.minecraft.util.Vec3;
 
 public class PlayerUtil {
@@ -86,6 +87,13 @@ public class PlayerUtil {
         if (!C.isInGame() || C.p().isDead) {
             PlayerUtil.setFakeCameraPos(null);
             PlayerUtil.fakeRotation = null;
+        }
+    }
+
+    @SubscribeEvent(priority = 0)
+    public static void resetBlink(PacketEvent.Receive event) {
+        if (event.packet instanceof S07PacketRespawn || event.packet instanceof S01PacketJoinGame || event.packet instanceof S40PacketDisconnect) {
+            Bus.post(new RespawnEvent());
         }
     }
 

@@ -11,7 +11,11 @@ public abstract class SubModuleRenderer {
     public final int SUBMODULE_HEIGHT = 15;
     public final Color SUBMODULE_BACKGROUND_COLOUR = new Color(25,25,25);
     public final float SUBMODULE_TEXT_X = ClickGUIScreen.BASE_X + 3;
-    public final float SUBMODULE_TEXT_Y = ClickGUIScreen.BASE_Y + SUBMODULE_HEIGHT/2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize)/2f;
+
+    // text y depends on font height which changes.
+    public float getSubmoduleTextY() {
+        return ClickGUIScreen.BASE_Y + SUBMODULE_HEIGHT/2f - FontUtil.getFontHeight(ClickGUIScreen.fontSize)/2f;
+    }
     public final int LEFT_OFFSET = 5;
 
     public static void handle(int mouseX, int mouseY, SubModule subModule) {

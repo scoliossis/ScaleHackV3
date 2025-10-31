@@ -49,11 +49,11 @@ public class EnumSubModuleRenderer extends SubModuleRenderer {
 
         String enumValue = ((Enum<?>) subModule.get()).name().replace("_", " ");
         RenderUtil.drawRect(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y, ClickGUIScreen.GUI_TAB_WIDTH, SUBMODULE_HEIGHT, this.SUBMODULE_BACKGROUND_COLOUR);
-        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, SUBMODULE_TEXT_Y, ClickGUIScreen.fontSize, Color.WHITE, true);
+        FontUtil.drawString(subModule.getAnnotation().name(), SUBMODULE_TEXT_X, getSubmoduleTextY(), ClickGUIScreen.fontSize, Color.WHITE, true);
         FontUtil.drawString(
                 enumValue,
                 ClickGUIScreen.BASE_X + ClickGUIScreen.GUI_TAB_WIDTH - FontUtil.getStringWidth(enumValue, ClickGUIScreen.fontSize) - this.LEFT_OFFSET,
-                SUBMODULE_TEXT_Y,
+                getSubmoduleTextY(),
                 ClickGUIScreen.fontSize,
                 ClickGUIScreen.secondaryColor,
                 true

@@ -51,9 +51,7 @@ public class Notifications extends Module {
     public static long notificationLength = 5000;
 
     private static final int titleFontSize = 12;
-    private static final float titleFontHeight = FontUtil.getFontHeight(titleFontSize);
     private static final int messageFontSize = 9;
-    private static final float messageFontHeight = FontUtil.getFontHeight(messageFontSize);
     private static final Color fontColor = Color.WHITE;
 
     private static final int widthPadding = 5;
@@ -95,6 +93,10 @@ public class Notifications extends Module {
 
     private static void renderNotification() {
         GL11.glPushMatrix();
+
+        float titleFontHeight = FontUtil.getFontHeight(titleFontSize);
+        float messageFontHeight = FontUtil.getFontHeight(messageFontSize);
+
         for (int i = 0; i < notifications.size()-1; i++) {
             Notification notification = notifications.get(i);
 
