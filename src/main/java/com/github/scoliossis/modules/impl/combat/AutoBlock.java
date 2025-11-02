@@ -1,5 +1,7 @@
 package com.github.scoliossis.modules.impl.combat;
 
+import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
+import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
@@ -7,15 +9,16 @@ import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.client.C;
-import com.github.scoliossis.utils.minecraft.BlinkUtil;
-import com.github.scoliossis.utils.minecraft.MovementUtil;
-import com.github.scoliossis.utils.minecraft.PlayerUtil;
-import com.github.scoliossis.utils.minecraft.TargetUtil;
+import com.github.scoliossis.utils.minecraft.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 
 import java.util.List;
 
@@ -33,6 +36,9 @@ public class AutoBlock extends Module {
 
     @RegisterSubModule(name = "Through Walls")
     public static boolean throughWalls = true;
+
+    @RegisterSubModule(name = "Packet Block")
+    public static boolean packetBlock = false;
 
     @RegisterSubModule(name = "Autoblock Mode", description = "bypahh")
     public static AutoBlockMode autoblockMode = AutoBlockMode.Blink;
@@ -65,7 +71,7 @@ public class AutoBlock extends Module {
     @Getter private static boolean isBlocking, isServerBlocking = false;
 
     public static boolean isBlockingSwing() {
-        return C.p().isUsingItem() || PlayerUtil.getLastUnblock() == MovementUtil.ticks;
+        return PlayerUtil.isUsingItem() || PlayerUtil.getLastUnblock() == MovementUtil.ticks;
     }
 
     private static ItemStack itemInUse = null;
@@ -146,7 +152,7 @@ public class AutoBlock extends Module {
 
     private static boolean setBlocking(boolean clientSide, boolean serverSide) {
         if (serverSide != isServerBlocking) {
-            boolean blockSuccess = PlayerUtil.rightClick(serverSide);
+            boolean blockSuccess = tryBlock(serverSide);
 
             if (!blockSuccess) return false;
             isServerBlocking = serverSide;
@@ -160,6 +166,25 @@ public class AutoBlock extends Module {
 
     public static boolean canSwingWhileBlocking() {
         return autoblockMode == AutoBlockMode.Vanilla && ModuleManager.isEnabled(AutoBlock.class) && isServerBlocking;
+    }
+
+    public static boolean tryBlock(boolean down) {
+        if (down && MovementUtil.getOverriddenKeybinds().containsKey(C.mc.gameSettings.keyBindUseItem) && !MovementUtil.getOverriddenKeybinds().get(C.mc.gameSettings.keyBindUseItem))
+            return false;
+
+        if (packetBlock) {
+            if (down) PacketUtil.sendPacket(new C08PacketPlayerBlockPlacement(C.p().getHeldItem()));
+            else
+                PacketUtil.sendPacket(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN));
+        }
+        else {
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setDown(down);
+
+            if (down) MinecraftBridge.from(C.mc).bridge$rightClickMouse();
+            else C.mc.playerController.onStoppedUsingItem(C.p());
+        }
+
+        return true;
     }
 
     @Override

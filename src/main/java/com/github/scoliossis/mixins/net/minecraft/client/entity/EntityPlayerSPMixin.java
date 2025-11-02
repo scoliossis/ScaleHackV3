@@ -50,7 +50,7 @@ public class EntityPlayerSPMixin {
 
     @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z"))
     public boolean editIsUsingItem(EntityPlayerSP instance) {
-        return NoSlow.isPlayerUsingItem();
+        return NoSlow.shouldSlowDown();
     }
 
     @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;sneak:Z"))

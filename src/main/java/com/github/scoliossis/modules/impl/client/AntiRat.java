@@ -1,0 +1,102 @@
+package com.github.scoliossis.modules.impl.client;
+
+import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.PacketEvent;
+import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.modules.Category;
+import com.github.scoliossis.modules.Module;
+import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.NetworkUtil;
+import net.minecraft.network.login.server.S01PacketEncryptionRequest;
+import net.minecraft.util.CryptManager;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+
+import javax.crypto.SecretKey;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.PublicKey;
+import java.util.concurrent.ForkJoinPool;
+
+@RegisterModule(
+        name = "Anti Rat",
+        description = "bypasses zzxgps magical ability to give alts with 30 other people on them",
+        category = Category.CLIENT,
+        enabledByDefault = true
+)
+public class AntiRat extends Module {
+    private static boolean finishedLastWave = true;
+
+    @SubscribeEvent
+    public static void rateLimitLogin(PlayerUpdateEvent event) {
+        if (C.mc.isSingleplayer() || !finishedLastWave) return;
+
+        // never ending requests.
+        ForkJoinPool.commonPool().execute(AntiRat::rateLimitLogin);
+    }
+
+    private static String serverID;
+    private static PublicKey serverPublicKey;
+
+    @SubscribeEvent
+    public static void onPacketEvent(PacketEvent.Receive event) {
+        if (C.mc.isSingleplayer()) return;
+
+        if (event.packet instanceof S01PacketEncryptionRequest) {
+            S01PacketEncryptionRequest packet = (S01PacketEncryptionRequest) event.packet;
+            serverID = packet.getServerId();
+            serverPublicKey = packet.getPublicKey();
+        }
+    }
+
+    // https://minecraft.wiki/w/Mojang_API#Verify_login_session_on_client
+    private static int attemptLogin() {
+        try {
+            HttpPost req = new HttpPost("https://sessionserver.mojang.com/session/minecraft/join");
+            req.setHeader("Content-Type", "application/json");
+
+            String accessToken = C.mc.getSession().getToken();
+            String selectedProfile = C.mc.getSession().getPlayerID();
+            String serverId = generateServerId(serverID, serverPublicKey, CryptManager.createNewSharedKey());
+            req.setEntity(new StringEntity("{ \"accessToken\": \""+accessToken+"\", \"selectedProfile\": \""+selectedProfile+"\", \"serverId\": \""+serverId+"\"}"));
+
+            CloseableHttpResponse res = NetworkUtil.getServerResponse(req);
+
+            return res.getStatusLine().getStatusCode();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 429;
+    }
+
+    public static String generateServerId(String baseServerId,   // Base server ID, usually an empty string""
+                                          PublicKey publicKey,   // Server's RSA public key
+                                          SecretKey secretKey    // The symmetric AES secret key used between server and client
+    ) throws Exception {
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+        messageDigest.update(baseServerId.getBytes("ISO_8859_1"));
+        messageDigest.update(secretKey.getEncoded());
+        messageDigest.update(publicKey.getEncoded());
+        byte[] digestData = messageDigest.digest();
+        return new BigInteger(digestData).toString(16);
+    }
+
+    private static void rateLimitLogin() {
+        finishedLastWave = false;
+        while (attemptLogin() != 429);
+        finishedLastWave = true;
+    }
+
+    @Override
+    protected void onEnable() {
+
+    }
+
+    @Override
+    protected void onDisable() {
+
+    }
+}

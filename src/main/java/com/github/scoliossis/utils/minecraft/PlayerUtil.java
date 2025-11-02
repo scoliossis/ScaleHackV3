@@ -1,7 +1,5 @@
 package com.github.scoliossis.utils.minecraft;
 
-import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
-import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.*;
@@ -36,14 +34,17 @@ public class PlayerUtil {
     private static boolean wasBlocking = false;
 
     public static int getLastUnblock() {
-        if (wasBlocking && !C.p().isUsingItem()) lastUnblock = MovementUtil.ticks;
+        if (wasBlocking && !isUsingItem()) lastUnblock = MovementUtil.ticks;
         return lastUnblock;
     }
 
-    // run after blocking set
+    public static boolean isUsingItem() {
+        return C.p().isUsingItem() || AutoBlock.isServerBlocking();
+    }
+
     @SubscribeEvent(priority = 9000)
     public static void updateLastBlocking(MotionEvent event) {
-        wasBlocking = C.p().isUsingItem();
+        wasBlocking = isUsingItem();
     }
 
     // i only learnt today (4/10/25) that when using a comma between initializing variables they arnt both set to the final value
@@ -148,17 +149,5 @@ public class PlayerUtil {
     // shut up intellij, this shouldn't be inverted, because the name would be longer and its alr too long!
     public static boolean shouldInteractFromFakePos() {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
-    }
-
-    public static boolean rightClick(boolean down) {
-        if (down && MovementUtil.getOverriddenKeybinds().containsKey(C.mc.gameSettings.keyBindUseItem) && !MovementUtil.getOverriddenKeybinds().get(C.mc.gameSettings.keyBindUseItem))
-            return false;
-
-        KeyBindingBridge.from(C.mc.gameSettings.keyBindUseItem).bridge$setDown(down);
-
-        if (down) MinecraftBridge.from(C.mc).bridge$rightClickMouse();
-        else C.mc.playerController.onStoppedUsingItem(C.p());
-
-        return true;
     }
 }

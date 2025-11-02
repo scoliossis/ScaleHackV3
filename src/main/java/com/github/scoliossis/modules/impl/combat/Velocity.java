@@ -64,6 +64,8 @@ public class Velocity extends Module {
 
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
+        if (event.isCancelled()) return;
+
         if (event.packet instanceof S19PacketEntityStatus && C.p() != null && C.w() != null) {
             Entity entity = ((S19PacketEntityStatus) event.packet).getEntity(C.w());
             if (entity == null) return;

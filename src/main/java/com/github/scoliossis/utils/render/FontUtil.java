@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
+// todo: weird scaling AND flickering on pop up messages
 public class FontUtil {
     private static Fonts currentFont;
 
@@ -70,7 +71,7 @@ public class FontUtil {
     private static final String LETTERS = "ÀÁÂÈÊËÍÓÔÕÚßãõğİıŒœŞşŴŵž !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»πμΩ∞±≥≤÷≈°∙·√²\u0000";
     private static final String COLOUR_CODES = "0123456789abcdef";
 
-    private static final int X_SPACING = 4;
+    private static final int X_SPACING = 10;
     private static FontTexture createFontTexture(Font font, Rectangle stringBounds) {
         int textureWidth = stringBounds.width + (LETTERS.length() * X_SPACING);
 
@@ -178,7 +179,7 @@ public class FontUtil {
                 continue;
             }
 
-            if (randomStyle) c = scrambleCharacter(c);
+            if (randomStyle) c = scrambleCharacter(c, size);
 
             CharacterInfo characterBounds = fontTexture.charBounds.get(c);
 
@@ -203,10 +204,10 @@ public class FontUtil {
                 // for white, this simplifies down to new Color(126, 126, 126)
                 // which is close to Color.GRAY!
                 Color[] shadowColours = new Color[] {
-                        new Color((colourFade[0].getRGB() & 16579836) >> 2 | colourFade[0].getRGB() & -16777216),
-                        new Color((colourFade[1].getRGB() & 16579836) >> 2 | colourFade[1].getRGB() & -16777216)
+                        new Color(22, 22, 22, colourFade[0].getAlpha()),
+                        new Color(22, 22, 22, colourFade[1].getAlpha())
                 };
-                drawCharacter(totalWidth + 2, 3, characterWidth, fontHeight, shadowColours, u, uw);
+                drawCharacter(totalWidth + 2, 2, characterWidth, fontHeight, shadowColours, u, uw);
             }
             drawCharacter(totalWidth, 0, characterWidth, fontHeight, colourFade, u, uw);
             if (boldStyle) drawCharacter(totalWidth + 1, 0, characterWidth, fontHeight, colourFade, u, uw);
@@ -240,11 +241,11 @@ public class FontUtil {
     }
 
     public static Random fontRandom = new Random();
-    private static char scrambleCharacter(char c) {
-        int characterWidth = getCharWidth(c, 5);
+    private static char scrambleCharacter(char c, int size) {
+        int characterWidth = getCharWidth(c, size);
 
         char scrambledCharacter;
-        while (getCharWidth((scrambledCharacter = LETTERS.charAt(fontRandom.nextInt(LETTERS.length()))), 5) != characterWidth) {}
+        while (getCharWidth((scrambledCharacter = LETTERS.charAt(fontRandom.nextInt(LETTERS.length()))), size) != characterWidth);
 
         return scrambledCharacter;
     }
@@ -254,12 +255,9 @@ public class FontUtil {
     }
 
     public static int getCharWidth(char c, int fontSize) {
-        float scaleFactor = getScaleFactor();
-        fontSize = (int) (fontSize * scaleFactor);
-
         FontTexture fontTexture = getFontTexture(fontSize);
         if (fontTexture.charBounds.get(c) == null) return C.mc.fontRendererObj.getCharWidth(c);
-        return (int) (fontTexture.charBounds.get(c).width / scaleFactor);
+        return fontTexture.charBounds.get(c).width;
     }
 
     public static int getStringWidth(String string, int fontSize) {

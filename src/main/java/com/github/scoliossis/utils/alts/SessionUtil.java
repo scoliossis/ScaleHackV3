@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Base64;
 
-// todo: rate limit accounts https://minecraft.wiki/w/Mojang_API#Verify_login_session_on_client
 // https://minecraft.wiki/w/Mojang_API
 public class SessionUtil {
     // https://minecraft.wiki/w/Mojang_API#Query_player_profile

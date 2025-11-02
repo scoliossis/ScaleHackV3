@@ -5,6 +5,7 @@ import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.minecraft.PlayerUtil;
 
 @RegisterModule(
         name = "No Slow",
@@ -13,8 +14,8 @@ import com.github.scoliossis.utils.client.C;
         dangerous = true
 )
 public class NoSlow extends Module {
-    public static boolean isPlayerUsingItem() {
-        return !ModuleManager.isEnabled(NoSlow.class) && C.p().isUsingItem();
+    public static boolean shouldSlowDown() {
+        return !ModuleManager.isEnabled(NoSlow.class) && PlayerUtil.isUsingItem();
     }
 
     @Override

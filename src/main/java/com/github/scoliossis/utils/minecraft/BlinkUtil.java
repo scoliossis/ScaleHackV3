@@ -17,7 +17,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BlinkUtil {
-    // todo: wipe on lobby change
     private final static Queue<Packet<?>> blinkedSentPackets = new ConcurrentLinkedQueue<>();
     private final static Queue<Packet<?>> blinkedReceivedPackets = new ConcurrentLinkedQueue<>();
 
@@ -32,7 +31,7 @@ public class BlinkUtil {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = 999)
     public static void onPacketReceived(PacketEvent.Receive event) {
         if (blinkIncomingIndex > -1) {
             blinkedReceivedPackets.add(event.packet);
