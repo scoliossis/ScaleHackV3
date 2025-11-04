@@ -3,7 +3,6 @@ package com.github.scoliossis.modules.impl.client;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ModuleStateChangeEvent;
 import com.github.scoliossis.modules.*;
-import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.render.EasingUtil;
 import com.github.scoliossis.utils.render.FontUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
@@ -105,7 +104,7 @@ public class ArrayListModule extends Module {
                     float height = FontUtil.getFontHeight(fontSize) + gapY;
 
                     GL11.glPushMatrix();
-                    RenderUtil.glScissor(x, 0, width, height);
+                    RenderUtil.glScissor(x, 0, width + 1, height);
 
                     double animation = EasingUtil.getAnimation(module.getUniqueKey("arraylist"));
                     if (animation != -1) GL11.glTranslated(pointingRight ? -width * (1 - animation) : width * (1 - animation), height * (1 - animation), 0);

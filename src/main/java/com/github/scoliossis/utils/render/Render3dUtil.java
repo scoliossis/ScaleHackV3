@@ -19,6 +19,11 @@ public class Render3dUtil {
         RenderUtil.worldRenderer.pos(x, y, 0).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
     }
 
+    public static void add3DVertexColor(double x, double y, double z, Color color) {
+        RenderUtil.worldRenderer.pos(x, y, z).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+    }
+
+
     public static void drawCentered3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean cull) {
         draw3dBox(x-w/2, y-h/2, z-d/2, w, h, d, color, partialTicks, cull);
     }

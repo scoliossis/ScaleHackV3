@@ -25,7 +25,7 @@ public class KeybindHandler {
             if (listeningModule != null) {
                 registerKeybind(listeningModule, event.keyCode);
 
-                Notifications.addNotification("Keybind", "&cSuccessfully bound &f" + listeningModule.getAnnotation().name() + " &cto &f" + getCharacter(event.keyCode));
+                Notifications.addNotification("Keybind", "§cSuccessfully bound §f" + listeningModule.getAnnotation().name() + " §cto §f" + getCharacter(event.keyCode));
 
                 listeningModule = null;
                 return;

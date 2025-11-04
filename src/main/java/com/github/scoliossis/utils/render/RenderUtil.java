@@ -9,7 +9,6 @@ import lombok.Getter;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Vec3;
@@ -52,6 +51,10 @@ public class RenderUtil {
     public static void finishRender() {
         getTessalator().draw();
 
+        resetRender();
+    }
+
+    public static void resetRender() {
         GL11.glPopMatrix();
 
         GlStateManager.disableBlend();

@@ -1,5 +1,7 @@
 package com.github.scoliossis.modules.impl.render;
 
+import com.github.scoliossis.bridge.net.minecraft.client.model.ModelBoxBridge;
+import com.github.scoliossis.bridge.net.minecraft.client.model.ModelRendererBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.modules.Category;
@@ -10,6 +12,14 @@ import com.github.scoliossis.utils.minecraft.TargetUtil;
 import com.github.scoliossis.utils.render.EasingUtil;
 import com.github.scoliossis.utils.render.Render3dUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
+import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.model.PositionTextureVertex;
+import net.minecraft.client.model.TexturedQuad;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
@@ -24,12 +34,29 @@ import java.awt.*;
 public class ESP extends Module {
     @RegisterSubModule(name = "Health Bar")
     public static boolean healthBar = true;
+    @RegisterSubModule(name = "Chams")
+    public static boolean chams = false;
 
     @RegisterSubModule(name = "Square")
-    public static boolean square = true;
+    public static boolean square = false;
 
     @RegisterSubModule(name = "Square Colour", parent = "Square")
-    public static Color squareColour = new Color(255, 132, 132);
+    public static Color squareColour = new Color(232, 205, 205);
+
+    @RegisterSubModule(name = "Outline")
+    public static boolean outline = true;
+    @RegisterSubModule(name = "Outline Mode")
+    public static OutlineMode outlineMode = OutlineMode.Solid;
+    public enum OutlineMode {
+        Solid,
+        Line,
+    }
+    @RegisterSubModule(name = "Outline Size", min = 0.75, max = 1.25, parent = "Outline Mode", modeParentString = "Solid")
+    public static float outlineSize = 1.1f;
+    @RegisterSubModule(name = "Outline Width", min = 1, max = 10, parent = "Outline Mode", modeParentString = "Line")
+    public static int outlineWidth = 3;
+    @RegisterSubModule(name = "Outline Colour", parent = "Outline")
+    public static Color outlineColour = new Color(255, 132, 132);
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
@@ -37,6 +64,55 @@ public class ESP extends Module {
             if (square) renderSquare(entity, event.partialTicks);
             if (healthBar) renderHealthBar(entity, event.partialTicks);
         }
+    }
+
+    // todo: cool colours !!!
+    // called by com.github.scoliossis.mixins.net.minecraft.client.model.ModelPlayerMixin.render
+    public static void renderOutline(ModelRenderer modelRenderer, float scale) {
+        if (modelRenderer.isHidden || !modelRenderer.showModel) return;
+
+        ModelRendererBridge modelRendererBridge = ModelRendererBridge.from(modelRenderer);
+        if (!modelRendererBridge.bridge$compiled()) {
+            modelRendererBridge.bridge$compileDisplayList(scale);
+        }
+
+        RenderUtil.beginRender();
+        GlStateManager.disableLighting();
+        GL11.glLineWidth(outlineWidth);
+
+        // minecraft code for rendering bodies
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(modelRenderer.offsetX, modelRenderer.offsetY, modelRenderer.offsetZ);
+        GlStateManager.translate(modelRenderer.rotationPointX * scale, modelRenderer.rotationPointY * 2 * scale, modelRenderer.rotationPointZ * scale);
+
+        if (outlineMode == OutlineMode.Solid) scale *= outlineSize;
+        GlStateManager.translate(0, -modelRenderer.rotationPointY * scale, 0);
+
+        GlStateManager.rotate(modelRenderer.rotateAngleZ * (180F / (float)Math.PI), 0.0F, 0.0F, 1.0F);
+        GlStateManager.rotate(modelRenderer.rotateAngleY * (180F / (float)Math.PI), 0.0F, 1.0F, 0.0F);
+        GlStateManager.rotate(modelRenderer.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
+
+        WorldRenderer renderer = Tessellator.getInstance().getWorldRenderer();
+
+        for (ModelBox box : modelRenderer.cubeList) {
+            for (TexturedQuad quad : ModelBoxBridge.from(box).bridge$quadList()) {
+                renderer.begin(outlineMode == OutlineMode.Line ? GL11.GL_LINE_LOOP : GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+
+                for (int i = 0; i < 4; ++i) {
+                    PositionTextureVertex positiontexturevertex = quad.vertexPositions[i];
+                    Render3dUtil.add3DVertexColor(positiontexturevertex.vector3D.xCoord * (double) scale, positiontexturevertex.vector3D.yCoord * (double) scale, positiontexturevertex.vector3D.zCoord * (double) scale, outlineColour);
+                }
+
+                RenderUtil.getTessalator().draw();
+            }
+        }
+
+        GlStateManager.popMatrix();
+        // swag
+
+        RenderUtil.resetRender();
+        GlStateManager.enableLighting();
+        GL11.glLineWidth(1);
     }
 
     private static void renderSquare(EntityLivingBase entity, float partialTicks) {
