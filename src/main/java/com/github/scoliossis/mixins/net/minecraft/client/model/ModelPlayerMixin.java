@@ -1,6 +1,8 @@
 package com.github.scoliossis.mixins.net.minecraft.client.model;
 
+import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.render.ESP;
+import com.github.scoliossis.utils.minecraft.TargetUtil;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
@@ -23,6 +25,8 @@ public class ModelPlayerMixin extends ModelBiped {
 
     @Inject(method = "render", at = @At("HEAD"))
     public void renderHEAD(Entity entityIn, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float scale, CallbackInfo ci) {
+        if (!ModuleManager.isEnabled(ESP.class) || !TargetUtil.isValidTarget(entityIn)) return;
+
         if (ESP.outline) {
             GlStateManager.pushMatrix();
 
@@ -54,7 +58,7 @@ public class ModelPlayerMixin extends ModelBiped {
 
     @Inject(method = "render", at = @At("TAIL"))
     public void renderTAIL(Entity entityIn, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float scale, CallbackInfo ci) {
-        if (ESP.chams) {
+        if (ESP.chams && TargetUtil.isValidTarget(entityIn)) {
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1, 1000000);
         }

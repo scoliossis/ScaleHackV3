@@ -1,9 +1,12 @@
 package com.github.scoliossis.mixins.net.minecraft.client.renderer.entity;
 
+import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.client.ShowRotations;
+import com.github.scoliossis.modules.impl.render.ESP;
 import com.github.scoliossis.modules.impl.render.Nametags;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import com.github.scoliossis.utils.minecraft.TargetUtil;
 import com.github.scoliossis.utils.render.Render3dUtil;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -11,6 +14,7 @@ import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -70,6 +74,23 @@ public abstract class RenderLivingEntityMixin <T extends EntityLivingBase> exten
     protected void canRenderName(T entity, CallbackInfoReturnable<Boolean> cir) {
         if (Nametags.shouldHideNametag(entity)) cir.setReturnValue(false);
     }
+
+    @Inject(method = "renderLayers", at = @At("HEAD"))
+    protected void renderLayersHEAD(T entitylivingbaseIn, float p_177093_2_, float p_177093_3_, float partialTicks, float p_177093_5_, float p_177093_6_, float p_177093_7_, float p_177093_8_, CallbackInfo ci) {
+        if (ESP.chams && ModuleManager.isEnabled(ESP.class)&& TargetUtil.isValidTarget(entitylivingbaseIn)) {
+            GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+            GL11.glPolygonOffset(1, -1000000);
+        }
+    }
+
+    @Inject(method = "renderLayers", at = @At("TAIL"))
+    protected void renderLayersTAIL(T entitylivingbaseIn, float p_177093_2_, float p_177093_3_, float partialTicks, float p_177093_5_, float p_177093_6_, float p_177093_7_, float p_177093_8_, CallbackInfo ci) {
+        if (ESP.chams && ModuleManager.isEnabled(ESP.class) && TargetUtil.isValidTarget(entitylivingbaseIn)) {
+            GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+            GL11.glPolygonOffset(1, 1000000);
+        }
+    }
+
 
     @Override
     protected ResourceLocation getEntityTexture(T entity) {

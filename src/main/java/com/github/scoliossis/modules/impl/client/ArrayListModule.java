@@ -34,7 +34,7 @@ public class ArrayListModule extends Module {
     @RegisterSubModule(name = "Pulsing Speed", parent = "Pulsing Colour", min = 0.1, max = 10)
     public static float pulseSpeed = 1;
 
-    @RegisterSubModule(name = "Pulsing Multiplier", parent = "Pulsing Colour", min = 0.1, max = 10)
+    @RegisterSubModule(name = "Pulsing Spread", parent = "Pulsing Colour", min = 0.1, max = 50)
     public static float pulseMulti = 1;
 
     @RegisterSubModule(name = "Animation In")
