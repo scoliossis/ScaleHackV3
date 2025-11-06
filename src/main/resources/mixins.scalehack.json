@@ -37,6 +37,7 @@
     "net.minecraft.client.renderer.entity.RenderLivingEntityMixin",
     "net.minecraft.client.settings.KeyBindingMixin",
     "net.minecraft.util.SessionMixin",
-    "net.minecraft.util.TimerMixin"
+    "net.minecraft.util.TimerMixin",
+    "net.minecraftforge.client.GuiIngameForgeMixin"
   ]
 }

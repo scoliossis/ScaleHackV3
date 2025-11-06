@@ -8,6 +8,7 @@ import com.github.scoliossis.events.impl.ClientTickEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.events.impl.MouseScrolledEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.FrameUtil;
@@ -15,6 +16,8 @@ import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import com.github.scoliossis.utils.minecraft.RotationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
@@ -38,6 +41,18 @@ public abstract class MinecraftMixin implements MinecraftBridge {
 
     @Shadow
     protected abstract void rightClickMouse();
+
+    @Shadow
+    public GuiScreen currentScreen;
+
+    @Shadow
+    public GameSettings gameSettings;
+
+    @Shadow
+    public boolean inGameHasFocus;
+
+    @Shadow
+    protected abstract void sendClickBlockToController(boolean leftClick);
 
     @Inject(method = "createDisplay", at = @At("TAIL"))
     public void onCreateDisplay(CallbackInfo ci) {
@@ -94,6 +109,30 @@ public abstract class MinecraftMixin implements MinecraftBridge {
         return isPressed;
     }
 
+    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 10))
+    public boolean onSuccessfulClick(KeyBinding instance) {
+        boolean isPressed = instance.isPressed();
+
+        if (isPressed && ModuleManager.isEnabled(AutoBlock.class)) {
+            AutoBlock.swingQueued = true;
+            return false;
+        }
+
+        return isPressed;
+    }
+
+    // blehhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+    @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;sendClickBlockToController(Z)V"))
+    public void onSuccessfulClick(Minecraft instance, boolean b) {
+        if (ModuleManager.isEnabled(AutoBlock.class)) {
+            AutoBlock.clickBlockQueued = true;
+        }
+        else {
+            this.sendClickBlockToController(this.currentScreen == null && this.gameSettings.keyBindAttack.isKeyDown() && this.inGameHasFocus);
+        }
+    }
+
+
     @Redirect(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isEntityInsideOpaqueBlock()Z"))
     private boolean overrideCanF5inBlocks(EntityPlayerSP instance) {
         if (PlayerUtil.noClipRender) return false;
@@ -108,7 +147,15 @@ public abstract class MinecraftMixin implements MinecraftBridge {
         this.session = (Session) session;
     }
 
+    public void bridge$clickMouse() {
+        this.clickMouse();
+    }
+
     public void bridge$rightClickMouse() {
         this.rightClickMouse();
+    }
+
+    public void bridge$sendClickBlockToController(boolean leftClick) {
+        this.sendClickBlockToController(leftClick);
     }
 }

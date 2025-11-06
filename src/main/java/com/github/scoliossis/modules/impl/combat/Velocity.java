@@ -9,7 +9,6 @@ import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.BlinkUtil;
-import com.github.scoliossis.utils.minecraft.ChatUtil;
 import com.github.scoliossis.utils.minecraft.MovementUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.EnumAction;
@@ -66,6 +65,7 @@ public class Velocity extends Module {
     public static void handleVelocityPacket(PacketEvent.Receive event) {
         if (event.isCancelled()) return;
 
+        // todo: check for S27PacketExplosion
         if (event.packet instanceof S19PacketEntityStatus && C.p() != null && C.w() != null) {
             Entity entity = ((S19PacketEntityStatus) event.packet).getEntity(C.w());
             if (entity == null) return;
@@ -126,8 +126,8 @@ public class Velocity extends Module {
 
         event.rotation.yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
 
-        // eating is arguably very important, and would be annoying if cancelled.
-        if (C.p().getHeldItem() != null && (C.p().getHeldItem().getItemUseAction() != EnumAction.EAT || !C.p().isEating())) {
+        // using items is arguably very important, and would be annoying if cancelled.
+        if (C.p().getHeldItem() != null && (C.p().getHeldItem().getItemUseAction() == EnumAction.BLOCK || !C.p().isUsingItem())) {
             MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindUseItem, false);
         }
     }

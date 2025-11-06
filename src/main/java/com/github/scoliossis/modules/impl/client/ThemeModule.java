@@ -37,6 +37,10 @@ public class ThemeModule extends Module {
 
     private static FontUtil.Fonts previousFont = null;
 
+    public static boolean shouldUseCustomFont() {
+        return ThemeModule.globalFont && RenderUtil.renderSide != RenderUtil.RenderSide.World;
+    }
+
     @SubscribeEvent
     public static void onClientTickEvent(ClientTickEvent event) {
         if (font != previousFont) {

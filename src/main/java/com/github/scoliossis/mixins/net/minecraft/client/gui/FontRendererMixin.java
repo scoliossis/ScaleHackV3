@@ -4,11 +4,9 @@ import com.github.scoliossis.bridge.net.minecraft.client.gui.FontRendererBridge;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.modules.impl.render.NickHider;
 import com.github.scoliossis.utils.render.FontUtil;
-import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -21,26 +19,12 @@ import java.awt.*;
 @Mixin(FontRenderer.class)
 public abstract class FontRendererMixin implements FontRendererBridge {
     @Shadow public abstract int getStringWidth(final String p0);
-
-    @Unique private boolean FontRenderer$shouldUseCustomFont() {
-        return ThemeModule.globalFont && RenderUtil.renderSide != RenderUtil.RenderSide.World;
-    }
-
     @Shadow public abstract int drawString(String text, int x, int y, int color);
-
     @Shadow public abstract int drawString(String text, float x, float y, int color, boolean dropShadow);
-
-    @Shadow
-    private boolean bidiFlag;
-
-    @Shadow
-    protected abstract String bidiReorder(String p_bidiReorder_1_);
-
-    @Shadow
-    protected abstract void resetStyles();
-
-    @Shadow
-    protected abstract int renderString(String p_renderString_1_, float p_renderString_2_, float p_renderString_3_, int p_renderString_4_, boolean p_renderString_5_);
+    @Shadow private boolean bidiFlag;
+    @Shadow protected abstract String bidiReorder(String p_bidiReorder_1_);
+    @Shadow protected abstract void resetStyles();
+    @Shadow protected abstract int renderString(String p_renderString_1_, float p_renderString_2_, float p_renderString_3_, int p_renderString_4_, boolean p_renderString_5_);
 
     @Override
     public void bridge$resetStyles() {
@@ -64,7 +48,7 @@ public abstract class FontRendererMixin implements FontRendererBridge {
             return;
         }
 
-        if (FontRenderer$shouldUseCustomFont()) {
+        if (ThemeModule.shouldUseCustomFont()) {
             if (this.bidiFlag) {
                 text2 = this.bidiReorder(text);
             }
@@ -87,7 +71,7 @@ public abstract class FontRendererMixin implements FontRendererBridge {
     private void impl$getStringWidth(String text, CallbackInfoReturnable<Integer> cir) {
         String text2 = NickHider.fixText(text);
 
-        if (FontRenderer$shouldUseCustomFont()) cir.setReturnValue(FontUtil.getStringWidth(text2, ThemeModule.minecraftFontSize));
+        if (ThemeModule.shouldUseCustomFont()) cir.setReturnValue(FontUtil.getStringWidth(text2, ThemeModule.minecraftFontSize));
         else if (!text.equals(text2)) cir.setReturnValue(this.getStringWidth(text2));
     }
 }

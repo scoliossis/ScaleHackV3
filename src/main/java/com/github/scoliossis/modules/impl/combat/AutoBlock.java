@@ -3,10 +3,7 @@ package com.github.scoliossis.modules.impl.combat;
 import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.*;
@@ -70,6 +67,9 @@ public class AutoBlock extends Module {
 
     @Getter private static boolean isBlocking, isServerBlocking = false;
 
+    public static boolean swingQueued = false;
+    public static boolean clickBlockQueued = false;
+
     public static boolean isBlockingSwing() {
         return PlayerUtil.isUsingItem() || PlayerUtil.getLastUnblock() == MovementUtil.ticks;
     }
@@ -82,7 +82,7 @@ public class AutoBlock extends Module {
 
     private static AutoBlockMode lastAutoblockMode;
 
-    @SubscribeEvent(priority = 999)
+    @SubscribeEvent(priority = 998)
     public static void tickAutoBlock(PlayerUpdateEvent event) {
         if (C.p().getHeldItem() != itemInUse || autoblockMode != lastAutoblockMode) {
             stopBlocking();
@@ -99,6 +99,19 @@ public class AutoBlock extends Module {
 
         if (C.p().getHeldItem() != null && C.p().getHeldItem().getItemUseAction() == EnumAction.BLOCK) {
             tickBlocking();
+        }
+    }
+
+    @SubscribeEvent(priority = 999)
+    public static void tickSwingQueued(PlayerUpdateEvent event) {
+        if (PlayerUtil.canAttack() && swingQueued) {
+            MinecraftBridge.from(C.mc).bridge$clickMouse();
+            swingQueued = false;
+        }
+
+        if (PlayerUtil.canAttack() && clickBlockQueued) {
+            MinecraftBridge.from(C.mc).bridge$sendClickBlockToController(C.mc.currentScreen == null && C.mc.gameSettings.keyBindAttack.isKeyDown() && C.mc.inGameHasFocus);
+            clickBlockQueued = false;
         }
     }
 

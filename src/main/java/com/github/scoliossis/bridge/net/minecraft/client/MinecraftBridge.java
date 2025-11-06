@@ -11,5 +11,7 @@ public interface MinecraftBridge {
     TimerBridge bridge$getTimer();
     void bridge$setSession(SessionBridge session);
 
+    void bridge$clickMouse();
     void bridge$rightClickMouse();
+    void bridge$sendClickBlockToController(boolean leftClick);
 }

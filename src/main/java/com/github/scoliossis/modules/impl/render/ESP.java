@@ -45,7 +45,7 @@ public class ESP extends Module {
 
     @RegisterSubModule(name = "Outline")
     public static boolean outline = true;
-    @RegisterSubModule(name = "Outline Mode")
+    @RegisterSubModule(name = "Outline Mode", parent = "Outline")
     public static OutlineMode outlineMode = OutlineMode.Solid;
     public enum OutlineMode {
         Solid,

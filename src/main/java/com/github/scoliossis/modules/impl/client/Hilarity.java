@@ -86,7 +86,7 @@ public class Hilarity extends Module {
         if (!event.pressed) return;
 
         i++;
-        if (i > slider) return;
+        if (i < slider) return;
 
         ChatUtil.chat("&dFrom " + hilarityNames[(int) Math.floor(Math.random() * hilarityNames.length)] + "&7: " + hilarityMessages[(int) Math.floor(Math.random() * hilarityMessages.length)]);
         i = 0;
