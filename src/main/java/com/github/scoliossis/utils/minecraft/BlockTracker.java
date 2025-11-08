@@ -23,6 +23,8 @@ public class BlockTracker {
     }
 
     public static void loadBlocksFromChunk(int chunkX, int chunkZ, Block searchBlock) {
+        if (trackedBlocks.isEmpty()) return;
+
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 256; y++) {
                 for (int z = 0; z < 16; z++) {
@@ -39,6 +41,8 @@ public class BlockTracker {
     }
 
     public static void unloadBlocksFromChunk(int chunkX, int chunkZ) {
+        if (trackedBlocks.isEmpty()) return;
+
         for (ArrayList<BlockPos> positions : BlockTracker.getTrackedBlocks().values()) {
             for (int i = 0; i < positions.size(); i++) {
                 BlockPos pos = positions.get(i);

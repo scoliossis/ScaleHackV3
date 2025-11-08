@@ -6,12 +6,6 @@ import com.github.scoliossis.events.impl.PacketEvent;
 import com.github.scoliossis.events.impl.RespawnEvent;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.INetHandlerPlayClient;
-import net.minecraft.network.play.INetHandlerPlayServer;
-import net.minecraft.network.play.client.C09PacketHeldItemChange;
-import net.minecraft.network.play.server.S01PacketJoinGame;
-import net.minecraft.network.play.server.S07PacketRespawn;
-import net.minecraft.network.play.server.S40PacketDisconnect;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -62,6 +56,8 @@ public class BlinkUtil {
     }
 
     public static void pushBlink(boolean sent, boolean received, Packet<?> packet) {
+        if (C.mc.isSingleplayer()) return;
+
         if (sent) {
             blinkOutgoingIndex = Math.max(0, blinkOutgoingIndex+1);
             if (packet != null) blinkedSentPackets.add(packet);

@@ -49,7 +49,10 @@ public class TargetUtil {
 
             if (s.length() >= 2)
             {
-                return C.mc.fontRendererObj.getColorCode(s.charAt(1));
+                if ("0123456789abcdef".indexOf(s.charAt(1)) != -1) {
+                    return C.mc.fontRendererObj.getColorCode(s.charAt(1));
+                }
+                return -1;
             }
         }
 

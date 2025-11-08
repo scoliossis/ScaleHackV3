@@ -7,6 +7,7 @@ import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.movement.NoSlow;
 import com.github.scoliossis.modules.impl.movement.Sneak;
+import com.github.scoliossis.modules.impl.movement.Sprint;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
@@ -17,6 +18,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,7 +26,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityPlayerSP.class)
-public class EntityPlayerSPMixin {
+public abstract class EntityPlayerSPMixin {
+    @Shadow
+    public abstract void setSprinting(boolean sprinting);
+
     @Inject(method = "onUpdate", at = @At("HEAD"), cancellable = true)
     private void onUpdate$pre(CallbackInfo ci) {
         PlayerUtil.fakePlayerPosAndRot();
@@ -51,6 +56,12 @@ public class EntityPlayerSPMixin {
     @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z"))
     public boolean editIsUsingItem(EntityPlayerSP instance) {
         return NoSlow.shouldSlowDown();
+    }
+
+    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;setSprinting(Z)V"))
+    public void setSprinting(EntityPlayerSP instance, boolean sprinting) {
+        if (Sprint.shouldOmniSprint()) this.setSprinting(true);
+        else this.setSprinting(sprinting);
     }
 
     @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;sneak:Z"))

@@ -2,10 +2,11 @@ package com.github.scoliossis.modules.impl.client;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PacketEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
+import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.NetworkUtil;
 import net.minecraft.network.login.server.S01PacketEncryptionRequest;
@@ -26,15 +27,19 @@ import java.util.concurrent.ForkJoinPool;
         category = Category.CLIENT,
         enabledByDefault = true
 )
+// todo: add setting for sending multiple requests at a time
 public class AntiRat extends Module {
-    private static boolean finishedLastWave = true;
+    @RegisterSubModule(name = "Outgoing Requests", min = 1, max = 10)
+    public static int maxOutgoingRequests = 3;
+
+    private static int outgoingRequests = 0;
 
     @SubscribeEvent
-    public static void rateLimitLogin(PlayerUpdateEvent event) {
-        if (C.mc.isSingleplayer() || !finishedLastWave) return;
+    public static void rateLimitLogin(RenderTickEvent event) {
+        if (!C.isInGame() || C.mc.isSingleplayer()) return;
 
         // never ending requests.
-        ForkJoinPool.commonPool().execute(AntiRat::rateLimitLogin);
+        rateLimitLogin();
     }
 
     private static String serverID;
@@ -85,9 +90,13 @@ public class AntiRat extends Module {
     }
 
     private static void rateLimitLogin() {
-        finishedLastWave = false;
-        while (attemptLogin() != 429);
-        finishedLastWave = true;
+        while (outgoingRequests < maxOutgoingRequests) {
+            outgoingRequests++;
+            ForkJoinPool.commonPool().execute(() -> {
+                while (attemptLogin() != 429);
+                outgoingRequests--;
+            });
+        }
     }
 
     @Override

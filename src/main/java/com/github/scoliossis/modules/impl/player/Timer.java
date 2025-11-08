@@ -15,7 +15,7 @@ import com.github.scoliossis.utils.minecraft.TimerUtil;
         dangerous = true
 )
 public class Timer extends Module {
-    @RegisterSubModule(name = "Timer Speed", min = 0.1, max = 10)
+    @RegisterSubModule(name = "Timer Speed", min = 0.01, max = 10)
     public static float timerSpeed = 1;
 
     public static float prevTimer = 1;

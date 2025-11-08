@@ -380,7 +380,7 @@ public class Scaffold extends Module {
         while (blocksInRange.hasNext()) {
             BlockPos blockPos = blocksInRange.next();
 
-            if (!C.w().getBlockState(blockPos).getBlock().isBlockSolid(C.w(), blockPos, EnumFacing.UP)) continue;
+            if (!InventoryUtil.isValidBlock(C.w().getBlockState(blockPos).getBlock())) continue;
 
             for (EnumFacing facing : EnumFacing.values()) {
                 BlockPos blockPosOffset = blockPos.offset(facing);
@@ -389,7 +389,7 @@ public class Scaffold extends Module {
                 if (facing == EnumFacing.DOWN) continue;
                 if (facing == EnumFacing.UP && shouldKeepY()) continue;
 
-                if (C.w().getBlockState(blockPosOffset).getBlock().isBlockSolid(C.w(), blockPosOffset, EnumFacing.UP)) continue;
+                if (InventoryUtil.isValidBlock(C.w().getBlockState(blockPosOffset).getBlock())) continue;
                 if (blockPosOffset.getY() >= C.p().posY) continue;
 
                 Vec3 offsetBlockCentre = new Vec3(blockPosOffset.getX() + 0.5, blockPosOffset.getY() + 0.5, blockPosOffset.getZ() + 0.5);
