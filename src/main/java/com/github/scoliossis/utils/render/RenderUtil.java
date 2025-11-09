@@ -9,6 +9,7 @@ import lombok.Getter;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.Vec3;
@@ -246,9 +247,13 @@ public class RenderUtil {
     }
 
     public static void drawRectTextured(float x, float y, float w, float h, Color color, int textureID) {
+        GlStateManager.bindTexture(textureID);
+        drawRectTextured(x, y, w, h, color);
+    }
+
+    public static void drawRectTextured(float x, float y, float w, float h, Color color) {
         beginRender();
         GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(textureID);
         RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         glColor(color);
 
@@ -259,6 +264,7 @@ public class RenderUtil {
 
         finishRender();
     }
+
     public static void drawRectTexturedColor(float x, float y, float w, float h, Color color1, Color color2, int textureID) {
         beginRender();
         GlStateManager.enableTexture2D();
@@ -269,6 +275,20 @@ public class RenderUtil {
         addVertexTextureColor(x+w, y+h, color2, 1, 1);
         addVertexTextureColor(x+w, y, color2, 1, 0);
         addVertexTextureColor(x, y, color1, 0, 0);
+
+        finishRender();
+    }
+
+    public static void drawRectSprite(float x, float y, float w, float h, Color color, TextureAtlasSprite sprite) {
+        beginRender();
+        GlStateManager.enableTexture2D();
+        RenderUtil.beginAddingVertex(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        glColor(color);
+
+        addVertexTexture(x, y+h, sprite.getMinU(), sprite.getMinV());
+        addVertexTexture(x+w, y+h, sprite.getMaxU(), sprite.getMinV());
+        addVertexTexture(x+w, y, sprite.getMaxU(), sprite.getMaxV());
+        addVertexTexture(x, y, sprite.getMinU(), sprite.getMaxV());
 
         finishRender();
     }

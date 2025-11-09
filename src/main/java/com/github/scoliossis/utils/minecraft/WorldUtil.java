@@ -3,12 +3,15 @@ package com.github.scoliossis.utils.minecraft;
 import com.github.scoliossis.utils.client.C;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import net.minecraft.block.BlockBed;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class WorldUtil {
@@ -148,5 +151,43 @@ public class WorldUtil {
         }
 
         return null;
+    }
+
+    public static BlockPos getBestBlockSurroundingBed(BlockPos blockPos) {
+        IBlockState state = C.w().getBlockState(blockPos);
+
+        if (!state.getProperties().containsKey(BlockBed.PART) || !state.getProperties().containsKey(BlockBed.FACING)) return null;
+        if (state.getValue(BlockBed.PART) != BlockBed.EnumPartType.FOOT) return null;
+
+        EnumFacing facing = state.getValue(BlockBed.FACING);
+        BlockPos headPos = blockPos.offset(facing);
+        List<BlockPos> possiblePositions = Arrays.asList(
+                headPos.offset(EnumFacing.UP),
+                headPos.offset(facing),
+                headPos.offset(facing.rotateY()),
+                headPos.offset(facing.rotateYCCW()),
+
+                blockPos.offset(EnumFacing.UP),
+                blockPos.offset(facing.getOpposite()),
+                blockPos.offset(facing.rotateY()),
+                blockPos.offset(facing.rotateYCCW())
+        );
+
+        float bestBreakSpeed = 0;
+        BlockPos bestPos = null;
+        double bestDistance = 0;
+
+        for (BlockPos pos : possiblePositions) {
+            float breakSpeed = InventoryUtil.blockStrength(C.p().inventory.getStackInSlot(InventoryUtil.getBestSlotForBlock(pos)), pos);
+
+            double distance = C.p().getPositionEyes(1).distanceTo(new Vec3(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5));
+            if (breakSpeed > bestBreakSpeed || bestPos == null || (breakSpeed == bestBreakSpeed && bestDistance > distance)) {
+                bestBreakSpeed = breakSpeed;
+                bestPos = pos;
+                bestDistance = distance;
+            }
+        }
+
+        return bestPos;
     }
 }

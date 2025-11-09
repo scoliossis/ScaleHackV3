@@ -42,7 +42,7 @@ public class Render3dUtil {
 
     public static void draw3dBox(double x, double y, double z, double w, double h, double d, Color color, float partialTicks, boolean down, boolean up, boolean north, boolean south, boolean west, boolean east, boolean cull) {
         // setup drawing
-        Vec3 relativeCoordinatePos = getRelativeCoordinatePos(new Vec3(x, y, z), partialTicks);
+        Vec3 relativeCoordinatePos = getRelativePos(new Vec3(x, y, z), partialTicks);
         x = relativeCoordinatePos.xCoord; y = relativeCoordinatePos.yCoord; z = relativeCoordinatePos.zCoord;
 
         RenderUtil.beginRender();
@@ -146,10 +146,10 @@ public class Render3dUtil {
 
     public static Vec3 getRelativeEntityPos(Entity entity, float partialTicks) {
         Vec3 entityLerped = lerpVec(new Vec3(entity.lastTickPosX, entity.lastTickPosY, entity.lastTickPosZ), entity.getPositionVector(), partialTicks);
-        return getRelativeCoordinatePos(entityLerped, partialTicks);
+        return getRelativePos(entityLerped, partialTicks);
     }
 
-    public static Vec3 getRelativeCoordinatePos(Vec3 vec3, float partialTicks) {
+    public static Vec3 getRelativePos(Vec3 vec3, float partialTicks) {
         Vec3 playerLerped = lerpVec(new Vec3(C.p().lastTickPosX, C.p().lastTickPosY, C.p().lastTickPosZ), C.p().getPositionVector(), partialTicks);
         return new Vec3(
                 vec3.xCoord - playerLerped.xCoord,

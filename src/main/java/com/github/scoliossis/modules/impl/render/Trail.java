@@ -73,7 +73,7 @@ public class Trail extends Module {
             GL11.glLineWidth(lineWidth);
             for (PosAndTime node : nodes) {
                 Color color = RenderUtil.getColorsFade(node.time, ThemeModule.getThemeColours(), fadeSpeed);
-                Vec3 relativeCoordinatePos = Render3dUtil.getRelativeCoordinatePos(node.pos, event.partialTicks);
+                Vec3 relativeCoordinatePos = Render3dUtil.getRelativePos(node.pos, event.partialTicks);
                 RenderUtil.getTessalator().getWorldRenderer()
                         .pos(relativeCoordinatePos.xCoord, relativeCoordinatePos.yCoord, relativeCoordinatePos.zCoord)
                         .color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha())
@@ -86,7 +86,7 @@ public class Trail extends Module {
                 Color color = RenderUtil.getColorsFade(node.time, ThemeModule.getThemeColours(), fadeSpeed);
 
                 GL11.glPushMatrix();
-                RenderUtil.glTranslate(Render3dUtil.getRelativeCoordinatePos(node.pos, event.partialTicks));
+                RenderUtil.glTranslate(Render3dUtil.getRelativePos(node.pos, event.partialTicks));
                 Render3dUtil.rotateToPlayer(true);
                 Render3dUtil.drawRoundedRectGlow(-0.1f, -0.1f, 0.2f, 0.2f, 0.2f, color);
                 GL11.glPopMatrix();

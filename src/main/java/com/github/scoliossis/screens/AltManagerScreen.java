@@ -399,8 +399,8 @@ public class AltManagerScreen extends GuiScreen {
                 return;
             }
             if (keyCode == 28) {
-                Login.loggingInCracked = false;
                 Login.addCracked(crackedLoginTextBox.getText());
+                Login.loggingInCracked = false;
                 crackedLoginTextBox.setText("");
                 return;
             }
@@ -415,6 +415,7 @@ public class AltManagerScreen extends GuiScreen {
             }
             if (keyCode == 28) {
                 Login.addProgressReport(SessionUtil.changeName(renamedAlt.json.get("session"), renameTextBox.getText()));
+                renamedAlt = null;
                 renameTextBox.setText("");
                 return;
             }

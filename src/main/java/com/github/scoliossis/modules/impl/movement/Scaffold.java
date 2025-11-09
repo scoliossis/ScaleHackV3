@@ -13,6 +13,7 @@ import com.github.scoliossis.utils.render.Render3dUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
@@ -379,8 +380,9 @@ public class Scaffold extends Module {
 
         while (blocksInRange.hasNext()) {
             BlockPos blockPos = blocksInRange.next();
+            Block currentBlock = C.w().getBlockState(blockPos).getBlock();
 
-            if (!InventoryUtil.isValidBlock(C.w().getBlockState(blockPos).getBlock())) continue;
+            if (InventoryUtil.isBlockInteractable(currentBlock) || !InventoryUtil.isSolidBlock(currentBlock)) continue;
 
             for (EnumFacing facing : EnumFacing.values()) {
                 BlockPos blockPosOffset = blockPos.offset(facing);
@@ -389,7 +391,7 @@ public class Scaffold extends Module {
                 if (facing == EnumFacing.DOWN) continue;
                 if (facing == EnumFacing.UP && shouldKeepY()) continue;
 
-                if (InventoryUtil.isValidBlock(C.w().getBlockState(blockPosOffset).getBlock())) continue;
+                if (InventoryUtil.isSolidBlock(C.w().getBlockState(blockPosOffset).getBlock())) continue;
                 if (blockPosOffset.getY() >= C.p().posY) continue;
 
                 Vec3 offsetBlockCentre = new Vec3(blockPosOffset.getX() + 0.5, blockPosOffset.getY() + 0.5, blockPosOffset.getZ() + 0.5);
