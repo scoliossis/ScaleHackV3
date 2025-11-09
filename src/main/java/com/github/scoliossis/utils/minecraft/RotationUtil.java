@@ -5,6 +5,7 @@ import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.MathUtil;
 import lombok.AllArgsConstructor;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
@@ -97,6 +98,11 @@ public class RotationUtil {
         float yawDelta = rotationDifference.yaw / smoothing;
 
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
+    }
+
+    public static EnumFacing getFacing() {
+        Vec3 facingVector = WorldUtil.getVectorForRotation(PlayerUtil.currentRotation().pitch, PlayerUtil.currentRotation().yaw);
+        return EnumFacing.getFacingFromVector((float) facingVector.xCoord, (float) facingVector.yCoord, (float) facingVector.zCoord);
     }
 
     @SubscribeEvent(priority = 9999)

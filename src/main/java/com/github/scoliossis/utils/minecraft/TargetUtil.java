@@ -79,23 +79,7 @@ public class TargetUtil {
     }
 
     public static Vec3 getClosestPointToEntity(EntityLivingBase target) {
-        AxisAlignedBB rotationTarget = target.getEntityBoundingBox();
-        Vec3 eyePos = C.p().getPositionEyes(1);
-
-        double posX = eyePos.xCoord;
-        double posY = eyePos.yCoord;
-        double posZ = eyePos.zCoord;
-
-        if (eyePos.xCoord < rotationTarget.minX) posX = rotationTarget.minX;
-        else if (eyePos.xCoord > rotationTarget.maxX) posX = rotationTarget.maxX;
-
-        if (eyePos.yCoord < rotationTarget.minY) posY = rotationTarget.minY;
-        else if (eyePos.yCoord > rotationTarget.maxY) posY = rotationTarget.maxY;
-
-        if (eyePos.zCoord < rotationTarget.minZ) posZ = rotationTarget.minZ;
-        else if (eyePos.zCoord > rotationTarget.maxZ) posZ = rotationTarget.maxZ;
-
-        return new Vec3(posX, posY, posZ);
+        return WorldUtil.getClosestPoint(target.getEntityBoundingBox());
     }
 
     public static RotationUtil.Rotation getTargetRotation(EntityLivingBase entity, double range, boolean throughWalls) {

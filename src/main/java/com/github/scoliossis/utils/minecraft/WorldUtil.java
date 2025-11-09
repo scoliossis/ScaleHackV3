@@ -3,6 +3,7 @@ package com.github.scoliossis.utils.minecraft;
 import com.github.scoliossis.utils.client.C;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -153,24 +154,26 @@ public class WorldUtil {
         return null;
     }
 
+    // hit through non solid blocks
     public static BlockPos getBestBlockSurroundingBed(BlockPos blockPos) {
         IBlockState state = C.w().getBlockState(blockPos);
 
-        if (!state.getProperties().containsKey(BlockBed.PART) || !state.getProperties().containsKey(BlockBed.FACING)) return null;
-        if (state.getValue(BlockBed.PART) != BlockBed.EnumPartType.FOOT) return null;
-
         EnumFacing facing = state.getValue(BlockBed.FACING);
-        BlockPos headPos = blockPos.offset(facing);
+
+        boolean isFoot = state.getValue(BlockBed.PART) == BlockBed.EnumPartType.FOOT;
+        BlockPos headPos = !isFoot ? blockPos.offset(facing.getOpposite()) : blockPos;
+        BlockPos footPos = isFoot ? blockPos.offset(facing) : blockPos;
+
         List<BlockPos> possiblePositions = Arrays.asList(
                 headPos.offset(EnumFacing.UP),
-                headPos.offset(facing),
+                headPos.offset(facing.getOpposite()),
                 headPos.offset(facing.rotateY()),
                 headPos.offset(facing.rotateYCCW()),
 
-                blockPos.offset(EnumFacing.UP),
-                blockPos.offset(facing.getOpposite()),
-                blockPos.offset(facing.rotateY()),
-                blockPos.offset(facing.rotateYCCW())
+                footPos.offset(EnumFacing.UP),
+                footPos.offset(facing),
+                footPos.offset(facing.rotateY()),
+                footPos.offset(facing.rotateYCCW())
         );
 
         float bestBreakSpeed = 0;
@@ -181,6 +184,7 @@ public class WorldUtil {
             float breakSpeed = InventoryUtil.blockStrength(C.p().inventory.getStackInSlot(InventoryUtil.getBestSlotForBlock(pos)), pos);
 
             double distance = C.p().getPositionEyes(1).distanceTo(new Vec3(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5));
+
             if (breakSpeed > bestBreakSpeed || bestPos == null || (breakSpeed == bestBreakSpeed && bestDistance > distance)) {
                 bestBreakSpeed = breakSpeed;
                 bestPos = pos;
@@ -189,5 +193,32 @@ public class WorldUtil {
         }
 
         return bestPos;
+    }
+
+    public static Vec3 getClosestPointToBlock(BlockPos blockPos) {
+        Block block = C.w().getBlockState(blockPos).getBlock();
+        AxisAlignedBB collisionBox = block.getCollisionBoundingBox(C.w(), BlockPos.ORIGIN, block.getDefaultState());
+        if (collisionBox == null) return null;
+
+        return getClosestPoint(collisionBox.offset(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
+    }
+
+    public static Vec3 getClosestPoint(AxisAlignedBB collisionBox) {
+        Vec3 eyePos = C.p().getPositionEyes(1);
+
+        double posX = eyePos.xCoord;
+        double posY = eyePos.yCoord;
+        double posZ = eyePos.zCoord;
+
+        if (eyePos.xCoord < collisionBox.minX) posX = collisionBox.minX;
+        else if (eyePos.xCoord > collisionBox.maxX) posX = collisionBox.maxX;
+
+        if (eyePos.yCoord < collisionBox.minY) posY = collisionBox.minY;
+        else if (eyePos.yCoord > collisionBox.maxY) posY = collisionBox.maxY;
+
+        if (eyePos.zCoord < collisionBox.minZ) posZ = collisionBox.minZ;
+        else if (eyePos.zCoord > collisionBox.maxZ) posZ = collisionBox.maxZ;
+
+        return new Vec3(posX, posY, posZ);
     }
 }

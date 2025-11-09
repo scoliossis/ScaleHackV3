@@ -25,6 +25,7 @@
     "net.minecraft.client.gui.FontRendererMixin",
     "net.minecraft.client.gui.GuiChatMixin",
     "net.minecraft.client.gui.GuiDisconnectedMixin",
+    "net.minecraft.client.gui.GuiIngameMixin",
     "net.minecraft.client.gui.GuiMainMenuMixin",
     "net.minecraft.client.gui.GuiScreenMixin",
     "net.minecraft.client.gui.GuiSlotMixin",

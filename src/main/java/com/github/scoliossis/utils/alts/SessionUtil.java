@@ -165,7 +165,7 @@ public class SessionUtil {
             CloseableHttpResponse res = NetworkUtil.getServerResponse(req);
             switch (res.getStatusLine().getStatusCode()) {
                 case 400:
-                    return "Skin URL is invalid.";
+                    return "Request failed, skin URL could be invalid.";
                 case 403:
                     return "Cannot change skin.";
                 case 429:

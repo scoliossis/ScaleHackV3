@@ -35,7 +35,7 @@ public class Scaffold extends Module {
     public static SubCategory basicCategory = new SubCategory();
 
     @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1, parent = "Basics")
-    public static float blockReach = 5f;
+    public static float blockReach = 4.5f;
 
     @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
     public static boolean blocksOnly = true;

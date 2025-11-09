@@ -2,16 +2,13 @@ package com.github.scoliossis.modules.impl.render;
 
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
-import com.github.scoliossis.modules.Category;
-import com.github.scoliossis.modules.Module;
-import com.github.scoliossis.modules.RegisterModule;
-import com.github.scoliossis.modules.RegisterSubModule;
+import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.impl.player.Fucker;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.BlockTracker;
 import com.github.scoliossis.utils.minecraft.WorldUtil;
 import com.github.scoliossis.utils.render.Render3dUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
-import lombok.extern.slf4j.Slf4j;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.state.IBlockState;
@@ -25,7 +22,6 @@ import org.lwjgl.opengl.GL11;
 import java.awt.*;
 import java.util.ArrayList;
 
-@Slf4j
 @RegisterModule(
         name = "Bed ESP",
         description = "scale-chan, c-can we,,, put our m-m-minecraft beds next to eachother >.<",
@@ -46,8 +42,7 @@ public class BedESP extends Module {
 
         if (beds == null) return;
 
-        for (int i = 0; i < beds.size(); i++) {
-            BlockPos blockPos = beds.get(i);
+        for (BlockPos blockPos : beds) {
             IBlockState state = C.w().getBlockState(blockPos);
 
             if (!state.getProperties().containsKey(BlockBed.PART) || !state.getProperties().containsKey(BlockBed.FACING)) continue;
@@ -86,11 +81,11 @@ public class BedESP extends Module {
 
     @Override
     protected void onEnable() {
-        BlockTracker.beginTracking(Blocks.bed);
+        if (!ModuleManager.isEnabled(Fucker.class)) BlockTracker.beginTracking(Blocks.bed);
     }
 
     @Override
     protected void onDisable() {
-        BlockTracker.stopTracking(Blocks.bed);
+        if (!ModuleManager.isEnabled(Fucker.class)) BlockTracker.stopTracking(Blocks.bed);
     }
 }

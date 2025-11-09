@@ -9,7 +9,6 @@ import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.minecraft.TargetUtil;
-import com.github.scoliossis.utils.render.EasingUtil;
 import com.github.scoliossis.utils.render.Render3dUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.model.ModelBox;
@@ -21,7 +20,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.MathHelper;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -133,10 +131,8 @@ public class ESP extends Module {
         float healthPercent = Math.min(entity.getHealth() / entity.getMaxHealth(), 1);
         float extraHealthPercent = entity.getAbsorptionAmount() / entity.getMaxHealth();
 
-        int healthColour = (int) (255 * MathHelper.clamp_float((float) EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease(healthPercent), 0, 1));
-
         Color backgroundColour = new Color(22, 22, 22);
-        Color healthBarColour = new Color(255-healthColour, healthColour, 80);
+        Color healthBarColour = RenderUtil.getProgressColour(healthPercent);
         Color absorptionColour = new Color(255, 255, 0);
 
         float backgroundWidth = 0.1f;

@@ -1,10 +1,10 @@
 package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.impl.player.Fucker;
 import com.github.scoliossis.utils.client.MathUtil;
 import com.github.scoliossis.utils.minecraft.*;
 import net.minecraft.entity.Entity;
@@ -120,7 +120,7 @@ public class KillAura extends Module {
     }
 
     private static boolean shouldAttack() {
-        return shouldAura() && MovementUtil.ticks >= nextAttackTick && PlayerUtil.canAttack();
+        return shouldAura() && MovementUtil.ticks >= nextAttackTick && PlayerUtil.canAttack() && !Fucker.shouldRotate();
     }
 
     private static EntityLivingBase getTarget() {

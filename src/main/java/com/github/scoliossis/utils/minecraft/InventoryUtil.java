@@ -60,7 +60,7 @@ public class InventoryUtil {
     }
 
     public static boolean isBlockInteractable(Block block) {
-        if (block == Blocks.tnt || block instanceof BlockStairs) return false;
+        if (block == Blocks.tnt || block instanceof BlockStairs || block == Blocks.end_stone || block == Blocks.redstone_ore) return false;
 
         Class<?> clazz = block.getClass();
 
@@ -92,19 +92,19 @@ public class InventoryUtil {
     }
 
     public static int getBestSlotForBlock(BlockPos blockPos) {
-        int bestSlot = -1;
+        int bestSlot = 0;
         float fastest = 0;
 
         for (int i = 0; i < 9; i++) {
             float breakSpeed = blockStrength(C.p().inventory.getStackInSlot(i), blockPos);
 
-            if (breakSpeed > fastest) {
+            if (breakSpeed > fastest || (breakSpeed == fastest && C.p().inventory.currentItem == i)) {
                 fastest = breakSpeed;
                 bestSlot = i;
             }
         }
 
-        return bestSlot == -1 ? C.p().inventory.currentItem : bestSlot;
+        return bestSlot;
     }
 
     // net.minecraftforge.common.ForgeHooks.blockStrength

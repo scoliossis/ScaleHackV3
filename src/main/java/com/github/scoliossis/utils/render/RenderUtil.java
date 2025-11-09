@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -399,6 +400,11 @@ public class RenderUtil {
 
         // we have finished! draw!
         finishRender();
+    }
+
+    public static Color getProgressColour(float percent) {
+        int progressInt = (int) (255 * MathHelper.clamp_float((float) EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease(percent), 0, 1));
+        return new Color(255-progressInt, progressInt, 80);
     }
 
     public static void drawRoundedRectFade(float x, float y, float w, float h, float radius, Color color1, Color color2) {
