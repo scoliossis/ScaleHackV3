@@ -46,6 +46,9 @@ public class Fucker extends Module {
     @RegisterSubModule(name = "Tick Swap", description = "Only swaps items on first and last tick of breaking block")
     public static boolean tickSwap = true;
 
+    @RegisterSubModule(name = "No Autoblock")
+    public static boolean noAutoblock = true;
+
     @RegisterSubModule(name = "Ticks Between Blocks", min = 0, max = 6, increment = 0.1, parent = "Basics")
     public static int ticksBetweenBlocks = 5;
 
@@ -67,8 +70,8 @@ public class Fucker extends Module {
     private static int bestSlot = -1;
 
     // todo: allow aura, switch tools n shi
-    // higher priority than killaura and scaffold
-    @SubscribeEvent(priority = 2000)
+    // higher priority than killaura and velocity
+    @SubscribeEvent(priority = 3000)
     public static void findTargetAndRotate(RotationEvent event) {
         if (justStartedGame) findOwnBed();
 
@@ -100,7 +103,7 @@ public class Fucker extends Module {
 
         if (currentTarget == null || PlayerUtil.isUsingItem() || (!preRotate && MovementUtil.ticks - rotationTick <= 0)) return;
 
-        C.p().swingItem();
+        PlayerUtil.swingHand();
 
         if (currentTarget != lastTarget) {
             lastTarget = currentTarget;
@@ -115,7 +118,8 @@ public class Fucker extends Module {
         }
 
         if (currentBreakProgress >= 1) {
-            PacketUtil.sendPacket(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, lastTarget, facing));
+            PacketUtil.sendPacket(new C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, currentTarget, facing));
+            C.w().setBlockState(currentTarget, Blocks.air.getDefaultState(), 3);
             if (lastHotbarSlot != -1) C.p().inventory.currentItem = lastHotbarSlot;
             currentTarget = lastTarget = null;
             lastBreakTick = MovementUtil.ticks;
@@ -263,5 +267,7 @@ public class Fucker extends Module {
         if (!ModuleManager.isEnabled(BedESP.class)) BlockTracker.stopTracking(Blocks.bed);
         currentBedTarget = currentTarget = lastTarget = null;
         hasTickSwapped = false;
+        if (lastHotbarSlot != -1) C.p().inventory.currentItem = lastHotbarSlot;
+        lastHotbarSlot = -1;
     }
 }

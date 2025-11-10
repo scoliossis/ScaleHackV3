@@ -234,7 +234,7 @@ public class Scaffold extends Module {
         if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
 
         if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
-            C.p().swingItem();
+            PlayerUtil.swingHand();
 
             lastPlacedDeltaX = Math.abs(PlayerUtil.currentRotation().yaw - PlayerUtil.lastRotation().yaw);
             blocksPlaced++;

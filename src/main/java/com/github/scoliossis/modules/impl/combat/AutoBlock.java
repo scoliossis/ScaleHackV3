@@ -5,6 +5,7 @@ import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBrid
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.impl.player.Fucker;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.*;
 import lombok.AllArgsConstructor;
@@ -84,6 +85,10 @@ public class AutoBlock extends Module {
 
     @SubscribeEvent(priority = 998)
     public static void tickAutoBlock(PlayerUpdateEvent event) {
+        if (Fucker.getCurrentTarget() != null && Fucker.noAutoblock) {
+            stopBlocking();
+            return;
+        }
         if (C.p().getHeldItem() != itemInUse || autoblockMode != lastAutoblockMode) {
             stopBlocking();
         }

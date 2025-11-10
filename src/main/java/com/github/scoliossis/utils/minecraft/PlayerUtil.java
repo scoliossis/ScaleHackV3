@@ -21,13 +21,22 @@ public class PlayerUtil {
 
     public static boolean attack(Entity target) {
         if (canAttack()) {
-            C.p().swingItem();
+            swingHand();
             C.mc.playerController.attackEntity(C.p(), target);
 
             return true;
         }
 
         return false;
+    }
+
+    private static int lastSwing = -1;
+
+    public static void swingHand() {
+        if (lastSwing == MovementUtil.ticks) return;
+
+        C.p().swingItem();
+        lastSwing = MovementUtil.ticks;
     }
 
     private static int lastUnblock = -1;
