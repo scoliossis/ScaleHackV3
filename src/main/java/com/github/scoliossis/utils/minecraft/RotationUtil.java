@@ -4,6 +4,7 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.MathUtil;
+import com.github.scoliossis.utils.render.EasingUtil;
 import lombok.AllArgsConstructor;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
@@ -96,6 +97,16 @@ public class RotationUtil {
         Rotation rotationDifference = to.subtract(from);
         float pitchDelta = rotationDifference.pitch / smoothing;
         float yawDelta = rotationDifference.yaw / smoothing;
+
+        return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
+    }
+
+    public static Rotation getEasedRotation(Rotation to, EasingUtil.EasingFunctions easingFunction, double easing) {
+        Rotation from = PlayerUtil.lastRotation();
+        Rotation rotationDifference = to.subtract(from);
+
+        float pitchDelta = (float) (rotationDifference.pitch * easingFunction.ease(easing));
+        float yawDelta = (float) (rotationDifference.yaw * easingFunction.ease(easing));
 
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
     }

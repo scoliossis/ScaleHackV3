@@ -154,7 +154,6 @@ public class WorldUtil {
         return null;
     }
 
-    // hit through non solid blocks
     public static BlockPos getBestBlockSurroundingBed(BlockPos blockPos) {
         IBlockState state = C.w().getBlockState(blockPos);
 
@@ -182,6 +181,9 @@ public class WorldUtil {
 
         for (BlockPos pos : possiblePositions) {
             float breakSpeed = InventoryUtil.blockStrength(C.p().inventory.getStackInSlot(InventoryUtil.getBestSlotForBlock(pos)), pos);
+
+            // non solid blocks are ignored
+            if (!InventoryUtil.isFullBlock(C.w().getBlockState(pos).getBlock())) return null;
 
             double distance = C.p().getPositionEyes(1).distanceTo(new Vec3(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5));
 

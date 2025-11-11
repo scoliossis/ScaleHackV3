@@ -9,6 +9,7 @@ import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.*;
+import com.github.scoliossis.utils.render.EasingUtil;
 import com.github.scoliossis.utils.render.Render3dUtil;
 import com.github.scoliossis.utils.render.RenderUtil;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,12 @@ public class Scaffold extends Module {
 
     @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
     public static boolean blocksOnly = true;
+
+    @RegisterSubModule(name = "Use Largest Stack", description = "Always switches to largest stack of blocks", parent = "Basics")
+    public static boolean useLargestStack = true;
+
+    @RegisterSubModule(name = "Swap Time", parent = "Use Largest Stack", description = "Blocks places between switching blocks", min = 1, max = 10)
+    public static int swapTime = 5;
 
     @RegisterSubModule(name = "Tower")
     public static SubCategory towerCategory = new SubCategory();
@@ -104,12 +111,20 @@ public class Scaffold extends Module {
     public static Telly_Mode tellyMode = Telly_Mode.Hypixel;
     @AllArgsConstructor
     public enum Telly_Mode {
-        Hypixel(true, 1, 4, 1),
-        Grim(false, 1, 0, 0),
-        Custom(false, -1, -1, -1) {
+        Hypixel(true, EasingUtil.EasingFunctions.Ease_Out_Expo, 2, 1, 2, 1),
+        Grim(false, EasingUtil.EasingFunctions.Normal, 0, 1, 0, 0),
+        Custom(false, null, -1, -1, -1, -1) {
             @Override
             public boolean isSmoothRotationTelly() {
                 return Scaffold.smoothRotationTelly;
+            }
+            @Override
+            public EasingUtil.EasingFunctions getEasingFunction() {
+                return Scaffold.easingFunction;
+            }
+            @Override
+            public int getRotationTicks() {
+                return Scaffold.rotationTicks;
             }
             @Override
             public int getTellyTicks() {
@@ -126,6 +141,8 @@ public class Scaffold extends Module {
         };
 
         @Getter public final boolean smoothRotationTelly;
+        @Getter public final EasingUtil.EasingFunctions easingFunction;
+        @Getter public final int rotationTicks;
         @Getter public final int tellyTicks;
         @Getter public final int tellyPlaceDelay;
         @Getter public final int tellyForwardTicks;
@@ -134,6 +151,12 @@ public class Scaffold extends Module {
 
     @RegisterSubModule(name = "Smooth Rotation", description = "Doesn't snap back to placing blocks", parent = "Telly Mode", modeParentString = "Custom")
     public static boolean smoothRotationTelly = true;
+
+    @RegisterSubModule(name = "Easing", description = "Doesn't snap back to placing blocks", parent = "Smooth Rotation")
+    public static EasingUtil.EasingFunctions easingFunction = EasingUtil.EasingFunctions.Ease_Out_Expo;
+
+    @RegisterSubModule(name = "Rotation Ticks", description = "Ticks taken to finish rotating", max = 5, parent = "Smooth Rotation")
+    public static int rotationTicks = 3;
 
     @RegisterSubModule(name = "Telly Ticks", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Telly Mode", modeParentString = "Custom")
     public static int tellyTicks = 1;
@@ -184,13 +207,14 @@ public class Scaffold extends Module {
     public static void onRotationEvent(RotationEvent event) {
         didPlace |= C.p().inventory.currentItem == previousStack && InventoryUtil.isSlotEmpty(C.p().inventory.currentItem) && shouldScaffold;
 
-        if (!InventoryUtil.isValidBlock()) {
-            int bestStack = InventoryUtil.biggestBlockSlot();
-            if ((blocksOnly && !didPlace) || bestStack == -1) {
-                disable();
-                return;
-            }
+        int bestStack = InventoryUtil.biggestBlockSlot();
 
+        if (!InventoryUtil.isValidBlock() && (blocksOnly && !didPlace) || bestStack == -1) {
+            disable();
+            return;
+        }
+
+        if (!InventoryUtil.isValidBlock() || (useLargestStack && blocksPlaced % swapTime == 0)) {
             C.p().inventory.currentItem = bestStack;
         }
 
@@ -226,7 +250,7 @@ public class Scaffold extends Module {
 
         if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
 
-        if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay()) return;
+        if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay() + Math.max(0, tellyMode.getRotationTicks()-1)) return;
 
         MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
@@ -469,7 +493,7 @@ public class Scaffold extends Module {
                 RotationUtil.Rotation bestRotation = new RotationUtil.Rotation(closestPitch, PlayerUtil.lastRotation().yaw + closestYaw);
 
                 if (shouldSmoothRotate()) {
-                    event.rotation = RotationUtil.getSmoothRotation(bestRotation, getSmoothRotateFactor());
+                    event.rotation = RotationUtil.getEasedRotation(bestRotation, tellyMode.getEasingFunction(), getRotationLerp());
                 }
                 else event.rotation = bestRotation;
 
@@ -484,12 +508,12 @@ public class Scaffold extends Module {
 
     private static boolean shouldSmoothRotate() {
         return shouldTelly()
-                && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay()
+                && tellyPlaceDelayCounter <= tellyMode.getRotationTicks()
                 && tellyMode.isSmoothRotationTelly();
     }
 
-    private static float getSmoothRotateFactor() {
-        return tellyMode.getTellyPlaceDelay()-tellyPlaceDelayCounter;
+    private static double getRotationLerp() {
+        return (double) tellyPlaceDelayCounter / tellyMode.getRotationTicks();
     }
 
     private static int previousPerspective = 0;

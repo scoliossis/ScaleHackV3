@@ -7,6 +7,7 @@ import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.player.Fucker;
 import com.github.scoliossis.utils.client.MathUtil;
 import com.github.scoliossis.utils.minecraft.*;
+import com.github.scoliossis.utils.render.EasingUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemSword;
@@ -53,10 +54,13 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Rotation")
     public SubCategory rotationsSubcategory = new SubCategory();
 
+    @RegisterSubModule(name = "Random Point", parent = "Rotation", description = "Picks a random valid roations instead of always the closest")
+    public static boolean randomValidRotation = true;
+
     @RegisterSubModule(name = "Rotation Mode", parent = "Rotation")
     public static KillAuraRotations rotations = KillAuraRotations.Smooth;
     public enum KillAuraRotations {
-        Simple, Smooth, Snap, None
+        Simple, Smooth, Eased, Snap, None
     }
 
     @RegisterSubModule(name = "Min Rotation", parent = "Rotation Mode", modeParentString = "Simple", min = 0, max = 180)
@@ -68,10 +72,17 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Rotation Smoothing", parent = "Rotation Mode", modeParentString = "Smooth", min = 1f, max = 5)
     public static float smoothRotationSpeed = 1;
 
+    @RegisterSubModule(name = "Easing", parent = "Rotation Mode", modeParentString = "Eased")
+    public static EasingUtil.EasingFunctions easingFunction = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
+
+    @RegisterSubModule(name = "Easing Ticks", parent = "Rotation Mode", modeParentString = "Eased", min = 1, max = 20)
+    public static int easingTicks = 10;
 
     @RegisterSubModule(name = "Attacking")
     public SubCategory attackingSubCat = new SubCategory();
 
+    @RegisterSubModule(name = "Swing Misses", parent = "Attacking", description = "Swings even if it won't do damage")
+    public static boolean swingMisses = true;
     @RegisterSubModule(name = "Swords Only", parent = "Attacking")
     public static boolean swordOnlyAura = true;
 
@@ -81,6 +92,7 @@ public class KillAura extends Module {
     public static double killAuraAttackSpeedMax = 10;
 
     private static int nextAttackTick = -1;
+    private static int easedRotationTick = 1;
 
     private static EntityLivingBase lastTarget = null;
     private static int switchTargetIndex = 0;
@@ -88,35 +100,50 @@ public class KillAura extends Module {
     // goes before scaffold because its less important imo
     @SubscribeEvent(priority = 999)
     public static void onRotationEvent(RotationEvent event) {
-        if (!shouldRotate()) return;
+        if (!shouldRotate()) {
+            easedRotationTick = 0;
+            return;
+        }
 
+        EntityLivingBase prevTarget = lastTarget;
         EntityLivingBase target = getTarget();
 
-        if (target == null || !shouldRotateToEntity(target)) return;
+        if (target == null || !shouldRotateToEntity(target)) {
+            easedRotationTick = 0;
+            return;
+        }
+
+        if (target != prevTarget) easedRotationTick = 0;
 
         event.rotation = getRotation(target);
     }
 
     @SubscribeEvent
     public static void tryAttackTarget(PlayerUpdateEvent event) {
+        Entity target = WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls);
+
+        if (target == lastTarget) easedRotationTick -= 2;
         if (!shouldAttack()) return;
 
         if (rotations == KillAuraRotations.None) {
-            EntityLivingBase target = getTarget();
+            EntityLivingBase bestTarget = getTarget();
 
-            if (target != null && shouldAttackEntity(target)) attack(target);
+            if (bestTarget != null && shouldAttackEntity(bestTarget)) attack(bestTarget);
             return;
         }
 
-        Entity target = WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls);
-
-        if (!TargetUtil.isValidTarget(target)) return;
+        if (!TargetUtil.isValidTarget(target)) {
+            if (swingMisses && lastTarget != null) {
+                PlayerUtil.swingHand();
+            }
+            return;
+        }
 
         attack(target);
     }
 
     private static boolean shouldAura() {
-        return !swordOnlyAura || InventoryUtil.getHeldItem() instanceof ItemSword;
+        return (!swordOnlyAura || InventoryUtil.getHeldItem() instanceof ItemSword) && (Fucker.getCurrentTarget() == null || !Fucker.noKillAura);
     }
 
     private static boolean shouldAttack() {
@@ -192,7 +219,7 @@ public class KillAura extends Module {
     }
 
     private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
-        RotationUtil.Rotation targetRotation = TargetUtil.getTargetRotation(entity, killAuraRotationRange, throughWalls);
+        RotationUtil.Rotation targetRotation = TargetUtil.getTargetRotation(entity, killAuraRotationRange, throughWalls, randomValidRotation);
 
         // should only be null if rotationRange is lower than attack range
         if (targetRotation == null) return PlayerUtil.currentRotation();
@@ -202,6 +229,10 @@ public class KillAura extends Module {
                 return RotationUtil.getLimitedRotation(targetRotation, MathUtil.getRandomInRange(minRotation, maxRotation));
             case Smooth:
                 return RotationUtil.getSmoothRotation(targetRotation, smoothRotationSpeed);
+            case Eased:
+                if (easedRotationTick < 0) easedRotationTick = 0;
+                if (easedRotationTick < easingTicks) easedRotationTick++;
+                return RotationUtil.getEasedRotation(targetRotation, easingFunction, (double) easedRotationTick / easingTicks);
             default:
                 return RotationUtil.applyGcd(targetRotation);
         }

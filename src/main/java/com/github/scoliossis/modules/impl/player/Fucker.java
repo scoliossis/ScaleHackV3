@@ -49,6 +49,9 @@ public class Fucker extends Module {
     @RegisterSubModule(name = "No Autoblock")
     public static boolean noAutoblock = true;
 
+    @RegisterSubModule(name = "No Kill Aura")
+    public static boolean noKillAura = true;
+
     @RegisterSubModule(name = "Ticks Between Blocks", min = 0, max = 6, increment = 0.1, parent = "Basics")
     public static int ticksBetweenBlocks = 5;
 
