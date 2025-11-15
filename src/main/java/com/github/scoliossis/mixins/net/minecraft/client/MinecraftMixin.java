@@ -10,6 +10,7 @@ import com.github.scoliossis.events.impl.MouseScrolledEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
+import com.github.scoliossis.modules.impl.player.FastPlace;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.FrameUtil;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
@@ -33,26 +34,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin implements MinecraftBridge {
     @Shadow private Timer timer;
-
     @Shadow private Session session;
+    @Shadow protected abstract void clickMouse();
+    @Shadow protected abstract void rightClickMouse();
+    @Shadow public GuiScreen currentScreen;
+    @Shadow public GameSettings gameSettings;
+    @Shadow public boolean inGameHasFocus;
+    @Shadow protected abstract void sendClickBlockToController(boolean leftClick);
 
     @Shadow
-    protected abstract void clickMouse();
-
-    @Shadow
-    protected abstract void rightClickMouse();
-
-    @Shadow
-    public GuiScreen currentScreen;
-
-    @Shadow
-    public GameSettings gameSettings;
-
-    @Shadow
-    public boolean inGameHasFocus;
-
-    @Shadow
-    protected abstract void sendClickBlockToController(boolean leftClick);
+    private int rightClickDelayTimer;
 
     @Inject(method = "createDisplay", at = @At("TAIL"))
     public void onCreateDisplay(CallbackInfo ci) {
@@ -132,11 +123,15 @@ public abstract class MinecraftMixin implements MinecraftBridge {
         }
     }
 
-
     @Redirect(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isEntityInsideOpaqueBlock()Z"))
     private boolean overrideCanF5inBlocks(EntityPlayerSP instance) {
         if (PlayerUtil.noClipRender) return false;
         return C.p().isEntityInsideOpaqueBlock();
+    }
+
+    @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))
+    private void onRightClickMouse(CallbackInfo ci) {
+        this.rightClickDelayTimer = FastPlace.getPlaceDelay();
     }
 
     public TimerBridge bridge$getTimer() {

@@ -216,6 +216,10 @@ public class EasingUtil {
         return returnValue;
     }
 
+    public static Animation getAnimationDetails(String key) {
+        return animations.get(key);
+    }
+
     public static void removeAnimation(String key) {
         animations.remove(key);
     }

@@ -6,13 +6,17 @@ import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.client.C;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -247,6 +251,23 @@ public class RenderUtil {
         drawGradient(x, y, w, h, bottomColour, topColour, bottomColour, topColour);
     }
 
+    public static void bindTexture(ResourceLocation texture) {
+        C.mc.getTextureManager().bindTexture(texture);
+    }
+
+    public static void drawPlayerHead(float x, float y, float w, float h, Color color, EntityLivingBase entity) {
+        glColor(color);
+
+        ResourceLocation skinTexture = new ResourceLocation("textures/entity/steve.png");
+        if (entity instanceof AbstractClientPlayer) {
+            skinTexture = ((AbstractClientPlayer) entity).getLocationSkin();
+        }
+        RenderUtil.bindTexture(skinTexture);
+
+        Gui.drawScaledCustomSizeModalRect((int) x, (int) y, 8, 8,  8, 8, (int) w, (int) h, 64, 64);
+        Gui.drawScaledCustomSizeModalRect((int) x, (int) y, 40, 8, 8, 8, (int) w, (int) h, 64, 64);
+    }
+
     public static void drawRectTextured(float x, float y, float w, float h, Color color, int textureID) {
         GlStateManager.bindTexture(textureID);
         drawRectTextured(x, y, w, h, color);
@@ -403,6 +424,7 @@ public class RenderUtil {
     }
 
     public static Color getProgressColour(float percent) {
+        percent = MathHelper.clamp_float(percent, 0, 1);
         int progressInt = (int) (255 * MathHelper.clamp_float((float) EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease(percent), 0, 1));
         return new Color(255-progressInt, progressInt, 80);
     }

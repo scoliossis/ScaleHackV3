@@ -43,8 +43,8 @@ public class ArrayListModule extends Module {
     @RegisterSubModule(name = "Easing", parent = "Animation In")
     public static EasingUtil.EasingFunctions easeInFunction = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Pop In Time", description = "Time for the pop in effect to finish", min = 100, max = 1000, increment = 100, parent = "Animation In")
-    public static long popInTime = 500;
+    @RegisterSubModule(name = "Pop In Time", description = "Time for the pop in effect to finish", max = 1000, increment = 50, parent = "Animation In")
+    public static long popInTime = 250;
 
     @RegisterSubModule(name = "Animation Out")
     public static SubCategory animationOut = new SubCategory();
@@ -52,8 +52,8 @@ public class ArrayListModule extends Module {
     @RegisterSubModule(name = "Easing", parent = "Animation Out")
     public static EasingUtil.EasingFunctions easeOutFunction = EasingUtil.EasingFunctions.Ease_In_Out_Expo;
 
-    @RegisterSubModule(name = "Pop Out Time", description = "Time for the pop out effect to finish", min = 100, max = 1000, increment = 100, parent = "Animation Out")
-    public static long popOutTime = 500;
+    @RegisterSubModule(name = "Pop Out Time", description = "Time for the pop out effect to finish", max = 1000, increment = 50, parent = "Animation Out")
+    public static long popOutTime = 250;
 
     @RegisterSubModule(name = "Other")
     public SubCategory other = new SubCategory();

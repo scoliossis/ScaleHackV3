@@ -35,11 +35,12 @@ public class AutoBlock extends Module {
     @RegisterSubModule(name = "Through Walls")
     public static boolean throughWalls = true;
 
-    @RegisterSubModule(name = "Packet Block")
-    public static boolean packetBlock = false;
-
     @RegisterSubModule(name = "Autoblock Mode", description = "bypahh")
     public static AutoBlockMode autoblockMode = AutoBlockMode.Blink;
+
+    @RegisterSubModule(name = "Packet Block", parent = "Autoblock Mode", modeParentString = {"Vanilla", "Blink"})
+    public static boolean packetBlock = false;
+
     @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
     public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
 

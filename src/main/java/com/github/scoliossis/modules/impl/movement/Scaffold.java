@@ -1,5 +1,6 @@
 package com.github.scoliossis.modules.impl.movement;
 
+import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
@@ -19,6 +20,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.util.Iterator;
@@ -92,6 +94,10 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Bypass")
     public static SubCategory bypass = new SubCategory();
 
+    // todo: make this customizable
+    @RegisterSubModule(name = "Crouch Randomly", parent = "Bypass")
+    public static boolean crouchRandomly = true;
+
     @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Bypass")
     public static boolean noDuplicateRot = true;
 
@@ -111,7 +117,7 @@ public class Scaffold extends Module {
     public static Telly_Mode tellyMode = Telly_Mode.Hypixel;
     @AllArgsConstructor
     public enum Telly_Mode {
-        Hypixel(true, EasingUtil.EasingFunctions.Ease_Out_Expo, 2, 1, 2, 1),
+        Hypixel(true, EasingUtil.EasingFunctions.Ease_Out_Bounce, 3, 1, 0, 1),
         Grim(false, EasingUtil.EasingFunctions.Normal, 0, 1, 0, 0),
         Custom(false, null, -1, -1, -1, -1) {
             @Override
@@ -246,6 +252,12 @@ public class Scaffold extends Module {
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
+        if (shouldScaffold && crouchRandomly) {
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(
+                    Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()) || (C.p().movementInput.jump || shouldTelly()) ? MovementUtil.airTicks == 3 : MovementUtil.ticks % 20 == 0
+            );
+        }
+
         if (shouldTower() && towerMovement()) setShouldTower();
 
         if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
@@ -416,7 +428,7 @@ public class Scaffold extends Module {
                 if (facing == EnumFacing.UP && shouldKeepY()) continue;
 
                 if (InventoryUtil.isSolidBlock(C.w().getBlockState(blockPosOffset).getBlock())) continue;
-                if (blockPosOffset.getY() >= C.p().posY) continue;
+                if (blockPosOffset.getY() + 1 > C.p().posY) continue;
 
                 Vec3 offsetBlockCentre = new Vec3(blockPosOffset.getX() + 0.5, blockPosOffset.getY() + 0.5, blockPosOffset.getZ() + 0.5);
                 double distance = position.distanceTo(offsetBlockCentre);
@@ -538,6 +550,9 @@ public class Scaffold extends Module {
 
             if (autoF5) {
                 C.mc.gameSettings.thirdPersonView = previousPerspective;
+            }
+            if (crouchRandomly) {
+                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
             }
         }
     }

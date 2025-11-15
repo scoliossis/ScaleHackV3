@@ -27,6 +27,9 @@ public class Nametags extends Module {
     @RegisterSubModule(name = "Background")
     public static boolean background = false;
 
+    @RegisterSubModule(name = "Health")
+    public static boolean health = false;
+
     @RegisterSubModule(name = "Background Colour")
     public static Color backgroundColour = new Color(22,22,22,100);
 
@@ -60,19 +63,28 @@ public class Nametags extends Module {
             GL11.glRotatef(180, 0, 0, 1);
 
             double distanceToPlayer = lerpedPlayerPos.distanceTo(lerpedEntityPos);
-            double scale = scaleWithDistance ? MathHelper.clamp_double(sizeMulti*distanceToPlayer, sizeMulti*5, sizeMulti*50) : sizeMulti;
+            double scale = scaleWithDistance ? MathHelper.clamp_double(sizeMulti*distanceToPlayer, sizeMulti*5, sizeMulti*50) : sizeMulti*10;
             GL11.glScaled(scale, scale, scale);
 
             String entityName = entity.getDisplayName().getFormattedText();
             int fontSize = 50;
 
-            double stringWidth = FontUtil.getStringWidth(entityName, fontSize);
+            float healthNumber = entity.getHealth() + entity.getAbsorptionAmount();
+            float healthPercentage = healthNumber / entity.getMaxHealth();
+            String healthString = String.format("%.1f", healthNumber) + " ";
+
+            float healthStringWidth = health ? FontUtil.getStringWidth(healthString, fontSize) : 0;
+            float stringWidth = healthStringWidth + FontUtil.getStringWidth(entityName, fontSize);
 
             if (background) {
                 RenderUtil.drawRect(-stringWidth / 2, -fontSize / 3f, stringWidth, fontSize, backgroundColour);
             }
 
-            FontUtil.drawCenteredString(entity.getDisplayName().getFormattedText(), 0, -fontSize/2f, fontSize, Color.WHITE, true);
+            if (health) {
+                FontUtil.drawString(healthString, -stringWidth / 2, -fontSize/2f, fontSize, RenderUtil.getProgressColour(healthPercentage), true);
+            }
+
+            FontUtil.drawString(entity.getDisplayName().getFormattedText(), -stringWidth / 2 + healthStringWidth, -fontSize/2f, fontSize, Color.WHITE, true);
 
             GL11.glPopMatrix();
         }

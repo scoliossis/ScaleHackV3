@@ -20,13 +20,13 @@ public class ClickGUIModule extends Module {
     @RegisterSubModule(name = "Open", parent = "Animations")
     public static EasingUtil.EasingFunctions openAnimation = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Open Length", parent = "Animations", max = 5000, increment = 50)
+    @RegisterSubModule(name = "Open Length", parent = "Animations", max = 1000, increment = 50)
     public static long openAnimationLength = 100;
 
     @RegisterSubModule(name = "Close", parent = "Animations")
     public static EasingUtil.EasingFunctions closeAnimation = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Close Length", parent = "Animations", max = 5000, increment = 50)
+    @RegisterSubModule(name = "Close Length", parent = "Animations", max = 1000, increment = 50)
     public static long closeAnimationLength = 100;
 
     private static final ClickGUIScreen screen = new ClickGUIScreen();
