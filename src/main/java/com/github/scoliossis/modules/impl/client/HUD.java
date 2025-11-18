@@ -37,9 +37,6 @@ public class HUD extends Module {
 
     private static final int GAMESENSE_FONT_SIZE = 10;
 
-    private static final float WATERMARK_X = 5;
-    private static final float WATERMARK_Y = 5;
-
     private static final String CLIENT_NAME = Main.MOD_NAME.split(" ")[0];
     private static final String GAMESENSE_TAG = "Sense";
 

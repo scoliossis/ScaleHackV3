@@ -49,6 +49,9 @@ public class Velocity extends Module {
     @RegisterSubModule(name = "Max Delay Ticks", parent = "Mode", modeParentString = {"Delay", "Dynamic"}, min = 1, max = 20)
     public static int maxDelayTicks = 5;
 
+    @RegisterSubModule(name = "Delay Outgoing", parent = "Mode", modeParentString = {"Delay", "Dynamic"})
+    public static boolean delayOutgoing = true;
+
     @RegisterSubModule(name = "Force Sprint", parent = "Mode", modeParentString = {"Jump_Reset", "Dynamic"})
     public static boolean forceSprint = true;
 
@@ -60,6 +63,8 @@ public class Velocity extends Module {
     private static Vec3 lastVelocity;
 
     private static boolean isDamage = false;
+
+    private static boolean isDelayOutgoing = false;
 
     @SubscribeEvent
     public static void handleVelocityPacket(PacketEvent.Receive event) {
@@ -114,6 +119,11 @@ public class Velocity extends Module {
                 BlinkUtil.pushBlink(false, true, event.packet);
                 event.setCancelled(true);
 
+                if (delayOutgoing) {
+                    BlinkUtil.pushBlink(true, false, null);
+                    isDelayOutgoing = true;
+                }
+
                 shouldDelay = true;
                 blinkStartTick = MovementUtil.ticks;
                 break;
@@ -148,9 +158,10 @@ public class Velocity extends Module {
 
     @SubscribeEvent
     public static void finishDynamicVelocity(ClientTickEvent event) {
-        if (!BlinkUtil.isBlinking(false, true) || !shouldStopBlink()) return;
+        if (!BlinkUtil.isBlinking(true, true) || !shouldStopBlink()) return;
 
-        BlinkUtil.popBlink(false, true);
+        BlinkUtil.popBlink(isDelayOutgoing, true);
+        isDelayOutgoing = false;
         shouldJump |= velocityMode == VelocityMode.Dynamic && C.p().onGround;
         resetVelocity();
     }
@@ -187,7 +198,8 @@ public class Velocity extends Module {
     @Override
     protected void onDisable() {
         if (blinkStartTick != -1 && C.isInGame()) {
-            BlinkUtil.popBlink(false, true);
+            BlinkUtil.popBlink(isDelayOutgoing, true);
+            isDelayOutgoing = false;
             resetVelocity();
         }
     }

@@ -38,18 +38,21 @@ public class DraggableRenderer {
             if (!shouldRender(draggable)) continue;
 
             try {
+                int renderX = (int) (draggable.x * C.res().getScaledWidth());
+                int renderY = (int) (draggable.y * C.res().getScaledHeight());
+
                 GL11.glPushMatrix();
-                GL11.glTranslated(draggable.x, draggable.y, 0);
+                GL11.glTranslated(renderX, renderY, 0);
                 double[] size = draggable.render.call();
 
                 if (canDrag()) {
-                    draggingCoords = dragging == null ? new Rectangle((int) ScreenUtil.getMouseX() - draggable.x, (int) ScreenUtil.getMouseY() - draggable.y) : draggingCoords;
+                    draggingCoords = dragging == null ? new Rectangle((int) ScreenUtil.getMouseX() - renderX, (int) ScreenUtil.getMouseY() - renderY) : draggingCoords;
 
                     if (dragging == draggable) {
                         RenderUtil.drawRectOutline(0, 0, size[0], size[1], 1, Color.WHITE);
 
-                        draggable.x = (int) (ScreenUtil.getMouseX() - draggingCoords.width);
-                        draggable.y = (int) (ScreenUtil.getMouseY() - draggingCoords.height);
+                        draggable.x = (ScreenUtil.getMouseX() - draggingCoords.width) / C.res().getScaledWidth();
+                        draggable.y = (ScreenUtil.getMouseY() - draggingCoords.height) / C.res().getScaledHeight();
                     }
 
                     dragging = Mouse.isButtonDown(0) ? dragging == null && ScreenUtil.isMouseOver(0, 0, size[0], size[1], ScreenUtil.getMouseX(), ScreenUtil.getMouseY()) ? draggable : dragging : null;
@@ -67,7 +70,7 @@ public class DraggableRenderer {
     }
 
     public static void saveDraggables() {
-        HashMap<String, int[]> draggingJSON = new HashMap<>();
+        HashMap<String, double[]> draggingJSON = new HashMap<>();
 
         File file = new File(draggablesPath + "/" + draggablesFile);
         if (file.exists()) {
@@ -79,8 +82,10 @@ public class DraggableRenderer {
             }
         }
 
+        if (draggingJSON == null) draggingJSON = new HashMap<>();
+
         for (Draggable draggable : draggables) {
-            draggingJSON.put(draggable.id, new int[] {draggable.x, draggable.y});
+            draggingJSON.put(draggable.id, new double[] {draggable.x, draggable.y});
         }
 
         try {
@@ -104,8 +109,8 @@ public class DraggableRenderer {
             for (Draggable draggable : draggables) {
                 if (draggingJSON.containsKey(draggable.id)) {
                     ArrayList<Double> positions = draggingJSON.get(draggable.id);
-                    draggable.x = (int) Double.parseDouble(String.valueOf(positions.get(0)));
-                    draggable.y = (int) Double.parseDouble(String.valueOf(positions.get(1)));
+                    draggable.x = Double.parseDouble(String.valueOf(positions.get(0)));
+                    draggable.y = Double.parseDouble(String.valueOf(positions.get(1)));
                 }
                 else {
                     System.err.println("Dragable config for " + draggable.id + " not found!");

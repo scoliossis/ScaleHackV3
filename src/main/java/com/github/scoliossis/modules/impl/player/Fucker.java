@@ -37,14 +37,14 @@ public class Fucker extends Module {
     @RegisterSubModule(name = "Whitelist Own Bed")
     public static boolean whitelistBed = true;
 
-    @RegisterSubModule(name = "Pre Rotate", description = "Swings and rotates in the same tick")
+    @RegisterSubModule(name = "Post Rotate", description = "Rotates in the same tick it swings")
     public static boolean preRotate = false;
 
     @RegisterSubModule(name = "Tick Rotate", description = "Only rotates on first and last tick of breaking block")
-    public static boolean tickRotate = true;
+    public static boolean tickRotate = false;
 
     @RegisterSubModule(name = "Tick Swap", description = "Only swaps items on first and last tick of breaking block")
-    public static boolean tickSwap = true;
+    public static boolean tickSwap = false;
 
     @RegisterSubModule(name = "No Autoblock")
     public static boolean noAutoblock = true;

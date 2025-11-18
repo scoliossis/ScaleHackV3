@@ -26,19 +26,19 @@ public class Notifications extends Module {
     @RegisterSubModule(name = "Animation In")
     public static SubCategory animationIn = new SubCategory();
 
-    @RegisterSubModule(name = "Easing", parent = "Animation In")
+    @RegisterSubModule(name = "Ease In", parent = "Animation In")
     public static EasingUtil.EasingFunctions easeInFunction = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Pop In Time", description = "Time for the pop in effect to finish", min = 100, max = 1000, increment = 100, parent = "Animation In")
+    @RegisterSubModule(name = "Pop In Time", description = "Time for the pop in effect to finish", max = 1000, increment = 50, parent = "Animation In")
     public static long popInTime = 500;
 
     @RegisterSubModule(name = "Animation Out")
     public static SubCategory animationOut = new SubCategory();
 
-    @RegisterSubModule(name = "Easing", parent = "Animation Out")
+    @RegisterSubModule(name = "Ease Out", parent = "Animation Out")
     public static EasingUtil.EasingFunctions easeOutFunction = EasingUtil.EasingFunctions.Ease_In_Out_Expo;
 
-    @RegisterSubModule(name = "Pop Out Time", description = "Time for the pop out effect to finish", min = 100, max = 1000, increment = 100, parent = "Animation Out")
+    @RegisterSubModule(name = "Pop Out Time", description = "Time for the pop out effect to finish", max = 1000, increment = 50, parent = "Animation Out")
     public static long popOutTime = 500;
 
     @RegisterSubModule(name = "Other")

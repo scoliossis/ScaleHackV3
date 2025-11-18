@@ -11,8 +11,8 @@ public class Draggable {
     /// conditions to render if enabled
     public Predicate<?> conditions;
 
-    public int x = 100;
-    public int y = 100;
+    public double x = 0.1;
+    public double y = 0.1;
 
     public Draggable(String id, Callable<double[]> render, Predicate<?> canRender, Predicate<?> conditions) {
         this.id = id;

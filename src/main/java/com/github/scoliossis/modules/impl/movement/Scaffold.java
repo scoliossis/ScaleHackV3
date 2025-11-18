@@ -117,7 +117,7 @@ public class Scaffold extends Module {
     public static Telly_Mode tellyMode = Telly_Mode.Hypixel;
     @AllArgsConstructor
     public enum Telly_Mode {
-        Hypixel(true, EasingUtil.EasingFunctions.Ease_Out_Bounce, 3, 1, 0, 1),
+        Hypixel(true, EasingUtil.EasingFunctions.Ease_Out_Bounce, 3, 1, 1, 1),
         Grim(false, EasingUtil.EasingFunctions.Normal, 0, 1, 0, 0),
         Custom(false, null, -1, -1, -1, -1) {
             @Override

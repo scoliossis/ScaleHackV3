@@ -31,7 +31,7 @@ public class TargetHUD extends Module {
     @RegisterSubModule(name = "Animation In")
     public static SubCategory animationIn = new SubCategory();
 
-    @RegisterSubModule(name = "Easing", parent = "Animation In")
+    @RegisterSubModule(name = "Ease In", parent = "Animation In")
     public static EasingUtil.EasingFunctions easeInFunction = EasingUtil.EasingFunctions.Ease_In_Out_Expo;
 
     @RegisterSubModule(name = "Pop In Time", description = "Time for the pop in effect to finish", max = 1000, increment = 50, parent = "Animation In")
@@ -40,7 +40,7 @@ public class TargetHUD extends Module {
     @RegisterSubModule(name = "Animation Out")
     public static SubCategory animationOut = new SubCategory();
 
-    @RegisterSubModule(name = "Easing", parent = "Animation Out")
+    @RegisterSubModule(name = "Ease Out", parent = "Animation Out")
     public static EasingUtil.EasingFunctions easeOutFunction = EasingUtil.EasingFunctions.Ease_In_Out_Expo;
 
     @RegisterSubModule(name = "Pop Out Time", description = "Time for the pop out effect to finish", max = 1000, increment = 50, parent = "Animation Out")

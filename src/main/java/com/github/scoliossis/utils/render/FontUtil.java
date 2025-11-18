@@ -11,7 +11,10 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Random;
 
 // todo: weird scaling AND flickering on pop up messages
 public class FontUtil {
@@ -143,6 +146,7 @@ public class FontUtil {
             char c = string.charAt(i);
 
             if (c == '§') {
+                if (i + 2 > string.length()) continue;
                 String colourCodeString = string.substring(i + 1, i + 2);
                 char colourCode = colourCodeString.charAt(0);
                 if (COLOUR_CODES.contains(colourCodeString)) {
@@ -303,7 +307,7 @@ public class FontUtil {
 
     private static int drawMinecraftString(String string, float x, float y, double size, Color colour, boolean dropShadow) {
         GL11.glPushMatrix();
-        GL11.glTranslated(x, y + size / 3, 1);
+        GL11.glTranslated(x, y + size / 3, 1000);
         GL11.glScaled(0.1 * size, 0.1 * size, 1);
 
         GlStateManager.enableAlpha();

@@ -76,7 +76,7 @@ public abstract class ItemRendererMixin {
 
     @Inject(method = "renderItemInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemRenderer;rotateWithPlayerRotations(Lnet/minecraft/client/entity/EntityPlayerSP;F)V", shift = At.Shift.AFTER))
     public void onRotateItem(float partialTicks, CallbackInfo ci) {
-        if (this.itemToRender != null && ModuleManager.isEnabled(Animations.class)) {
+        if (this.itemToRender != null && !(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) && ModuleManager.isEnabled(Animations.class)) {
             Animations.scaleRotateTranslateHeldItem();
         }
     }

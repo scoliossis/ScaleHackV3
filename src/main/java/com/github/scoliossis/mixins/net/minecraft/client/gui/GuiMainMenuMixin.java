@@ -1,5 +1,7 @@
 package com.github.scoliossis.mixins.net.minecraft.client.gui;
 
+import com.github.scoliossis.modules.ModuleManager;
+import com.github.scoliossis.modules.impl.client.CoolMainMenu;
 import com.github.scoliossis.screens.MainMenuScreen;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.gui.GuiMainMenu;
@@ -12,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GuiMainMenu.class)
 public class GuiMainMenuMixin extends GuiScreen {
     @Inject(method = "initGui", at = @At("TAIL"))
-    private void onRenderSkybox(CallbackInfo ci) {
-        C.mc.displayGuiScreen(new MainMenuScreen());
+    private void onInitGui(CallbackInfo ci) {
+        if (ModuleManager.isEnabled(CoolMainMenu.class)) C.mc.displayGuiScreen(new MainMenuScreen());
     }
 }
