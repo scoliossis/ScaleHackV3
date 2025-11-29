@@ -72,7 +72,7 @@ public class TargetUtil {
         return isValidTarget(entity)
                 && getDistanceToEntity(entity) <= range
                 // if the rotation code wont lock onto the entity, dont bother targeting them
-                && (!rotate || getTargetRotation(entity, range, throughWalls, false) != null);
+                && (!rotate || getTargetRotationPoint(  entity, range, throughWalls, false) != null);
     }
 
     public static double getDistanceToEntity(EntityLivingBase entity) {
@@ -83,16 +83,16 @@ public class TargetUtil {
         return WorldUtil.getClosestPoint(target.getEntityBoundingBox());
     }
 
-    public static RotationUtil.Rotation getTargetRotation(EntityLivingBase entity, double range, boolean throughWalls, boolean randomValid) {
+    public static Vec3 getTargetRotationPoint(EntityLivingBase entity, double range, boolean throughWalls, boolean randomValid) {
         AxisAlignedBB targetBoundingBox = entity.getEntityBoundingBox();
 
-        Vec3 closestPoint = TargetUtil.getClosestPointToEntity(entity);
+        Vec3 closestPoint = TargetUtil.getClosestPointToEntity(entity).subtract(0, 0, 0);
         if (!randomValid) {
             RotationUtil.Rotation bestRotation = RotationUtil.getRotation(closestPoint);
 
             // if best rotation works, lock it in.
             if (WorldUtil.getMouseOver(bestRotation, range, throughWalls) == entity) {
-                return bestRotation;
+                return closestPoint;
             }
         }
 
@@ -110,19 +110,14 @@ public class TargetUtil {
         possibleRotations.add(new Vec3(entity.posX, (targetBoundingBox.maxY + targetBoundingBox.minY) / 2, entity.posZ));
         possibleRotations.add(new Vec3(entity.posX, targetBoundingBox.minY, entity.posZ));
         possibleRotations.add(new Vec3(entity.posX, targetBoundingBox.maxY, entity.posZ));
-        if (randomValid) {
-            possibleRotations.add(closestPoint);
-            possibleRotations.sort(Comparator.comparingDouble(point -> Math.random()));
-        }
-        else {
-            possibleRotations.sort(Comparator.comparingDouble(point -> C.p().getPositionEyes(1).distanceTo(point)));
-        }
+        possibleRotations.add(closestPoint);
+        possibleRotations.sort(Comparator.comparingDouble(randomValid ? point -> Math.random() : point -> C.p().getPositionEyes(1).distanceTo(point)));
 
         // try other rotations, surely one will work
         for (Vec3 possibleRotationVector : possibleRotations) {
             RotationUtil.Rotation possibleRotation = RotationUtil.getRotation(possibleRotationVector);
             if (WorldUtil.getMouseOver(possibleRotation, range, throughWalls) == entity) {
-                return possibleRotation;
+                return possibleRotationVector;
             }
         }
 

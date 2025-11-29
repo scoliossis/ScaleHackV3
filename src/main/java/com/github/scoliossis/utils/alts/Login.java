@@ -13,6 +13,7 @@ import com.github.scoliossis.utils.alts.microsoft.AuthServer;
 import com.github.scoliossis.utils.alts.microsoft.Cookies;
 import com.github.scoliossis.utils.alts.microsoft.MSAuth;
 import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.FrameUtil;
 import com.github.scoliossis.utils.client.NetworkUtil;
 import com.google.gson.JsonObject;
 import lombok.AllArgsConstructor;
@@ -75,7 +76,8 @@ public class Login {
                     String filePath = ((String) clipboard.getData(DataFlavor.stringFlavor)).replaceAll("\"", "").trim();
                     Login.loginCookie(new File(filePath));
                 } catch (Exception ex) {
-                    setErrorMessage("Please copy a file / file path to clipboard.");
+                    FrameUtil.createCookiesFrame();
+                    setErrorMessage("Opened window to drop cookies file on");
                 }
             }
         }),
@@ -187,7 +189,13 @@ public class Login {
     public static void onFileDrop(FileDroppedEvent event) {
         System.out.println("File dropped: " + event.droppedFiles.get(0).getAbsolutePath());
 
-        for (File file : event.droppedFiles) loginCookie(file);
+        for (File file : event.droppedFiles) {
+            try {
+                loginCookie(file);
+            } catch (Exception e) {
+                setErrorMessage("Cannot read cookies from file!");
+            }
+        }
     }
 
     private static Session lastSession = C.mc.getSession();
@@ -300,7 +308,7 @@ public class Login {
         });
     }
 
-    public static void loginCookie(File file) {
+    public static void loginCookie(File file) throws Exception {
         String cookie = Cookies.formatCookies(Cookies.getCookiesFromFile(file.getAbsolutePath()));
         if (cookie == null) return;
 

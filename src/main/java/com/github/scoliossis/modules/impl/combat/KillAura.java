@@ -11,6 +11,7 @@ import com.github.scoliossis.utils.render.EasingUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemSword;
+import net.minecraft.util.Vec3;
 
 import java.util.Comparator;
 import java.util.List;
@@ -54,6 +55,11 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Rotation")
     public SubCategory rotationsSubcategory = new SubCategory();
 
+    @RegisterSubModule(name = "Jitter Pitch", parent = "Rotation", description = "Pitch Moves Up And Down")
+    public static boolean jitterPitch = true;
+    @RegisterSubModule(name = "Jitter Ticks", parent = "Jitter Pitch", min = 2, max = 500)
+    public static int pitchJitter = 20;
+
     @RegisterSubModule(name = "Random Point", parent = "Rotation", description = "Picks a random valid roations instead of always the closest")
     public static boolean randomValidRotation = true;
 
@@ -75,7 +81,7 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Easing", parent = "Rotation Mode", modeParentString = "Eased")
     public static EasingUtil.EasingFunctions easingFunction = EasingUtil.EasingFunctions.Ease_In_Out_Sine;
 
-    @RegisterSubModule(name = "Easing Ticks", parent = "Rotation Mode", modeParentString = "Eased", min = 1, max = 20)
+    @RegisterSubModule(name = "Easing Ticks", parent = "Rotation Mode", modeParentString = "Eased", min = 3, max = 20)
     public static int easingTicks = 10;
 
     @RegisterSubModule(name = "Attacking")
@@ -122,7 +128,7 @@ public class KillAura extends Module {
     public static void tryAttackTarget(PlayerUpdateEvent event) {
         Entity target = WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls);
 
-        if (target == lastTarget) easedRotationTick -= 2;
+        if (target == lastTarget) easedRotationTick-=2;
         if (!shouldAttack()) return;
 
         if (rotations == KillAuraRotations.None) {
@@ -219,10 +225,14 @@ public class KillAura extends Module {
     }
 
     private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
-        RotationUtil.Rotation targetRotation = TargetUtil.getTargetRotation(entity, killAuraRotationRange, throughWalls, randomValidRotation);
+        Vec3 targetRotationPoint = TargetUtil.getTargetRotationPoint(entity, killAuraRotationRange, throughWalls, randomValidRotation);
 
         // should only be null if rotationRange is lower than attack range
-        if (targetRotation == null) return PlayerUtil.currentRotation();
+        if (targetRotationPoint == null) return PlayerUtil.currentRotation();
+
+        double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease((MovementUtil.ticks % pitchJitter) / (pitchJitter/2d)) : 0;
+        targetRotationPoint = targetRotationPoint.addVector(0, targetRotationPoint.yCoord >= entity.getEntityBoundingBox().maxY - entity.height / 2 ? -extraYcoord : extraYcoord, 0);
+        RotationUtil.Rotation targetRotation = RotationUtil.getRotation(targetRotationPoint);
 
         switch (rotations) {
             case Simple:
@@ -230,7 +240,7 @@ public class KillAura extends Module {
             case Smooth:
                 return RotationUtil.getSmoothRotation(targetRotation, smoothRotationSpeed);
             case Eased:
-                if (easedRotationTick < 0) easedRotationTick = 0;
+                if (easedRotationTick < 0) easedRotationTick = 1;
                 if (easedRotationTick < easingTicks) easedRotationTick++;
                 return RotationUtil.getEasedRotation(targetRotation, easingFunction, (double) easedRotationTick / easingTicks);
             default:
@@ -238,11 +248,17 @@ public class KillAura extends Module {
         }
     }
 
+    private static double lostPrecision = 0;
     private static void attack(Entity target) {
         if (PlayerUtil.attack(target)) {
             int nextCps = (int) MathUtil.getRandomInRange(killAuraAttackSpeedMin, killAuraAttackSpeedMax);
 
-            nextAttackTick = MovementUtil.ticks + (20 / (Math.max(nextCps, 1)));
+            double ticksTillNextAttack = 20d / (Math.max(nextCps, 1)) + lostPrecision;
+            lostPrecision += ticksTillNextAttack - Math.floor(ticksTillNextAttack);
+            while (lostPrecision >= 1) lostPrecision--;
+            ticksTillNextAttack = Math.floor(ticksTillNextAttack);
+
+            nextAttackTick = (int) (MovementUtil.ticks + ticksTillNextAttack);
             switchTargetIndex += 1;
         }
     }

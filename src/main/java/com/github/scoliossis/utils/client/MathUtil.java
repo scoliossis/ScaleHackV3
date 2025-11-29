@@ -17,6 +17,11 @@ public class MathUtil {
     }
 
     public static double getRandomInRange(double min, double max) {
+        if (min > max) {
+            double m = min;
+            min = max;
+            max = m;
+        }
         return min + (max - min) * rand.nextFloat();
     }
 

@@ -21,9 +21,9 @@ public class BindCommand extends Command {
     public boolean execute(String[] args) {
         if (args[0].equals("list")) {
             for (Map.Entry<Integer, List<Module>> entry : KeybindHandler.keybindsMap.entrySet()) {
-                ChatUtil.prefixMessage("&f" + entry.getValue().stream()
-                        .map(e -> "&6" + e.getAnnotation().name()).collect(Collectors.joining(" &fand "))
-                        + " &cis bound to &f" + KeybindHandler.getCharacter(entry.getKey())
+                ChatUtil.prefixMessage("§f" + entry.getValue().stream()
+                        .map(e -> "§6" + e.getAnnotation().name()).collect(Collectors.joining(" §fand "))
+                        + " §cis bound to §f" + KeybindHandler.getCharacter(entry.getKey())
                 );
             }
         }
@@ -34,14 +34,14 @@ public class BindCommand extends Command {
             if (module == null) return false;
 
             KeybindHandler.removeKeybind(module);
-            Notifications.addNotification("Keybind", "&cSuccessfully unbound &f" + module.getAnnotation().name() + "&c!");
+            Notifications.addNotification("Keybind", "§cSuccessfully unbound §f" + module.getAnnotation().name() + "§c!");
         }
         else {
             Module module = FuzzySearchUtil.findModule(args[0]);
 
             if (module == null) return false;
 
-            Notifications.addNotification("Keybind", "&cPress the keybind you wish to bind &f" + module.getAnnotation().name() + " &cto!");
+            Notifications.addNotification("Keybind", "§cPress the keybind you wish to bind §f" + module.getAnnotation().name() + " §cto!");
             KeybindHandler.listeningModule = module;
         }
 

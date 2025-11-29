@@ -7,6 +7,7 @@ import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.player.Fucker;
 import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.MathUtil;
 import com.github.scoliossis.utils.minecraft.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -44,6 +45,12 @@ public class AutoBlock extends Module {
     @RegisterSubModule(name = "Blink Mode", parent = "Autoblock Mode", modeParentString = "Blink")
     public static Blink_Mode blinkMode = Blink_Mode.Hypixel;
 
+    @RegisterSubModule(name = "Min Blink Ticks", min = 2, max = 6, parent = "Blink Mode", modeParentString = "Random")
+    public static int minBlinkTicks = 3;
+
+    @RegisterSubModule(name = "Max Blink Ticks", min = 2, max = 6, parent = "Blink Mode", modeParentString = "Random")
+    public static int maxBlinkTicks = 3;
+
     @RegisterSubModule(name = "Blink Pre", parent = "Autoblock Mode", modeParentString = "Blink", dangerous = true)
     public static boolean blinkPre = false;
 
@@ -59,7 +66,7 @@ public class AutoBlock extends Module {
         Random(-1) {
             @Override
             public int getBlinkTicks() {
-                return ((int) (Math.random() * 3) + 2);
+                return (int) MathUtil.getRandomInRange(minBlinkTicks, maxBlinkTicks + 1);
             }
         };
 
@@ -80,6 +87,7 @@ public class AutoBlock extends Module {
 
     private static int blinkTick = 0;
     private static int nextBlinkTicks = 2;
+    @Getter
     private static boolean isBlinking = false;
 
     private static AutoBlockMode lastAutoblockMode;

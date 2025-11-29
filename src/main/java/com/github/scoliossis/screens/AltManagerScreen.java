@@ -128,7 +128,7 @@ public class AltManagerScreen extends GuiScreen {
         for (Login.AltTypes altType : Login.AltTypes.values()) {
             float textX = sidebarWidth / 2;
             float height = FontUtil.getFontHeight(sidebarFont);
-            float buttonY = height * 2;
+            float buttonY = height;
 
             boolean hovered = ScreenUtil.isMouseOver(0, buttonY, sidebarWidth, height, mX, mY);
 

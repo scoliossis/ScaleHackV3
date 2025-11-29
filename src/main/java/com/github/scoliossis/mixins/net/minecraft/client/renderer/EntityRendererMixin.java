@@ -5,6 +5,7 @@ import com.github.scoliossis.events.impl.RenderTickEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.modules.impl.client.MovementFix;
 import com.github.scoliossis.modules.impl.combat.Reach;
+import com.github.scoliossis.modules.impl.render.NoRender;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import com.github.scoliossis.utils.minecraft.RotationUtil;
@@ -13,10 +14,14 @@ import com.github.scoliossis.utils.render.RenderUtil;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.potion.Potion;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.util.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -25,6 +30,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin {
+    @Shadow
+    private float fogColorRed;
+
+    @Shadow
+    private float fogColorGreen;
+
+    @Shadow
+    private float fogColorBlue;
+
     // my only other minecraft mod uses https://github.com/Sunderw3k/InjectAPI which has cuter and mixins <3
     @Inject(method = "updateCameraAndRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiIngame;renderGameOverlay(F)V", shift = At.Shift.AFTER))
     private void updateCameraAndRender(float partialTicks, long nanoTime, CallbackInfo ci) {
@@ -101,4 +115,36 @@ public abstract class EntityRendererMixin {
         return PlayerUtil.noClipRender || C.p().isSpectator();
     }
 
+    @Redirect(method = "updateFogColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isPotionActive(Lnet/minecraft/potion/Potion;)Z", ordinal = 1))
+    private boolean overrideBlindnessOnUpdateFogColor(EntityLivingBase instance, Potion potionIn) {
+        return !NoRender.noBlindness() && instance.isPotionActive(potionIn);
+    }
+
+    @Inject(method = "updateFogColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;clearColor(FFFF)V"))
+    private void overrideBlindnessOnUpdateFogColor(float partialTicks, CallbackInfo ci) {
+        if (NoRender.noBlindness() && NoRender.customBlindnessFog && C.p().isPotionActive(Potion.blindness)) {
+            this.fogColorRed = NoRender.blindnessFogColour.getRed() / 255f;
+            this.fogColorGreen = NoRender.blindnessFogColour.getGreen() / 255f;
+            this.fogColorBlue = NoRender.blindnessFogColour.getBlue() / 255f;
+        }
+    }
+
+    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isPotionActive(Lnet/minecraft/potion/Potion;)Z", ordinal = 0))
+    private boolean overrideBlindnessOnSetupFog(EntityLivingBase instance, Potion potionIn) {
+        return (!NoRender.noBlindness() || NoRender.customBlindnessFog) && instance.isPotionActive(potionIn);
+    }
+
+    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;setFogEnd(F)V", ordinal = 0))
+    private void overrideBlindnessOnSetupFogEnd0(float param) {
+        GlStateManager.setFogEnd(NoRender.noBlindness() && C.p().isPotionActive(Potion.blindness) ? param * NoRender.fogDistance() : param);
+    }
+
+    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;setFogStart(F)V", ordinal = 1))
+    private void overrideBlindnessOnSetupFogStart(float param) {
+        GlStateManager.setFogEnd(NoRender.noBlindness() && C.p().isPotionActive(Potion.blindness) ? param * NoRender.fogDistance() : param);
+    }
+    @Redirect(method = "setupFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;setFogEnd(F)V", ordinal = 1))
+    private void overrideBlindnessOnSetupFogEnd1(float param) {
+        GlStateManager.setFogEnd(NoRender.noBlindness() && C.p().isPotionActive(Potion.blindness) ? param * NoRender.fogDistance() : param);
+    }
 }

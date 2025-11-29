@@ -1,6 +1,5 @@
 package com.github.scoliossis.commands.impl;
 
-import com.github.scoliossis.Main;
 import com.github.scoliossis.commands.Command;
 import com.github.scoliossis.commands.CommandManager;
 import com.github.scoliossis.utils.minecraft.ChatUtil;
@@ -24,9 +23,6 @@ public class HelpCommand extends Command {
             ChatUtil.chat(
                     "&7Modules are found using fuzzy search, this means you can type in any part of the module name to find it!" +
                             "\n&7Spaces are used to split each command argument, so you can't name configs with spaces!" +
-                            "\n&7" + (Main.optifineInstalled
-                            ? "Optifine is installed, this means you cannot drag and drop cookie alts"
-                            : "Optifine is not installed, this means you can drag and drop cookie alts!") +
                             "\n&7Use \".help commands\" &7to see a list of commands.");
         }
 

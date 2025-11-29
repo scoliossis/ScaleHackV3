@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
 
-// todo: weird scaling AND flickering on pop up messages
 public class FontUtil {
     private static Fonts currentFont;
 
@@ -81,7 +80,7 @@ public class FontUtil {
         BufferedImage texture = new BufferedImage(textureWidth, stringBounds.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = setAntiAliasing(texture.createGraphics());
         graphics.setColor(Color.WHITE);
-        graphics.drawRect(0, 0, 1, 1);
+        graphics.drawRect(0, 0, 1, stringBounds.height);
 
         graphics.setFont(font);
 
@@ -120,6 +119,7 @@ public class FontUtil {
 
     public static float drawStringFade(String string, float x, float y, int size, Color[] colour, double fadeSpeed, double fadeSpread, boolean dropShadow) {
         if (string.isEmpty()) return 0;
+        Color[] inputColour = colour;
 
         float scaleFactor = getScaleFactor();
         size = (int) (size * scaleFactor);
@@ -173,7 +173,7 @@ public class FontUtil {
                             break;
 
                         default:
-                            for (int j = 0; j < colour.length; j++) colour[j] = new Color(255,255,255,colour[j].getAlpha());
+                            for (int j = 0; j < colour.length; j++) colour[j] = new Color(inputColour[j].getRed(),inputColour[j].getGreen(),inputColour[j].getBlue(),colour[j].getAlpha());
                             randomStyle = boldStyle = strikethroughStyle = underlineStyle = italicStyle = false;
                             break;
                     }
@@ -211,14 +211,14 @@ public class FontUtil {
                         new Color(22, 22, 22, colourFade[0].getAlpha()),
                         new Color(22, 22, 22, colourFade[1].getAlpha())
                 };
-                drawCharacter(totalWidth + 2, 2, characterWidth, fontHeight, shadowColours, u, uw);
+                drawCharacter(totalWidth + 1, 1, characterWidth, fontHeight, shadowColours, u, uw);
             }
             drawCharacter(totalWidth, 0, characterWidth, fontHeight, colourFade, u, uw);
             if (boldStyle) drawCharacter(totalWidth + 1, 0, characterWidth, fontHeight, colourFade, u, uw);
 
             float filledTextureUW = 1f / fontTexture.width;
-            if (underlineStyle) drawCharacter(totalWidth, fontHeight, characterWidth, 1, colourFade, 0, filledTextureUW);
-            if (strikethroughStyle) drawCharacter(totalWidth, fontHeight/2f, characterWidth, 1, colourFade, 0, filledTextureUW);
+            if (underlineStyle) drawCharacter(totalWidth, fontHeight * 0.8f, characterWidth, 1, colourFade, 0, filledTextureUW);
+            if (strikethroughStyle) drawCharacter(totalWidth, fontHeight / 2f - 1, characterWidth, 2, colourFade, 0, filledTextureUW);
 
             // todo: impl italics, sounds like effort and they dont look good anyway.
 
@@ -234,8 +234,8 @@ public class FontUtil {
     }
 
     private static void drawCharacter(float x, float y, float w, float h, Color[] colours, float u, float uw) {
-        RenderUtil.addVertexTextureColor(x, h, colours[0], u, 1);
-        RenderUtil.addVertexTextureColor(x + w, h, colours[1], uw, 1);
+        RenderUtil.addVertexTextureColor(x, y+h, colours[0], u, 1);
+        RenderUtil.addVertexTextureColor(x + w, y+h, colours[1], uw, 1);
         RenderUtil.addVertexTextureColor(x + w, y, colours[1], uw, 0);
         RenderUtil.addVertexTextureColor(x, y, colours[0], u, 0);
     }
@@ -307,8 +307,9 @@ public class FontUtil {
 
     private static int drawMinecraftString(String string, float x, float y, double size, Color colour, boolean dropShadow) {
         GL11.glPushMatrix();
-        GL11.glTranslated(x, y + size / 3, 1000);
+        GL11.glTranslated(x, y + size / 3, 0);
         GL11.glScaled(0.1 * size, 0.1 * size, 1);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
 
         GlStateManager.enableAlpha();
 
@@ -323,6 +324,7 @@ public class FontUtil {
         }
 
         GL11.glPopMatrix();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         return i;
     }

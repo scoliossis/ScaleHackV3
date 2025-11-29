@@ -14,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.EnumAction;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
+import net.minecraft.network.play.server.S27PacketExplosion;
 import net.minecraft.util.Vec3;
 
 @RegisterModule(
@@ -27,6 +28,9 @@ public class Velocity extends Module {
 
     @RegisterSubModule(name = "Ignore Teleport")
     public static boolean ignoreTeleport = true;
+
+    @RegisterSubModule(name = "Ignore Explosions")
+    public static boolean ignoreExplosions = true;
 
     @RegisterSubModule(name = "Mode")
     public static VelocityMode velocityMode = VelocityMode.Dynamic;
@@ -50,7 +54,7 @@ public class Velocity extends Module {
     public static int maxDelayTicks = 5;
 
     @RegisterSubModule(name = "Delay Outgoing", parent = "Mode", modeParentString = {"Delay", "Dynamic"})
-    public static boolean delayOutgoing = true;
+    public static boolean delayOutgoing = false;
 
     @RegisterSubModule(name = "Force Sprint", parent = "Mode", modeParentString = {"Jump_Reset", "Dynamic"})
     public static boolean forceSprint = true;
@@ -70,22 +74,29 @@ public class Velocity extends Module {
     public static void handleVelocityPacket(PacketEvent.Receive event) {
         if (event.isCancelled()) return;
 
-        // todo: check for S27PacketExplosion
         if (event.packet instanceof S19PacketEntityStatus && C.p() != null && C.w() != null) {
             Entity entity = ((S19PacketEntityStatus) event.packet).getEntity(C.w());
-            if (entity == null) return;
+            if (entity == null || entity.getEntityId() != C.p().getEntityId()) return;
 
-            isDamage = entity.getEntityId() == C.p().getEntityId();
+            isDamage = true;
             return;
         }
+
+        if (event.packet instanceof S27PacketExplosion && ignoreExplosions) {
+            isDamage = false;
+            return;
+        }
+
+        if (!isDamage && event.packet instanceof S12PacketEntityVelocity) {
+            isDamage = true;
+            return;
+        }
+        isDamage = !ignoreTeleport;
 
         if (!(event.packet instanceof S12PacketEntityVelocity)) return;
 
         S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
         if (packet.getEntityID() != C.p().getEntityId()) return;
-
-        if (ignoreTeleport && !isDamage) return;
-        isDamage = false;
 
         S12PacketEntityVelocityBridge accessiblePacket = S12PacketEntityVelocityBridge.from(packet);
         Vec3 originalVelocity = new Vec3(packet.getMotionX()/8000d, packet.getMotionY()/8000d, packet.getMotionZ()/8000d);

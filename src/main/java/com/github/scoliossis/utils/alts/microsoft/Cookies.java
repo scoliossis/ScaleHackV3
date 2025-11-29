@@ -128,18 +128,12 @@ public class Cookies {
         return null;
     }
 
-    public static String getCookiesFromFile(String path) {
-        try {
-            StringBuilder fileText = new StringBuilder();
-            List<String> fileLines = Files.readAllLines(Paths.get(path));
+    public static String getCookiesFromFile(String path) throws Exception {
+        StringBuilder fileText = new StringBuilder();
+        List<String> fileLines = Files.readAllLines(Paths.get(path));
 
-            fileLines.stream().map(e -> e + ";\n").forEach(fileText::append);
-            return fileText.toString();
-        } catch (Exception e) {
-            Login.setErrorMessage("Cannot read cookies from file!");
-            e.printStackTrace();
-            return null;
-        }
+        fileLines.stream().map(e -> e + ";\n").forEach(fileText::append);
+        return fileText.toString();
     }
 
     public static String formatCookies(String fileContent) {

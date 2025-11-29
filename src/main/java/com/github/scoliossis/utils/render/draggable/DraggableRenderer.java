@@ -21,7 +21,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-// todo: store pos as % of screen size.
 public class DraggableRenderer {
     public static ArrayList<Draggable> draggables = new ArrayList<>();
 

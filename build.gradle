@@ -1,5 +1,6 @@
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.stream.Collectors
 
 buildscript {
     repositories {
@@ -129,16 +130,30 @@ void createEventBus() {
     String classBase = """
 // magical self-writing class much wow! for more info check build.gradle!
 public class Bus {
+    public static java.util.List<Class<? extends Event>> events = java.util.Arrays.asList(
+        ${events.stream().map {e -> "${eventsClasspath}.${e.eventName}.class"}.distinct().collect(Collectors.toList()).toString().replace("[", "").replace("]", "")}
+    );
+
     public static boolean post(Event event) {"""
 
     String postMethod = ""
     String lastEvent = ""
+
+    for (Event event : events) {
+        // this event is posted on any event
+        if (event.eventName == "EventEvent") {
+            postMethod += """
+        ${event.classPackage}.${event.methodName}(new ${eventsClasspath}.EventEvent(event));"""
+        }
+    }
 
     // shoutout: https://css-tricks.com/snippets/javascript/array-of-country-names/ (small amount of cleansing was done)
     String[] countryNames = ["Afghanistan","Albania","Algeria","Andorra","Angola","Anguilla","AntiguaAndBarbuda","Argentina","Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bermuda","Bhutan","Bolivia","BosniaAndHerzegovina","Botswana","Brazil","BritishVirginIslands","Brunei","Bulgaria","BurkinaFaso","Burundi","Cambodia","Cameroon","CapeVerde","CaymanIslands","Chad","Chile","China","Colombia","Congo","CookIslands","CostaRica","CoteDIvoire","Croatia","CruiseShip","Cuba","Cyprus","CzechRepublic","Denmark","Djibouti","Dominica","DominicanRepublic","Ecuador","Egypt","ElSalvador","EquatorialGuinea","Estonia","Ethiopia","FalklandIslands","FaroeIslands","Fiji","Finland","France","FrenchPolynesia","FrenchWestIndies","Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland","Grenada","Guam","Guatemala","Guernsey","Guinea","GuineaBissau","Guyana","Haiti","Honduras","HongKong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","IsleOfMan","Israel","Italy","Jamaica","Japan","Jersey","Jordan","Kazakhstan","Kenya","Kuwait","KyrgyzRepublic","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Macedonia","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Mauritania","Mauritius","Mexico","Moldova","Monaco","Mongolia","Montenegro","Montserrat","Morocco","Mozambique","Namibia","Nepal","Netherlands","NetherlandsAntilles","NewCaledonia","NewZealand","Nicaragua","Niger","Nigeria","Norway","Oman","Pakistan","Palestine","Panama","PapuaNewGuinea","Paraguay","Peru","Philippines","Poland","Portugal","PuertoRico","Qatar","Reunion","Romania","Russia","Rwanda","SaintPierreAndMiquelon","Samoa","SanMarino","Satellite","SaudiArabia","Senegal","Serbia","Seychelles","SierraLeone","Singapore","Slovakia","Slovenia","SouthAfrica","SouthKorea","Spain","SriLanka","StKittsAndNevis","StLucia","StVincent","Sudan","Suriname","Swaziland","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","TimorLEste","Togo","Tonga","TrinidadAndTobago","Tunisia","Turkey","Turkmenistan","TurksAndCaicos","Uganda","Ukraine","UnitedArabEmirates","UnitedKingdom","Uruguay","Uzbekistan","Venezuela","Vietnam","VirginIslands","Yemen","Zambia","Zimbabwe"]
     String country = ""
     for (Event event : events) {
         if (event.eventName != lastEvent) {
+            if (event.eventName == "EventEvent") continue;
+
             // close
             if (!lastEvent.isEmpty()) {
                 postMethod += """

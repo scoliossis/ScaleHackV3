@@ -27,7 +27,6 @@ import java.util.concurrent.ForkJoinPool;
         category = Category.CLIENT,
         enabledByDefault = true
 )
-// todo: add setting for sending multiple requests at a time
 public class AntiRat extends Module {
     @RegisterSubModule(name = "Outgoing Requests", min = 1, max = 10)
     public static int maxOutgoingRequests = 3;
@@ -56,7 +55,6 @@ public class AntiRat extends Module {
         }
     }
 
-    // https://minecraft.wiki/w/Mojang_API#Verify_login_session_on_client
     private static int attemptLogin() {
         try {
             HttpPost req = new HttpPost("https://sessionserver.mojang.com/session/minecraft/join");

@@ -1,16 +1,51 @@
 package com.github.scoliossis.mixins.net.minecraft.entity;
 
 import com.github.scoliossis.modules.impl.client.MovementFix;
+import com.github.scoliossis.modules.impl.render.NoRender;
+import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityLivingBase.class)
-public class EntityLivingBaseMixin {
+public class EntityLivingBaseMixin extends Entity {
+    public EntityLivingBaseMixin(World worldIn) {
+        super(worldIn);
+    }
+
     @Redirect(method = "jump", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F"))
     public float editYawOnJump(EntityLivingBase instance) {
         return MovementFix.shouldMoveFix(instance) ? PlayerUtil.currentRotation().yaw : instance.rotationYaw;
+    }
+
+    @Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
+    public void onIsPotionActive(Potion potionIn, CallbackInfoReturnable<Boolean> cir) {
+        if (potionIn == Potion.confusion && NoRender.noNausea() && C.p() != null && this.getEntityId() == C.p().getEntityId()) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Shadow
+    protected void entityInit() {
+
+    }
+
+    @Shadow
+    public void readEntityFromNBT(NBTTagCompound tagCompund) {
+
+    }
+
+    @Shadow
+    public void writeEntityToNBT(NBTTagCompound tagCompound) {
+
     }
 }

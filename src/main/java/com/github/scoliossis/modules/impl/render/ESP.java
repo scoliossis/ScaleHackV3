@@ -64,7 +64,7 @@ public class ESP extends Module {
         }
     }
 
-    // todo: cool colours !!!
+    // todo: cool colours !!! also this sucks ass, figure out shaders or however normal people do outlines.
     // called by com.github.scoliossis.mixins.net.minecraft.client.model.ModelPlayerMixin.render
     public static void renderOutline(ModelRenderer modelRenderer, float scale) {
         if (modelRenderer.isHidden || !modelRenderer.showModel) return;

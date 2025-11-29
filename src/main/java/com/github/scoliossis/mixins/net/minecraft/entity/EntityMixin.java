@@ -3,11 +3,13 @@ package com.github.scoliossis.mixins.net.minecraft.entity;
 import com.github.scoliossis.events.Bus;
 import com.github.scoliossis.events.impl.MoveFlyingEvent;
 import com.github.scoliossis.modules.impl.client.MovementFix;
+import com.github.scoliossis.modules.impl.render.NoRender;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import com.github.scoliossis.utils.minecraft.RotationUtil;
 import com.github.scoliossis.utils.minecraft.WorldUtil;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -66,5 +68,10 @@ public abstract class EntityMixin {
                     currentRot
             ));
         }
+    }
+
+    @Inject(method = "isInvisibleToPlayer", at = @At("HEAD"), cancellable = true)
+    public void isInvisibleToPlayer(EntityPlayer player, CallbackInfoReturnable<Boolean> cir) {
+        if (NoRender.showInvisible()) cir.setReturnValue(false);
     }
 }

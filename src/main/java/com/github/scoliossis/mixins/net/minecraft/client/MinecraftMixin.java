@@ -12,7 +12,6 @@ import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.player.FastPlace;
 import com.github.scoliossis.utils.client.C;
-import com.github.scoliossis.utils.client.FrameUtil;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import com.github.scoliossis.utils.minecraft.RotationUtil;
 import net.minecraft.client.Minecraft;
@@ -20,6 +19,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import org.lwjgl.input.Keyboard;
@@ -41,14 +41,8 @@ public abstract class MinecraftMixin implements MinecraftBridge {
     @Shadow public GameSettings gameSettings;
     @Shadow public boolean inGameHasFocus;
     @Shadow protected abstract void sendClickBlockToController(boolean leftClick);
-
-    @Shadow
-    private int rightClickDelayTimer;
-
-    @Inject(method = "createDisplay", at = @At("TAIL"))
-    public void onCreateDisplay(CallbackInfo ci) {
-        FrameUtil.init();
-    }
+    @Shadow private int rightClickDelayTimer;
+    @Shadow public MovingObjectPosition objectMouseOver;
 
     @Inject(method = "runTick", at = @At(value = "HEAD"))
     public void onRunTick(CallbackInfo ci) {

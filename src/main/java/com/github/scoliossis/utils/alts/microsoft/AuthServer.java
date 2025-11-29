@@ -46,7 +46,7 @@ public class AuthServer {
                         Login.addProgressReport("Logging into Microsoft account");
                         Login.loginSession(MSAuth.authWithCode(code));
                     } catch (Exception ex) {
-                        Notifications.addNotification("&cLogin", "Failed to login with Microsoft account.");
+                        Notifications.addNotification("§cLogin", "Failed to login with Microsoft account.");
                         ex.printStackTrace();
                     }
                 }

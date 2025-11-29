@@ -8,7 +8,7 @@ import com.github.scoliossis.modules.*;
         category = Category.PLAYER
 )
 public class FastPlace extends Module {
-    @RegisterSubModule(name = "Place Delay", max = 5)
+    @RegisterSubModule(name = "Place Delay", min = 1, max = 5)
     public static int placeDelay = 1;
 
     public static int getPlaceDelay() {

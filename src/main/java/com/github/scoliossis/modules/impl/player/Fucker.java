@@ -34,6 +34,13 @@ import java.util.List;
         dangerous = true
 )
 public class Fucker extends Module {
+    @RegisterSubModule(name = "Mode")
+    public static Mode mode = Mode.Hypixel;
+    public enum Mode {
+        Vanilla,
+        Hypixel
+    }
+
     @RegisterSubModule(name = "Whitelist Own Bed")
     public static boolean whitelistBed = true;
 
@@ -72,7 +79,6 @@ public class Fucker extends Module {
 
     private static int bestSlot = -1;
 
-    // todo: allow aura, switch tools n shi
     // higher priority than killaura and velocity
     @SubscribeEvent(priority = 3000)
     public static void findTargetAndRotate(RotationEvent event) {
@@ -250,7 +256,7 @@ public class Fucker extends Module {
             }
         }
 
-        if (currentTarget == null) return;
+        if (currentTarget == null || mode != Mode.Hypixel) return;
 
         BlockPos bestSurrounding = WorldUtil.getBestBlockSurroundingBed(currentBedTarget);
         if (bestSurrounding == null) return;

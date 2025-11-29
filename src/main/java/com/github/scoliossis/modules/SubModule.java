@@ -34,7 +34,6 @@ public class SubModule {
 
     public void set(Object object) {
         try {
-            // todo: clean this up, it's a mess.
             if (isSlider()) {
                 double value = MathHelper.clamp_double(
                         MathUtil.roundTo(

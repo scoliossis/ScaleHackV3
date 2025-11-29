@@ -3,10 +3,12 @@ package com.github.scoliossis.mixins.net.minecraft.client.renderer;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.render.Animations;
+import com.github.scoliossis.modules.impl.render.NoRender;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.entity.EntityLivingBase;
@@ -21,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+
+import java.awt.*;
 
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
@@ -79,5 +83,18 @@ public abstract class ItemRendererMixin {
         if (this.itemToRender != null && !(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) && ModuleManager.isEnabled(Animations.class)) {
             Animations.scaleRotateTranslateHeldItem();
         }
+    }
+
+    @Inject(method = "renderFireInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V", ordinal = 0, shift = At.Shift.AFTER))
+    private void renderFireInFirstPersonHEAD(float partialTicks, CallbackInfo ci) {
+        GL11.glPushMatrix();
+        Color fireColour = NoRender.fireColour();
+        GlStateManager.color(fireColour.getRed() / 255f, fireColour.getGreen() / 255f, fireColour.getBlue() / 255f, fireColour.getAlpha() / 255f);
+        GL11.glTranslated(0, NoRender.getFireOffset(), 0);
+    }
+
+    @Inject(method = "renderFireInFirstPerson", at = @At("TAIL"))
+    private void renderFireInFirstPersonTAIL(float partialTicks, CallbackInfo ci) {
+        GL11.glPopMatrix();
     }
 }
