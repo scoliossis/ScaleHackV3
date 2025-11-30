@@ -1,6 +1,8 @@
 package com.github.scoliossis.modules.impl.render;
 
 import com.github.scoliossis.modules.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 
 import java.awt.*;
 
@@ -22,6 +24,8 @@ public class NoRender extends Module {
 
     @RegisterSubModule(name = "Show Invisibles")
     public static boolean showInvisibles = true;
+    @RegisterSubModule(name = "Only Invis Players")
+    public static boolean onlyInvisPlayers = true;
 
     @RegisterSubModule(name = "No Blindness")
     public static boolean noBlindness = true;
@@ -34,8 +38,8 @@ public class NoRender extends Module {
     @RegisterSubModule(name = "No Nausea")
     public static boolean noNausea = true;
 
-    public static boolean showInvisible() {
-        return ModuleManager.isEnabled(NoRender.class) && showInvisibles;
+    public static boolean showInvisible(Entity entity) {
+        return ModuleManager.isEnabled(NoRender.class) && showInvisibles && (!onlyInvisPlayers || entity instanceof EntityPlayer);
     }
 
     public static float fogDistance() {

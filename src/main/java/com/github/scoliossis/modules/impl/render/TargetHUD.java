@@ -67,7 +67,7 @@ public class TargetHUD extends Module {
         if (attackPacket.getAction() != C02PacketUseEntity.Action.ATTACK) return;
 
         Entity newTarget = attackPacket.getEntityFromWorld(C.w());
-        if (!(newTarget instanceof EntityLivingBase) || !TargetUtil.isValidTarget(newTarget)) return;
+        if (!(newTarget instanceof EntityLivingBase) || !TargetUtil.isValidTarget(newTarget, true)) return;
 
         updateTarget((EntityLivingBase) newTarget);
     }

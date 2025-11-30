@@ -18,8 +18,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class TargetUtil {
-    public static boolean isValidTarget(Entity entity) {
-        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead && !isBot(entity) && !isTeam(entity);
+    public static boolean isValidTarget(Entity entity, boolean visual) {
+        return entity != C.p() && entity instanceof EntityPlayer && !entity.isDead && !isBot(entity) && !isTeam(entity, visual);
     }
 
     public static boolean isBot(Entity entity) {
@@ -32,8 +32,10 @@ public class TargetUtil {
         return playerInfo.getResponseTime() <= Targets.botPingMode.ping;
     }
 
-    public static boolean isTeam(Entity entity) {
+    public static boolean isTeam(Entity entity, boolean visual) {
         if (!Targets.teamsCheck || !(entity instanceof EntityLivingBase)) return false;
+        if (visual && Targets.showVisuals) return false;
+
         EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
 
         return Targets.clientCheck && C.p().isOnSameTeam(entityLivingBase)
@@ -60,8 +62,8 @@ public class TargetUtil {
         return -1;
     }
 
-    public static List<EntityLivingBase> getAllValidTargets() {
-        return C.w().getEntities(EntityLivingBase.class, TargetUtil::isValidTarget);
+    public static List<EntityLivingBase> getAllValidTargets(boolean visual) {
+        return C.w().getEntities(EntityLivingBase.class, (entity) -> isValidTarget(entity, visual));
     }
 
     public static List<EntityLivingBase> getPossibleTargets(double reach, boolean throughWalls, boolean rotate) {
@@ -69,7 +71,7 @@ public class TargetUtil {
     }
 
     public static boolean canEntityBeHit(EntityLivingBase entity, double range, boolean throughWalls, boolean rotate) {
-        return isValidTarget(entity)
+        return isValidTarget(entity, false)
                 && getDistanceToEntity(entity) <= range
                 // if the rotation code wont lock onto the entity, dont bother targeting them
                 && (!rotate || getTargetRotationPoint(  entity, range, throughWalls, false) != null);

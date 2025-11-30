@@ -72,6 +72,6 @@ public abstract class EntityMixin {
 
     @Inject(method = "isInvisibleToPlayer", at = @At("HEAD"), cancellable = true)
     public void isInvisibleToPlayer(EntityPlayer player, CallbackInfoReturnable<Boolean> cir) {
-        if (NoRender.showInvisible()) cir.setReturnValue(false);
+        if (NoRender.showInvisible(C.w().getEntityByID(this.entityId))) cir.setReturnValue(false);
     }
 }

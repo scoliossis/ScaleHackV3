@@ -25,7 +25,7 @@ public class ModelPlayerMixin extends ModelBiped {
 
     @Inject(method = "render", at = @At("HEAD"))
     public void renderHEAD(Entity entityIn, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float scale, CallbackInfo ci) {
-        if (!ModuleManager.isEnabled(ESP.class) || !TargetUtil.isValidTarget(entityIn)) return;
+        if (!ModuleManager.isEnabled(ESP.class) || !TargetUtil.isValidTarget(entityIn, true)) return;
 
         if (ESP.outline) {
             GlStateManager.pushMatrix();
@@ -58,7 +58,7 @@ public class ModelPlayerMixin extends ModelBiped {
 
     @Inject(method = "render", at = @At("TAIL"))
     public void renderTAIL(Entity entityIn, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float scale, CallbackInfo ci) {
-        if (ESP.chams && TargetUtil.isValidTarget(entityIn)) {
+        if (ESP.chams && TargetUtil.isValidTarget(entityIn, true)) {
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1, 1000000);
         }

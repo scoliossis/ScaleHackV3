@@ -77,7 +77,7 @@ public abstract class RenderLivingEntityMixin <T extends EntityLivingBase> exten
 
     @Inject(method = "renderLayers", at = @At("HEAD"))
     protected void renderLayersHEAD(T entitylivingbaseIn, float p_177093_2_, float p_177093_3_, float partialTicks, float p_177093_5_, float p_177093_6_, float p_177093_7_, float p_177093_8_, CallbackInfo ci) {
-        if (ESP.chams && ModuleManager.isEnabled(ESP.class)&& TargetUtil.isValidTarget(entitylivingbaseIn)) {
+        if (ESP.chams && ModuleManager.isEnabled(ESP.class)&& TargetUtil.isValidTarget(entitylivingbaseIn, true)) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1, -1000000);
         }
@@ -85,7 +85,7 @@ public abstract class RenderLivingEntityMixin <T extends EntityLivingBase> exten
 
     @Inject(method = "renderLayers", at = @At("TAIL"))
     protected void renderLayersTAIL(T entitylivingbaseIn, float p_177093_2_, float p_177093_3_, float partialTicks, float p_177093_5_, float p_177093_6_, float p_177093_7_, float p_177093_8_, CallbackInfo ci) {
-        if (ESP.chams && ModuleManager.isEnabled(ESP.class) && TargetUtil.isValidTarget(entitylivingbaseIn)) {
+        if (ESP.chams && ModuleManager.isEnabled(ESP.class) && TargetUtil.isValidTarget(entitylivingbaseIn, true)) {
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1, 1000000);
         }

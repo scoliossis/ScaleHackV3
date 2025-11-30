@@ -505,7 +505,7 @@ public class Scaffold extends Module {
                 RotationUtil.Rotation bestRotation = new RotationUtil.Rotation(closestPitch, PlayerUtil.lastRotation().yaw + closestYaw);
 
                 if (shouldSmoothRotate()) {
-                    event.rotation = RotationUtil.getEasedRotation(bestRotation, tellyMode.getEasingFunction(), getRotationLerp());
+                    event.rotation = RotationUtil.getEasedRotation(PlayerUtil.lastRotation(), bestRotation, tellyMode.getEasingFunction(), getRotationLerp());
                 }
                 else event.rotation = bestRotation;
 

@@ -83,8 +83,7 @@ public class RotationUtil {
         );
     }
 
-    public static Rotation getLimitedRotation(Rotation to, float maxTurnAmount) {
-        Rotation from = PlayerUtil.lastRotation();
+    public static Rotation getLimitedRotation(Rotation from, Rotation to, float maxTurnAmount) {
         Rotation rotationDifference = to.subtract(from);
         float pitchDelta = MathHelper.clamp_float(rotationDifference.pitch, -maxTurnAmount, maxTurnAmount);
         float yawDelta = MathHelper.clamp_float(rotationDifference.yaw, -maxTurnAmount, maxTurnAmount);
@@ -92,8 +91,7 @@ public class RotationUtil {
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
     }
 
-    public static Rotation getSmoothRotation(Rotation to, float smoothing) {
-        Rotation from = PlayerUtil.lastRotation();
+    public static Rotation getSmoothRotation(Rotation from, Rotation to, float smoothing) {
         Rotation rotationDifference = to.subtract(from);
         float pitchDelta = rotationDifference.pitch / smoothing;
         float yawDelta = rotationDifference.yaw / smoothing;
@@ -101,8 +99,7 @@ public class RotationUtil {
         return applyGcd(from, new Rotation(pitchDelta, yawDelta).add(from));
     }
 
-    public static Rotation getEasedRotation(Rotation to, EasingUtil.EasingFunctions easingFunction, double easing) {
-        Rotation from = PlayerUtil.lastRotation();
+    public static Rotation getEasedRotation(Rotation from, Rotation to, EasingUtil.EasingFunctions easingFunction, double easing) {
         Rotation rotationDifference = to.subtract(from);
 
         float pitchDelta = (float) (rotationDifference.pitch * easingFunction.ease(easing));
@@ -118,7 +115,9 @@ public class RotationUtil {
 
     @SubscribeEvent(priority = 9999)
     public static void onRotationTAIL(RotationEvent event) {
-        applyGcd(PlayerUtil.lastRotation(), event.rotation);
+        if (C.p().ticksExisted > 0) {
+            applyGcd(PlayerUtil.lastRotation(), event.rotation);
+        }
     }
 
     @AllArgsConstructor

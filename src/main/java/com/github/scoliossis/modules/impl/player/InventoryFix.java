@@ -6,6 +6,7 @@ import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
+import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Keyboard;
@@ -18,6 +19,9 @@ import org.lwjgl.input.Mouse;
         dangerous = true
 )
 public class InventoryFix extends Module {
+    @RegisterSubModule(name = "Only Movement")
+    public static boolean movementOnly = true;
+
     private static boolean wasInGUI = false;
 
     @SubscribeEvent
@@ -31,6 +35,7 @@ public class InventoryFix extends Module {
 
         for (KeyBinding keyBinding : C.mc.gameSettings.keyBindings) {
             if (keyBinding == C.mc.gameSettings.keyBindInventory) continue;
+            if (!keyBinding.getKeyCategory().equals("key.categories.movement") && movementOnly) continue;
 
             if (keyBinding.getKeyCode() < 0) KeyBindingBridge.from(keyBinding).bridge$setDown(Mouse.isButtonDown(keyBinding.getKeyCode() + 100));
             else KeyBindingBridge.from(keyBinding).bridge$setDown(Keyboard.isKeyDown(keyBinding.getKeyCode()));

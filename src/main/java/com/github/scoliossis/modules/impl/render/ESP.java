@@ -58,7 +58,7 @@ public class ESP extends Module {
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
-        for (EntityLivingBase entity : TargetUtil.getAllValidTargets()) {
+        for (EntityLivingBase entity : TargetUtil.getAllValidTargets(true)) {
             if (square) renderSquare(entity, event.partialTicks);
             if (healthBar) renderHealthBar(entity, event.partialTicks);
         }

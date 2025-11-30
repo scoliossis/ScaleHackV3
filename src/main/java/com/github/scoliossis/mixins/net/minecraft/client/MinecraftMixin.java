@@ -4,10 +4,7 @@ import com.github.scoliossis.bridge.net.minecraft.client.MinecraftBridge;
 import com.github.scoliossis.bridge.net.minecraft.util.SessionBridge;
 import com.github.scoliossis.bridge.net.minecraft.util.TimerBridge;
 import com.github.scoliossis.events.Bus;
-import com.github.scoliossis.events.impl.ClientTickEvent;
-import com.github.scoliossis.events.impl.KeyPressedEvent;
-import com.github.scoliossis.events.impl.MouseScrolledEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.ModuleManager;
 import com.github.scoliossis.modules.impl.combat.AutoBlock;
 import com.github.scoliossis.modules.impl.player.FastPlace;
@@ -79,6 +76,16 @@ public abstract class MinecraftMixin implements MinecraftBridge {
         if (i != 0 && !Keyboard.isRepeatEvent()) {
             Bus.post(new KeyPressedEvent(i, Keyboard.getEventKeyState()));
         }
+    }
+
+    @Inject(method = "clickMouse", at = @At("HEAD"), cancellable = true)
+    private void clickMouse(CallbackInfo ci) {
+        if (Bus.post(new ClickMouseEvent())) ci.cancel();
+    }
+
+    @Inject(method = "sendClickBlockToController", at = @At("HEAD"), cancellable = true)
+    private void sendClickBlockToController(CallbackInfo ci) {
+        if (Bus.post(new ClickMouseEvent())) ci.cancel();
     }
 
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 7))

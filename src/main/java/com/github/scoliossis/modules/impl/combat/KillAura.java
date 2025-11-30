@@ -1,10 +1,13 @@
 package com.github.scoliossis.modules.impl.combat;
 
 import com.github.scoliossis.events.SubscribeEvent;
+import com.github.scoliossis.events.impl.ClickMouseEvent;
+import com.github.scoliossis.events.impl.MotionEvent;
 import com.github.scoliossis.events.impl.PlayerUpdateEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.player.Fucker;
+import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.MathUtil;
 import com.github.scoliossis.utils.minecraft.*;
 import com.github.scoliossis.utils.render.EasingUtil;
@@ -12,6 +15,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemSword;
 import net.minecraft.util.Vec3;
+import org.lwjgl.input.Mouse;
 
 import java.util.Comparator;
 import java.util.List;
@@ -33,6 +37,8 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Attack Range", parent = "Range", min = 1, max = 6)
     public static double killAuraAttackRange = 3.1;
 
+    @RegisterSubModule(name = "FOV", parent = "Range", min = 1, max = 180)
+    public static double FOV = 180;
 
     @RegisterSubModule(name = "Targeting")
     public SubCategory killAuraTargetingSubCategory = new SubCategory();
@@ -55,18 +61,10 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Rotation")
     public SubCategory rotationsSubcategory = new SubCategory();
 
-    @RegisterSubModule(name = "Jitter Pitch", parent = "Rotation", description = "Pitch Moves Up And Down")
-    public static boolean jitterPitch = true;
-    @RegisterSubModule(name = "Jitter Ticks", parent = "Jitter Pitch", min = 2, max = 500)
-    public static int pitchJitter = 20;
-
-    @RegisterSubModule(name = "Random Point", parent = "Rotation", description = "Picks a random valid roations instead of always the closest")
-    public static boolean randomValidRotation = true;
-
     @RegisterSubModule(name = "Rotation Mode", parent = "Rotation")
     public static KillAuraRotations rotations = KillAuraRotations.Smooth;
     public enum KillAuraRotations {
-        Simple, Smooth, Eased, Snap, None
+        Simple, Smooth, Eased, Snap, Manual, None
     }
 
     @RegisterSubModule(name = "Min Rotation", parent = "Rotation Mode", modeParentString = "Simple", min = 0, max = 180)
@@ -75,7 +73,7 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Max Rotation", parent = "Rotation Mode", modeParentString = "Simple", min = 1, max = 180)
     public static float maxRotation = 100;
 
-    @RegisterSubModule(name = "Rotation Smoothing", parent = "Rotation Mode", modeParentString = "Smooth", min = 1f, max = 5)
+    @RegisterSubModule(name = "Rotation Smoothing", parent = "Rotation Mode", modeParentString = "Smooth", min = 1, max = 50)
     public static float smoothRotationSpeed = 1;
 
     @RegisterSubModule(name = "Easing", parent = "Rotation Mode", modeParentString = "Eased")
@@ -84,6 +82,20 @@ public class KillAura extends Module {
     @RegisterSubModule(name = "Easing Ticks", parent = "Rotation Mode", modeParentString = "Eased", min = 3, max = 20)
     public static int easingTicks = 10;
 
+    @RegisterSubModule(name = "Client Side", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased"})
+    public static boolean clientSideRotation = true;
+
+    @RegisterSubModule(name = "Only Necessary", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased"}, description = "Only changes rotation if not currently looking at a valid target")
+    public static boolean onlyNecessary = true;
+
+    @RegisterSubModule(name = "Jitter Pitch", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased", "Snap"}, description = "Pitch Moves Up And Down")
+    public static boolean jitterPitch = true;
+    @RegisterSubModule(name = "Jitter Ticks", parent = "Jitter Pitch", min = 2, max = 500)
+    public static int pitchJitter = 20;
+
+    @RegisterSubModule(name = "Random Point", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased", "Snap"}, description = "Picks a random valid roations instead of always the closest")
+    public static boolean randomValidRotation = true;
+
     @RegisterSubModule(name = "Attacking")
     public SubCategory attackingSubCat = new SubCategory();
 
@@ -91,6 +103,8 @@ public class KillAura extends Module {
     public static boolean swingMisses = true;
     @RegisterSubModule(name = "Swords Only", parent = "Attacking")
     public static boolean swordOnlyAura = true;
+    @RegisterSubModule(name = "Left Click Only", parent = "Attacking", description = "Only enables when left click is held down")
+    public static boolean leftClickDownOnly = true;
 
     @RegisterSubModule(name = "Attack Speed Min", min = 0, max = 20, parent = "Attacking")
     public static double killAuraAttackSpeedMin = 5;
@@ -138,22 +152,53 @@ public class KillAura extends Module {
             return;
         }
 
-        if (!TargetUtil.isValidTarget(target)) {
-            if (swingMisses && lastTarget != null) {
-                PlayerUtil.swingHand();
-            }
+        if (!TargetUtil.isValidTarget(target, false)) {
+            if (swingMisses) PlayerUtil.swingHand();
             return;
         }
 
         attack(target);
     }
 
+    private static boolean willSwing() {
+        if (!shouldAttack()) return false;
+        if (rotations == KillAuraRotations.None) return true;
+
+        if (!TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false)) {
+            return swingMisses;
+        }
+
+        return true;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerMotion(MotionEvent event) {
+        if (lastTarget != null && clientSideRotation && rotations != KillAuraRotations.Snap && shouldRotate() && shouldRotateToEntity(lastTarget)) {
+            C.p().rotationYaw = RotationUtil.applyWrap360(C.p().rotationYaw, PlayerUtil.currentRotation().yaw);
+            C.p().rotationPitch = PlayerUtil.currentRotation().pitch;
+        }
+    }
+
+    @SubscribeEvent
+    public static void clickMouseEvent(ClickMouseEvent event) {
+        if (willSwing()) {
+            event.setCancelled(true);
+        }
+    }
+
     private static boolean shouldAura() {
-        return (!swordOnlyAura || InventoryUtil.getHeldItem() instanceof ItemSword) && (Fucker.getCurrentTarget() == null || !Fucker.noKillAura);
+        return (!swordOnlyAura || InventoryUtil.getHeldItem() instanceof ItemSword)
+                && (Fucker.getCurrentTarget() == null || !Fucker.noKillAura)
+                && (!leftClickDownOnly || Mouse.isButtonDown(0));
     }
 
     private static boolean shouldAttack() {
-        return shouldAura() && MovementUtil.ticks >= nextAttackTick && PlayerUtil.canAttack() && !Fucker.shouldRotate();
+        return lastTarget != null
+                && shouldAura()
+                && MovementUtil.ticks >= nextAttackTick
+                && PlayerUtil.canAttack()
+                && !Fucker.shouldRotate()
+                && (isTargetInFOV(lastTarget) || TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false));
     }
 
     private static EntityLivingBase getTarget() {
@@ -217,11 +262,19 @@ public class KillAura extends Module {
     private static boolean shouldRotate() {
         return shouldAura()
                 && (rotations != KillAuraRotations.Snap || shouldAttack())
-                && rotations != KillAuraRotations.None;
+                && rotations != KillAuraRotations.None
+                && rotations != KillAuraRotations.Manual;
     }
 
-    private static boolean shouldRotateToEntity(EntityLivingBase EntityLivingBase) {
-        return TargetUtil.getDistanceToEntity(EntityLivingBase) <= killAuraRotationRange;
+    private static boolean shouldRotateToEntity(EntityLivingBase entity) {
+        return TargetUtil.getDistanceToEntity(entity) <= killAuraRotationRange && isTargetInFOV(entity);
+    }
+
+    private static boolean isTargetInFOV(EntityLivingBase entity) {
+        Vec3 rotationPoint = TargetUtil.getTargetRotationPoint(entity, killAuraRotationRange, throughWalls, randomValidRotation);
+        if (rotationPoint == null) return false;
+
+        return Math.abs(RotationUtil.getCurrentClientRotation().yaw - RotationUtil.getRotation(rotationPoint).yaw) % 180 <= FOV;
     }
 
     private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
@@ -232,20 +285,28 @@ public class KillAura extends Module {
 
         double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease((MovementUtil.ticks % pitchJitter) / (pitchJitter/2d)) : 0;
         targetRotationPoint = targetRotationPoint.addVector(0, targetRotationPoint.yCoord >= entity.getEntityBoundingBox().maxY - entity.height / 2 ? -extraYcoord : extraYcoord, 0);
-        RotationUtil.Rotation targetRotation = RotationUtil.getRotation(targetRotationPoint);
+
+        if (onlyNecessary && TargetUtil.isValidTarget(WorldUtil.getMouseOver(getCurrentRotation(), killAuraAttackRange, throughWalls), false))
+            return getCurrentRotation();
+
+        RotationUtil.Rotation targetRotation = RotationUtil.getRotation(getCurrentRotation(), C.p().getPositionEyes(1), targetRotationPoint);
 
         switch (rotations) {
             case Simple:
-                return RotationUtil.getLimitedRotation(targetRotation, MathUtil.getRandomInRange(minRotation, maxRotation));
+                return RotationUtil.getLimitedRotation(getCurrentRotation(), targetRotation, MathUtil.getRandomInRange(minRotation, maxRotation));
             case Smooth:
-                return RotationUtil.getSmoothRotation(targetRotation, smoothRotationSpeed);
+                return RotationUtil.getSmoothRotation(getCurrentRotation(), targetRotation, smoothRotationSpeed);
             case Eased:
                 if (easedRotationTick < 0) easedRotationTick = 1;
                 if (easedRotationTick < easingTicks) easedRotationTick++;
-                return RotationUtil.getEasedRotation(targetRotation, easingFunction, (double) easedRotationTick / easingTicks);
+                return RotationUtil.getEasedRotation(getCurrentRotation(), targetRotation, easingFunction, (double) easedRotationTick / easingTicks);
             default:
-                return RotationUtil.applyGcd(targetRotation);
+                return RotationUtil.applyGcd(getCurrentRotation(), targetRotation);
         }
+    }
+
+    private static RotationUtil.Rotation getCurrentRotation() {
+        return clientSideRotation ? RotationUtil.getCurrentClientRotation() : PlayerUtil.lastRotation();
     }
 
     private static double lostPrecision = 0;

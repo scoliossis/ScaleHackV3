@@ -28,10 +28,12 @@ public class Targets extends Module {
 
     @RegisterSubModule(name = "Teams Check")
     public static boolean teamsCheck = false;
+    @RegisterSubModule(name = "Show Visuals", parent = "Teams Check")
+    public static boolean showVisuals = true;
     @RegisterSubModule(name = "Client Teams", parent = "Teams Check")
-    public static boolean clientCheck = false;
+    public static boolean clientCheck = true;
     @RegisterSubModule(name = "Colour Teams", parent = "Teams Check")
-    public static boolean colourTeams = false;
+    public static boolean colourTeams = true;
 
     @Override
     protected void onEnable() {

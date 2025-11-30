@@ -48,7 +48,7 @@ public class Nametags extends Module {
 
         double sizeMulti = baseSizeMulti*sizeMultiplier;
 
-        List<EntityLivingBase> sortedEntities = TargetUtil.getAllValidTargets().stream().sorted(
+        List<EntityLivingBase> sortedEntities = TargetUtil.getAllValidTargets(true).stream().sorted(
                 Comparator.comparingDouble(e -> -e.getDistanceToEntity(C.p()))
         ).collect(Collectors.toList());
 
@@ -91,7 +91,7 @@ public class Nametags extends Module {
     }
 
     public static boolean shouldHideNametag(EntityLivingBase entityLivingBase) {
-        return ModuleManager.isEnabled(Nametags.class) && TargetUtil.isValidTarget(entityLivingBase);
+        return ModuleManager.isEnabled(Nametags.class) && TargetUtil.isValidTarget(entityLivingBase, true);
     }
 
     @Override
