@@ -80,12 +80,12 @@ public abstract class MinecraftMixin implements MinecraftBridge {
 
     @Inject(method = "clickMouse", at = @At("HEAD"), cancellable = true)
     private void clickMouse(CallbackInfo ci) {
-        if (Bus.post(new ClickMouseEvent())) ci.cancel();
+        if (Bus.post(new ClickMouseEvent.Left())) ci.cancel();
     }
 
     @Inject(method = "sendClickBlockToController", at = @At("HEAD"), cancellable = true)
     private void sendClickBlockToController(CallbackInfo ci) {
-        if (Bus.post(new ClickMouseEvent())) ci.cancel();
+        if (Bus.post(new ClickMouseEvent.Left())) ci.cancel();
     }
 
     @Redirect(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isPressed()Z", ordinal = 7))
@@ -130,9 +130,10 @@ public abstract class MinecraftMixin implements MinecraftBridge {
         return C.p().isEntityInsideOpaqueBlock();
     }
 
-    @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))
+    @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER), cancellable = true)
     private void onRightClickMouse(CallbackInfo ci) {
         this.rightClickDelayTimer = FastPlace.getPlaceDelay();
+        if (Bus.post(new ClickMouseEvent.Right())) ci.cancel();
     }
 
     public TimerBridge bridge$getTimer() {

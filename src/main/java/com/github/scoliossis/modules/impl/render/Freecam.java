@@ -17,6 +17,7 @@ import org.lwjgl.input.Keyboard;
         description = "But first, we need to talk about parallel universes",
         category = Category.RENDER
 )
+// todo: terrible, fix.
 public class Freecam extends Module {
     @RegisterSubModule(name = "Horizontal Speed", max = 10)
     public static float horizontalSpeed = 2;

@@ -1,5 +1,6 @@
 package com.github.scoliossis.modules.impl.combat;
 
+import com.github.scoliossis.bridge.net.minecraft.client.multiplayer.PlayerControllerMPBridge;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.ClickMouseEvent;
 import com.github.scoliossis.events.impl.MotionEvent;
@@ -92,6 +93,8 @@ public class KillAura extends Module {
     public static boolean jitterPitch = true;
     @RegisterSubModule(name = "Jitter Ticks", parent = "Jitter Pitch", min = 2, max = 500)
     public static int pitchJitter = 20;
+    @RegisterSubModule(name = "Jitter Size", parent = "Jitter Pitch", min = 0.1, max = 1.5)
+    public static double jitterSize = 0.3;
 
     @RegisterSubModule(name = "Random Point", parent = "Rotation Mode", modeParentString = {"Simple", "Smooth", "Eased", "Snap"}, description = "Picks a random valid roations instead of always the closest")
     public static boolean randomValidRotation = true;
@@ -105,6 +108,10 @@ public class KillAura extends Module {
     public static boolean swordOnlyAura = true;
     @RegisterSubModule(name = "Left Click Only", parent = "Attacking", description = "Only enables when left click is held down")
     public static boolean leftClickDownOnly = true;
+    @RegisterSubModule(name = "Not While Mining", parent = "Attacking", description = "Only enables when not mining a block")
+    public static boolean noMine = true;
+    @RegisterSubModule(name = "No GUI", parent = "Attacking", description = "Disables aura while in any gui")
+    public static boolean noGUI = true;
 
     @RegisterSubModule(name = "Attack Speed Min", min = 0, max = 20, parent = "Attacking")
     public static double killAuraAttackSpeedMin = 5;
@@ -116,11 +123,13 @@ public class KillAura extends Module {
 
     private static EntityLivingBase lastTarget = null;
     private static int switchTargetIndex = 0;
+    private static RotationUtil.Rotation lastRotation = null;
 
     // goes before scaffold because its less important imo
     @SubscribeEvent(priority = 999)
     public static void onRotationEvent(RotationEvent event) {
         if (!shouldRotate()) {
+            lastRotation = null;
             easedRotationTick = 0;
             return;
         }
@@ -129,13 +138,15 @@ public class KillAura extends Module {
         EntityLivingBase target = getTarget();
 
         if (target == null || !shouldRotateToEntity(target)) {
+            lastRotation = null;
             easedRotationTick = 0;
             return;
         }
 
         if (target != prevTarget) easedRotationTick = 0;
 
-        event.rotation = getRotation(target);
+        lastRotation = getRotation(target);
+        event.rotation = new RotationUtil.Rotation(lastRotation.pitch, lastRotation.yaw);
     }
 
     @SubscribeEvent
@@ -173,14 +184,14 @@ public class KillAura extends Module {
 
     @SubscribeEvent
     public static void onPlayerMotion(MotionEvent event) {
-        if (lastTarget != null && clientSideRotation && rotations != KillAuraRotations.Snap && shouldRotate() && shouldRotateToEntity(lastTarget)) {
-            C.p().rotationYaw = RotationUtil.applyWrap360(C.p().rotationYaw, PlayerUtil.currentRotation().yaw);
-            C.p().rotationPitch = PlayerUtil.currentRotation().pitch;
+        if (lastTarget != null && lastRotation != null && clientSideRotation && rotations != KillAuraRotations.Snap && shouldRotate() && shouldRotateToEntity(lastTarget)) {
+            C.p().rotationYaw = RotationUtil.applyWrap360(C.p().rotationYaw, lastRotation.yaw);
+            C.p().rotationPitch = lastRotation.pitch;
         }
     }
 
     @SubscribeEvent
-    public static void clickMouseEvent(ClickMouseEvent event) {
+    public static void clickMouseEvent(ClickMouseEvent.Left event) {
         if (willSwing()) {
             event.setCancelled(true);
         }
@@ -189,7 +200,9 @@ public class KillAura extends Module {
     private static boolean shouldAura() {
         return (!swordOnlyAura || InventoryUtil.getHeldItem() instanceof ItemSword)
                 && (Fucker.getCurrentTarget() == null || !Fucker.noKillAura)
-                && (!leftClickDownOnly || Mouse.isButtonDown(0));
+                && (!leftClickDownOnly || Mouse.isButtonDown(0))
+                && (!noGUI || C.mc.currentScreen == null)
+                && (!noMine || PlayerControllerMPBridge.from(C.mc.playerController).bridge$getCurBlockDamageMP() == 0);
     }
 
     private static boolean shouldAttack() {
@@ -197,6 +210,7 @@ public class KillAura extends Module {
                 && shouldAura()
                 && MovementUtil.ticks >= nextAttackTick
                 && PlayerUtil.canAttack()
+                && (killAuraAttackSpeedMin != 0 || killAuraAttackSpeedMax != 0)
                 && !Fucker.shouldRotate()
                 && (isTargetInFOV(lastTarget) || TargetUtil.isValidTarget(WorldUtil.getMouseOver(PlayerUtil.currentRotation(), killAuraAttackRange, throughWalls), false));
     }
@@ -274,7 +288,7 @@ public class KillAura extends Module {
         Vec3 rotationPoint = TargetUtil.getTargetRotationPoint(entity, killAuraRotationRange, throughWalls, randomValidRotation);
         if (rotationPoint == null) return false;
 
-        return Math.abs(RotationUtil.getCurrentClientRotation().yaw - RotationUtil.getRotation(rotationPoint).yaw) % 180 <= FOV;
+        return Math.abs(Math.abs(RotationUtil.getCurrentClientRotation().yaw) - Math.abs(RotationUtil.getRotation(rotationPoint).yaw)) % 180 <= FOV;
     }
 
     private static RotationUtil.Rotation getRotation(EntityLivingBase entity) {
@@ -283,7 +297,7 @@ public class KillAura extends Module {
         // should only be null if rotationRange is lower than attack range
         if (targetRotationPoint == null) return PlayerUtil.currentRotation();
 
-        double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease((MovementUtil.ticks % pitchJitter) / (pitchJitter/2d)) : 0;
+        double extraYcoord = jitterPitch ? EasingUtil.EasingFunctions.Ease_In_Out_Sine.ease((MovementUtil.ticks % pitchJitter) / (pitchJitter/2d)) * jitterSize : 0;
         targetRotationPoint = targetRotationPoint.addVector(0, targetRotationPoint.yCoord >= entity.getEntityBoundingBox().maxY - entity.height / 2 ? -extraYcoord : extraYcoord, 0);
 
         if (onlyNecessary && TargetUtil.isValidTarget(WorldUtil.getMouseOver(getCurrentRotation(), killAuraAttackRange, throughWalls), false))

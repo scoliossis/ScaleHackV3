@@ -76,7 +76,7 @@ public class ConfigCommand extends Command {
                     if (configFiles.isEmpty()) ChatUtil.prefixMessage("&7No config files found!");
                     else {
                         ChatUtil.prefixMessage("&f" + configFiles.size() + " &cConfig files found: ");
-                        ChatUtil.chat("&c" + configFiles.stream().map(File::getName).collect(Collectors.joining("&f, &c")));
+                        ChatUtil.chat("&c" + configFiles.stream().map(e -> e.getName().replace(".cfg", "")).collect(Collectors.joining("&f, &c")));
                     }
 
                     List<File> folders = files.stream().filter(File::isDirectory).collect(Collectors.toList());

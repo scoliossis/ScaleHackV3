@@ -26,12 +26,11 @@ import java.util.stream.Collectors;
 public class Nametags extends Module {
     @RegisterSubModule(name = "Background")
     public static boolean background = false;
+    @RegisterSubModule(name = "Background Colour", parent = "Background")
+    public static Color backgroundColour = new Color(22,22,22,100);
 
     @RegisterSubModule(name = "Health")
     public static boolean health = false;
-
-    @RegisterSubModule(name = "Background Colour")
-    public static Color backgroundColour = new Color(22,22,22,100);
 
 
     @RegisterSubModule(name = "Scale With Distance")

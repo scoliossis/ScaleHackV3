@@ -24,11 +24,12 @@ import java.util.List;
 // shoutout to litdab. for the idea to make autoblock a separate module
 // a really old mushroom build ~2020 did the same, but badly, its a cool idea i think
 @RegisterModule(
-        name = "AutoBlock",
+        name = "Auto Block",
         description = "im enderflame and you are BLOCKED",
         category = Category.COMBAT,
         dangerous = true
 )
+// todo: on right click option
 public class AutoBlock extends Module {
     @RegisterSubModule(name = "Range", max = 6)
     public static double autoblockRange = 3;

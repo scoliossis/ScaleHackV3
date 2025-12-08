@@ -9,6 +9,7 @@ import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.client.C;
 import lombok.Getter;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.network.play.server.S01PacketJoinGame;
 import net.minecraft.network.play.server.S07PacketRespawn;
 import net.minecraft.network.play.server.S40PacketDisconnect;
@@ -158,5 +159,19 @@ public class PlayerUtil {
     // shut up intellij, this shouldn't be inverted, because the name would be longer and its alr too long!
     public static boolean shouldInteractFromFakePos() {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
+    }
+
+    public static int ticksUntilInRange(EntityLivingBase entity, double range) {
+        Vec3 playerPos = C.p().getPositionVector();
+        Vec3 targetPos = entity.getPositionVector();
+
+        double startDistance = playerPos.distanceTo(targetPos);
+        playerPos = playerPos.add(new Vec3(playerPos.xCoord - C.p().prevPosX, 0, playerPos.zCoord - C.p().prevPosZ));
+        targetPos = targetPos.add(new Vec3(targetPos.xCoord - entity.lastTickPosX, 0, targetPos.zCoord - entity.lastTickPosZ));
+        double nextDistance = playerPos.distanceTo(targetPos);
+        double distanceChange = startDistance - nextDistance;
+
+        if (distanceChange <= 0) return -1;
+        return (int) Math.ceil((startDistance - range) / distanceChange);
     }
 }

@@ -35,7 +35,7 @@ public class AntiRat extends Module {
 
     @SubscribeEvent
     public static void rateLimitLogin(RenderTickEvent event) {
-        if (!C.isInGame() || C.mc.isSingleplayer()) return;
+        if (!C.isInGame() || C.mc.isSingleplayer() || serverPublicKey == null) return;
 
         // never ending requests.
         rateLimitLogin();
@@ -62,6 +62,7 @@ public class AntiRat extends Module {
 
             String accessToken = C.mc.getSession().getToken();
             String selectedProfile = C.mc.getSession().getPlayerID();
+
             String serverId = generateServerId(serverID, serverPublicKey, CryptManager.createNewSharedKey());
             req.setEntity(new StringEntity("{ \"accessToken\": \""+accessToken+"\", \"selectedProfile\": \""+selectedProfile+"\", \"serverId\": \""+serverId+"\"}"));
 

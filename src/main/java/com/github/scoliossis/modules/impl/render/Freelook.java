@@ -13,6 +13,7 @@ import com.github.scoliossis.utils.minecraft.RotationUtil;
         description = "Yeah, I'm out that Brooklyn, now I'm down in Tribeca Right next to De Niro, but I'll be hood forever",
         category = Category.RENDER
 )
+// todo: fix it setting rotation after its changed by server
 public class Freelook extends Module {
     private int lastPerspective = 0;
 

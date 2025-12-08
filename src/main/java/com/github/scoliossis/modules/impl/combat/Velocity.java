@@ -56,8 +56,17 @@ public class Velocity extends Module {
     @RegisterSubModule(name = "Delay Outgoing", parent = "Mode", modeParentString = {"Delay", "Dynamic"})
     public static boolean delayOutgoing = false;
 
-    @RegisterSubModule(name = "Force Sprint", parent = "Mode", modeParentString = {"Jump_Reset", "Dynamic"})
-    public static boolean forceSprint = true;
+    @RegisterSubModule(name = "Jump", parent = "Mode", modeParentString = {"Jump_Reset", "Dynamic"})
+    public static JumpResetMode jumpResetMode = JumpResetMode.Sprint_Only;
+
+    public enum JumpResetMode {
+        Force_Sprint,
+        Sprint_Only,
+        Normal
+    }
+
+    @RegisterSubModule(name = "Sprint FOV", parent = "Jump", modeParentString = {"Force_Sprint"}, min = 1, max = 180)
+    public static int sprintFOV = 180;
 
     private static boolean shouldJump = false;
 
@@ -87,16 +96,16 @@ public class Velocity extends Module {
             return;
         }
 
+        if (!(event.packet instanceof S12PacketEntityVelocity)) return;
+
+        S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
+        if (packet.getEntityID() != C.p().getEntityId()) return;
+
         if (!isDamage && event.packet instanceof S12PacketEntityVelocity) {
             isDamage = true;
             return;
         }
         isDamage = !ignoreTeleport;
-
-        if (!(event.packet instanceof S12PacketEntityVelocity)) return;
-
-        S12PacketEntityVelocity packet = ((S12PacketEntityVelocity) event.packet);
-        if (packet.getEntityID() != C.p().getEntityId()) return;
 
         S12PacketEntityVelocityBridge accessiblePacket = S12PacketEntityVelocityBridge.from(packet);
         Vec3 originalVelocity = new Vec3(packet.getMotionX()/8000d, packet.getMotionY()/8000d, packet.getMotionZ()/8000d);
@@ -120,6 +129,8 @@ public class Velocity extends Module {
 
             case Jump_Reset:
             case Dynamic:
+                if (!C.p().isSprinting() && jumpResetMode == JumpResetMode.Sprint_Only) return;
+
                 if (C.p().onGround || velocityMode == VelocityMode.Jump_Reset) {
                     shouldJump |= C.p().onGround;
                     break;
@@ -141,9 +152,16 @@ public class Velocity extends Module {
         }
     }
 
+    private static boolean isWithinSprintFOV() {
+        if (lastVelocity == null) return false;
+
+        float yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
+        return 180 - Math.abs(((C.p().rotationYaw - yaw) % 360) - 180) <= sprintFOV;
+    }
+
     @SubscribeEvent(priority = 2000)
     public static void fixRotationForJumpReset(RotationEvent event) {
-        if (!shouldJump || lastVelocity == null || !forceSprint) return;
+        if (!shouldJump || lastVelocity == null || jumpResetMode != JumpResetMode.Force_Sprint || !isWithinSprintFOV()) return;
 
         event.rotation.yaw = getYawFromVelocity(lastVelocity.xCoord, lastVelocity.zCoord);
 
@@ -157,7 +175,7 @@ public class Velocity extends Module {
     public static void jumpReset(MovementInputEvent event) {
         if (!shouldJump) return;
 
-        if (forceSprint) {
+        if (jumpResetMode == JumpResetMode.Force_Sprint && isWithinSprintFOV()) {
             event.movementInput.moveForward = event.movementInput.sneak ? (float) 0.3D : 1;
             event.movementInput.moveStrafe = 0;
             MovementUtil.oneTickKeybind(C.mc.gameSettings.keyBindSprint, true);

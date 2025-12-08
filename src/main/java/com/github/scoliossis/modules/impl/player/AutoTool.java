@@ -16,6 +16,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging;
         description = "x.com/scoliosissy",
         category = Category.PLAYER
 )
+// todo: dont switch back tick 1
 public class AutoTool extends Module {
     @RegisterSubModule(name = "Crouching Only")
     public static boolean onlyWhenCrouching = true;

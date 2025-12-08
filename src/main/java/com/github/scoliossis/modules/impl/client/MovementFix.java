@@ -3,6 +3,7 @@ package com.github.scoliossis.modules.impl.client;
 import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.MovementInputEvent;
 import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.impl.movement.Scaffold;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.MathUtil;
@@ -39,8 +40,8 @@ public class MovementFix extends Module {
                 && !ModuleManager.isEnabled(Freecam.class);
     }
     public static boolean shouldRotationFix() {
-        return rotationFix
-                && ModuleManager.isEnabled(MovementFix.class)
+        return ((rotationFix && ModuleManager.isEnabled(MovementFix.class))
+                || (Scaffold.isShouldScaffold() && Scaffold.manualPlace))
                 && !ModuleManager.isEnabled(Freecam.class);
     }
 

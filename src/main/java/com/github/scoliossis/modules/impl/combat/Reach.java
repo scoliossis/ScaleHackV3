@@ -14,7 +14,7 @@ public class Reach extends Module {
     public static double attackReach = 3;
 
     @RegisterSubModule(name = "Block Reach", max = 10)
-    public static float blockReach = 5;
+    public static float blockReach = 4.5f;
 
     public static boolean shouldOverwriteReach() {
         return ModuleManager.isEnabled(Reach.class);

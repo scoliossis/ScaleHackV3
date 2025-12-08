@@ -60,9 +60,22 @@ public class InventoryUtil {
     }
 
     public static boolean isBlockInteractable(Block block) {
-        if (block == Blocks.tnt || block instanceof BlockStairs || block == Blocks.end_stone || block == Blocks.redstone_ore) return false;
+        if (block == Blocks.tnt || block instanceof BlockStairs || block == Blocks.end_stone || block == Blocks.redstone_ore || block == Blocks.cobblestone) return false;
 
         Class<?> clazz = block.getClass();
+
+        if (clazz == null) {
+            ChatUtil.chat("clazz == null");
+            return false;
+        }
+        if (clazz.getDeclaredMethods() == null) {
+            ChatUtil.chat("clazz.getDeclaredMethods() == null");
+            return false;
+        }
+        if (Arrays.stream(clazz.getDeclaredMethods()) == null) {
+            ChatUtil.chat("Arrays.stream(clazz.getDeclaredMethods()) == null");
+            return false;
+        }
 
         // shoutout to 112batman! just using the getMethod function and returning true if it errors is SLOW
         while(Arrays.stream(clazz.getDeclaredMethods()).noneMatch(m -> m.getName().equals("onBlockActivated"))) {

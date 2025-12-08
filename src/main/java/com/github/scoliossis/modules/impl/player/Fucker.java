@@ -6,6 +6,7 @@ import com.github.scoliossis.events.impl.RenderScoreboardEvent;
 import com.github.scoliossis.events.impl.RenderWorldEvent;
 import com.github.scoliossis.events.impl.RotationEvent;
 import com.github.scoliossis.modules.*;
+import com.github.scoliossis.modules.impl.movement.Scaffold;
 import com.github.scoliossis.modules.impl.render.BedESP;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.minecraft.*;
@@ -53,11 +54,14 @@ public class Fucker extends Module {
     @RegisterSubModule(name = "Tick Swap", description = "Only swaps items on first and last tick of breaking block")
     public static boolean tickSwap = false;
 
-    @RegisterSubModule(name = "No Autoblock")
+    @RegisterSubModule(name = "Override Autoblock")
     public static boolean noAutoblock = true;
 
-    @RegisterSubModule(name = "No Kill Aura")
+    @RegisterSubModule(name = "Override Kill Aura")
     public static boolean noKillAura = true;
+
+    @RegisterSubModule(name = "Override Scaffold")
+    public static boolean noScaffold = false;
 
     @RegisterSubModule(name = "Ticks Between Blocks", min = 0, max = 6, increment = 0.1, parent = "Basics")
     public static int ticksBetweenBlocks = 5;
@@ -79,9 +83,11 @@ public class Fucker extends Module {
 
     private static int bestSlot = -1;
 
-    // higher priority than killaura and velocity
-    @SubscribeEvent(priority = 3000)
+    // higher priority than killaura, velocity and scaffold
+    @SubscribeEvent(priority = 4000)
     public static void findTargetAndRotate(RotationEvent event) {
+        if (!noScaffold && Scaffold.isShouldScaffold()) return;
+
         if (justStartedGame) findOwnBed();
 
         if (MovementUtil.ticks - lastBreakTick < ticksBetweenBlocks || C.mc.playerController.getCurrentGameType().isAdventure()) return;

@@ -2,10 +2,7 @@ package com.github.scoliossis.modules.impl.movement;
 
 import com.github.scoliossis.bridge.net.minecraft.client.settings.KeyBindingBridge;
 import com.github.scoliossis.events.SubscribeEvent;
-import com.github.scoliossis.events.impl.MovementInputEvent;
-import com.github.scoliossis.events.impl.PlayerUpdateEvent;
-import com.github.scoliossis.events.impl.RenderWorldEvent;
-import com.github.scoliossis.events.impl.RotationEvent;
+import com.github.scoliossis.events.impl.*;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.client.ThemeModule;
 import com.github.scoliossis.utils.client.C;
@@ -32,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
         category = Category.MOVEMENT,
         dangerous = true
 )
+// this code is so messy i hate it blehhhh
 // todo: safewalk, better rotations
 public class Scaffold extends Module {
     @RegisterSubModule(name = "Basics")
@@ -41,10 +39,15 @@ public class Scaffold extends Module {
     public static float blockReach = 4.5f;
 
     @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
-    public static boolean blocksOnly = true;
+    public static boolean blocksOnly = false;
+
+    @RegisterSubModule(name = "Crouch Down Only", description = "Only scaffold if crouch key is down", parent = "Basics")
+    public static boolean crouchDownOnly = false;
+    @RegisterSubModule(name = "Uncrouch", description = "Doesn't actually sneak while holding crouch", parent = "Crouch Down Only")
+    public static boolean uncrouchAuto = true;
 
     @RegisterSubModule(name = "Use Largest Stack", description = "Always switches to largest stack of blocks", parent = "Basics")
-    public static boolean useLargestStack = true;
+    public static boolean useLargestStack = false;
 
     @RegisterSubModule(name = "Swap Time", parent = "Use Largest Stack", description = "Blocks places between switching blocks", min = 1, max = 10)
     public static int swapTime = 5;
@@ -85,35 +88,48 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Auto F5", parent = "Visuals")
     public static boolean autoF5 = true;
 
+    @RegisterSubModule(name = "Show Target Block", parent = "Visuals")
+    public static boolean showTargetBlock = true;
+    @RegisterSubModule(name = "Target Block Colour", parent = "Show Target Block")
+    public static Color targetBlockColour = new Color(227, 155, 248);
+
     @RegisterSubModule(name = "Show Previous Blocks", parent = "Visuals")
     public static boolean showPreviousBlocks = true;
-
     @RegisterSubModule(name = "Fade Time", parent = "Show Previous Blocks", min = 50, max = 10000, increment = 50)
     public static long showPreviousBlocksTime = 3000;
 
     @RegisterSubModule(name = "Bypass")
     public static SubCategory bypass = new SubCategory();
 
-    // todo: make this customizable
-    @RegisterSubModule(name = "Crouch Randomly", parent = "Bypass")
-    public static boolean crouchRandomly = true;
+    // todo: crouch ticks option, only while looking down / backwards option
+    @RegisterSubModule(name = "Crouch On Edge", parent = "Bypass")
+    public static boolean crouchOnEdge = false;
+    @RegisterSubModule(name = "Crouch In Air", parent = "Crouch On Edge")
+    public static boolean crouchInAir = false;
+
+    @RegisterSubModule(name = "Manual Place", parent = "Bypass", description = "Manually click to place")
+    public static boolean manualPlace = false;
+
+    @RegisterSubModule(name = "Only Place Best", parent = "Bypass", description = "Only places when looking at best target block")
+    public static boolean onlyPlaceBest = true;
 
     @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Bypass")
     public static boolean noDuplicateRot = true;
 
-    @RegisterSubModule(name = "Bridging Mode", parent = "Bypass")
+    @RegisterSubModule(name = "Rotation Mode", parent = "Bypass")
     public static BridgingMode bridgingMode = BridgingMode.God;
 
     public enum BridgingMode {
         God,
         Telly,
-        Derp
+        Derp,
+        Manual
     }
 
-    @RegisterSubModule(name = "Only When Jumping", description = "Only telly bridge if space held down", parent = "Bridging Mode", modeParentString = "Telly")
+    @RegisterSubModule(name = "Only When Jumping", description = "Only telly bridge if space held down", parent = "Rotation Mode", modeParentString = "Telly")
     public static boolean spaceDownOnly = true;
 
-    @RegisterSubModule(name = "Telly Mode", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Bridging Mode", modeParentString = "Telly")
+    @RegisterSubModule(name = "Telly Mode", description = "Ticks To Snap Back To Looking Forward After Landing", max = 5, parent = "Rotation Mode", modeParentString = "Telly")
     public static Telly_Mode tellyMode = Telly_Mode.Hypixel;
     @AllArgsConstructor
     public enum Telly_Mode {
@@ -173,7 +189,7 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Telly Forward Ticks", description = "Ticks Before Jumping", max = 5, parent = "Telly Mode", modeParentString = "Custom")
     public static int tellyForwardTicks = 1;
 
-    private static boolean shouldScaffold = false;
+    @Getter private static boolean shouldScaffold = false;
 
     private static final ConcurrentHashMap<BlockPos, Long> previousInteractions = new ConcurrentHashMap<>();
 
@@ -207,20 +223,25 @@ public class Scaffold extends Module {
     }
 
     private static boolean didPlace = false;
-    private static int previousStack = -1;
+    private static int lastPlaceStack = -1;
+    private static boolean overridingSneak = false;
 
-    @SubscribeEvent
+    private static BlockTarget targetBlock = null;
+
+    @SubscribeEvent(priority = 3000)
     public static void onRotationEvent(RotationEvent event) {
-        didPlace |= C.p().inventory.currentItem == previousStack && InventoryUtil.isSlotEmpty(C.p().inventory.currentItem) && shouldScaffold;
+        tryPlace = false;
+        didPlace |= C.p().inventory.currentItem == lastPlaceStack && InventoryUtil.isSlotEmpty(C.p().inventory.currentItem) && shouldScaffold;
 
         int bestStack = InventoryUtil.biggestBlockSlot();
 
-        if (!InventoryUtil.isValidBlock() && (blocksOnly && !didPlace) || bestStack == -1) {
+        if (!InventoryUtil.isValidBlock() && (blocksOnly && !didPlace) || bestStack == -1 || !shouldScaffold()) {
             disable();
             return;
         }
 
         if (!InventoryUtil.isValidBlock() || (useLargestStack && blocksPlaced % swapTime == 0)) {
+            if (previousStack == -1) previousStack = C.p().inventory.currentItem;
             C.p().inventory.currentItem = bestStack;
         }
 
@@ -234,7 +255,7 @@ public class Scaffold extends Module {
             if (predictedNextPosition != null) positionToRotateFrom = predictedNextPosition;
         }
 
-        BlockTarget targetBlock = getBestTargetBlock(positionToRotateFrom);
+        targetBlock = getBestTargetBlock(positionToRotateFrom);
         if (targetBlock == null) return;
 
         if (shouldTelly() && C.p().onGround && (tellyBlockPlaced || tellyMode.getTellyForwardTicks() == 0)) {
@@ -248,42 +269,80 @@ public class Scaffold extends Module {
         tellyPlaceDelayCounter++;
 
         if (shouldRotate()) rotate(positionToRotateFrom, targetBlock, event);
+        if (!manualPlace) tryPlace = true;
     }
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
-        if (shouldScaffold && crouchRandomly) {
-            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(
-                    Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()) || (C.p().movementInput.jump || shouldTelly()) ? MovementUtil.airTicks == 3 : MovementUtil.ticks % 20 == 0
-            );
-        }
+        if (!shouldScaffold()) return;
 
         if (shouldTower() && towerMovement()) setShouldTower();
 
-        if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) return;
+        if (InventoryUtil.isValidBlock() && crouchDownOnly && uncrouchAuto) {
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(false);
+        }
 
-        if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay() + Math.max(0, tellyMode.getRotationTicks()-1)) return;
+        if (!shouldPlaceBlock() || !InventoryUtil.isValidBlock()) {
+            if (overridingSneak && (C.p().onGround || !crouchInAir)) {
+                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
+                overridingSneak = false;
+            }
+            return;
+        }
 
+        if (crouchOnEdge) {
+            if (C.p().onGround) {
+                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(true);
+                overridingSneak = true;
+            }
+            else if (crouchInAir) {
+                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(true);
+                overridingSneak = true;
+            }
+        }
+
+        if (!tryPlace) return;
+
+        tryPlace();
+    }
+
+    private static boolean tryPlace = false;
+
+    @SubscribeEvent
+    public static void onRightClick(ClickMouseEvent.Right event) {
+        if (!manualPlace) return;
+        if (!shouldScaffold) return;
+
+        if (shouldPlaceBlock()) {
+            event.setCancelled(true);
+            tryPlace = true;
+        }
+    }
+
+    private static void tryPlace() {
         MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
-        if (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-        if (rayTrace.sideHit == EnumFacing.UP && shouldKeepY()) return;
+        if (rayTrace == null || rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+        if (onlyPlaceBest && (targetBlock == null || !rayTrace.getBlockPos().offset(rayTrace.sideHit).equals(targetBlock.pos.offset(targetBlock.direction)))) return;
+        if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay() + Math.max(0, tellyMode.getRotationTicks()-1)) return;
 
         if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
             PlayerUtil.swingHand();
+            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem))
+                C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
 
             lastPlacedDeltaX = Math.abs(PlayerUtil.currentRotation().yaw - PlayerUtil.lastRotation().yaw);
             blocksPlaced++;
             previousInteractions.put(rayTrace.getBlockPos().offset(rayTrace.sideHit), System.currentTimeMillis());
 
-            if (InventoryUtil.isSlotEmpty(C.p().inventory.currentItem)) {
-                C.p().inventory.removeStackFromSlot(C.p().inventory.currentItem);
-            }
-
-            previousStack = C.p().inventory.currentItem;
+            lastPlaceStack = C.p().inventory.currentItem;
 
             tellyBlockPlaced = C.p().onGround;
         }
+    }
+
+    private static boolean shouldScaffold() {
+        return !crouchDownOnly || Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode());
     }
 
     private static boolean shouldTelly() {
@@ -296,7 +355,7 @@ public class Scaffold extends Module {
     }
 
     private static boolean shouldRotate() {
-        return bridgingMode != BridgingMode.Derp || shouldPlaceBlock();
+        return bridgingMode != BridgingMode.Manual && (bridgingMode != BridgingMode.Derp || shouldPlaceBlock());
     }
 
     // 1 second time travel hack
@@ -316,17 +375,39 @@ public class Scaffold extends Module {
 
     @SubscribeEvent
     public static void onRenderWorldEvent(RenderWorldEvent event) {
-        if (!showPreviousBlocks) return;
+        if (showPreviousBlocks) {
+            previousInteractions.forEach((blockPos, time) -> {
+                if (System.currentTimeMillis() - time > showPreviousBlocksTime) {
+                    previousInteractions.remove(blockPos);
+                    return;
+                }
 
-        previousInteractions.forEach((blockPos, time) -> {
-            if (System.currentTimeMillis() - time > showPreviousBlocksTime) {
-                previousInteractions.remove(blockPos);
-                return;
-            }
+                double animationValue = (double) (System.currentTimeMillis() - time) / showPreviousBlocksTime;
 
-            double animationValue = (double) (System.currentTimeMillis() - time) / showPreviousBlocksTime;
+                Color color = RenderUtil.getColorsFade(time / 20d, ThemeModule.getThemeColours(), 0.2f);
 
-            Color color = RenderUtil.getColorsFade(time / 20d, ThemeModule.getThemeColours(), 0.2f);
+                Render3dUtil.draw3dBox(
+                        blockPos.getX(),
+                        blockPos.getY(),
+                        blockPos.getZ(),
+                        1,
+                        1,
+                        1,
+                        RenderUtil.setOpacity(color, 0.5 * (1 - animationValue)),
+                        event.partialTicks,
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.DOWN)),
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.UP)),
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.NORTH)),
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.SOUTH)),
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.WEST)),
+                        !previousInteractions.containsKey(blockPos.offset(EnumFacing.EAST)),
+                        false
+                );
+            });
+        }
+
+        if (showTargetBlock && targetBlock != null) {
+            BlockPos blockPos = targetBlock.pos.offset(targetBlock.direction);
 
             Render3dUtil.draw3dBox(
                     blockPos.getX(),
@@ -335,17 +416,10 @@ public class Scaffold extends Module {
                     1,
                     1,
                     1,
-                    RenderUtil.setOpacity(color, 0.5*(1 - animationValue)),
-                    event.partialTicks,
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.DOWN)),
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.UP)),
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.NORTH)),
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.SOUTH)),
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.WEST)),
-                    !previousInteractions.containsKey(blockPos.offset(EnumFacing.EAST)),
-                    false
+                    targetBlockColour,
+                    event.partialTicks
             );
-        });
+        }
     }
 
     private static boolean shouldTellyJump(boolean jumpDown) {
@@ -418,7 +492,7 @@ public class Scaffold extends Module {
             BlockPos blockPos = blocksInRange.next();
             Block currentBlock = C.w().getBlockState(blockPos).getBlock();
 
-            if (InventoryUtil.isBlockInteractable(currentBlock) || !InventoryUtil.isSolidBlock(currentBlock)) continue;
+            if (currentBlock == null || InventoryUtil.isBlockInteractable(currentBlock) || !InventoryUtil.isSolidBlock(currentBlock)) continue;
 
             for (EnumFacing facing : EnumFacing.values()) {
                 BlockPos blockPosOffset = blockPos.offset(facing);
@@ -529,6 +603,7 @@ public class Scaffold extends Module {
     }
 
     private static int previousPerspective = 0;
+    private static int previousStack = -1;
 
     private static void enable() {
         shouldScaffold = true;
@@ -547,12 +622,18 @@ public class Scaffold extends Module {
         if (shouldScaffold) {
             shouldScaffold = false;
             shouldTower = false;
+            targetBlock = null;
 
+            if (previousStack != -1 && C.isInGame()) {
+                C.p().inventory.currentItem = previousStack;
+                previousStack = -1;
+            }
             if (autoF5) {
                 C.mc.gameSettings.thirdPersonView = previousPerspective;
             }
-            if (crouchRandomly) {
+            if (overridingSneak) {
                 KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
+                overridingSneak = false;
             }
         }
     }

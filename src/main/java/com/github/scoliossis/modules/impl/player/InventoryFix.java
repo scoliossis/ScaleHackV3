@@ -16,7 +16,7 @@ import org.lwjgl.input.Mouse;
         name = "Inventory Fix",
         description = "Fixes what keys are held down when an inventory is closed",
         category = Category.PLAYER,
-        dangerous = true
+        enabledByDefault = true
 )
 public class InventoryFix extends Module {
     @RegisterSubModule(name = "Only Movement")
