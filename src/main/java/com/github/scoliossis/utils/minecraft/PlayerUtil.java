@@ -161,6 +161,12 @@ public class PlayerUtil {
         return Freecam.allowInteract && ModuleManager.isEnabled(Freecam.class) && C.isInGame() && !C.p().isDead;
     }
 
+    public static boolean movingTowardsEntity(EntityLivingBase entity) {
+        double prevDistance = new Vec3(C.p().prevPosX, C.p().prevPosY, C.p().prevPosZ).distanceTo(entity.getPositionVector());
+        double currentDistance = C.p().getPositionVector().distanceTo(entity.getPositionVector());
+        return currentDistance < prevDistance;
+    }
+
     public static int ticksUntilInRange(EntityLivingBase entity, double range) {
         Vec3 playerPos = C.p().getPositionVector();
         Vec3 targetPos = entity.getPositionVector();

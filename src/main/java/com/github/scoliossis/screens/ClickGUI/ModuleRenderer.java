@@ -17,10 +17,14 @@ public class ModuleRenderer extends Module {
     private final float MODULE_TEXT_INDENT_X = 5;
     private final Color MODULE_COLOUR = new Color(37, 37, 37);
 
+    public static String moduleName(Module module) {
+        return module.getAnnotation().name().replaceAll(" ", "").toLowerCase();
+    }
+
     public void render(Module module, int mouseX, int mouseY) {
         ClickGUIScreen.drawGuiBackground(MODULE_HEIGHT, module.getAnnotation().category());
 
-        String moduleName = module.getAnnotation().name().replaceAll(" ", "").toLowerCase();
+        String moduleName = moduleName(module);
 
         Color backgroundColor = module.isEnabled() ? module.getAnnotation().category().color : MODULE_COLOUR;
         boolean isMouseOver = ScreenUtil.isMouseOver(ClickGUIScreen.BASE_X, ClickGUIScreen.BASE_Y+1, ClickGUIScreen.GUI_TAB_WIDTH, MODULE_HEIGHT-1, mouseX, mouseY);

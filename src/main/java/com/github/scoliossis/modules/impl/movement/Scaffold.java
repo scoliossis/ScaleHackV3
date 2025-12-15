@@ -32,19 +32,32 @@ import java.util.concurrent.ConcurrentHashMap;
 // this code is so messy i hate it blehhhh
 // todo: safewalk, better rotations
 public class Scaffold extends Module {
+    @RegisterSubModule(name = "Conditions")
+    public static SubCategory conditions = new SubCategory();
+    @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Conditions")
+    public static boolean blocksOnly = false;
+
+    @RegisterSubModule(name = "Moving Backwards", description = "Only scaffold if holding back key", parent = "Conditions")
+    public static boolean movingBackwards = false;
+    @RegisterSubModule(name = "Right Click Down", description = "Only scaffold if right click is down", parent = "Conditions")
+    public static boolean rightClickOnly = false;
+    @RegisterSubModule(name = "Crouch Down", description = "Only scaffold if crouch key is down", parent = "Conditions")
+    public static boolean crouchDownOnly = false;
+    @RegisterSubModule(name = "Uncrouch", description = "Doesn't actually sneak while holding crouch", parent = "Crouch Down")
+    public static boolean uncrouchAuto = true;
+
+    @RegisterSubModule(name = "Pitch Range", description = "Only scaffold if holding back key", parent = "Conditions")
+    public static boolean pitchRange = false;
+    @RegisterSubModule(name = "Min Pitch", parent = "Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
+    public static int minPitch = 35;
+    @RegisterSubModule(name = "Max Pitch", parent = "Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
+    public static int maxPitch = 90;
+
     @RegisterSubModule(name = "Basics")
     public static SubCategory basicCategory = new SubCategory();
 
     @RegisterSubModule(name = "Block Place Reach", min = 2, max = 6, increment = 0.1, parent = "Basics")
     public static float blockReach = 4.5f;
-
-    @RegisterSubModule(name = "Blocks Only", description = "Only scaffold if holding blocks", parent = "Basics")
-    public static boolean blocksOnly = false;
-
-    @RegisterSubModule(name = "Crouch Down Only", description = "Only scaffold if crouch key is down", parent = "Basics")
-    public static boolean crouchDownOnly = false;
-    @RegisterSubModule(name = "Uncrouch", description = "Doesn't actually sneak while holding crouch", parent = "Crouch Down Only")
-    public static boolean uncrouchAuto = true;
 
     @RegisterSubModule(name = "Use Largest Stack", description = "Always switches to largest stack of blocks", parent = "Basics")
     public static boolean useLargestStack = false;
@@ -76,11 +89,11 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Tower Pitch Range", parent = "Tower Mode", modeParentString = {"Legit", "Vanilla"}, description = "Only tower within certain pitch range")
     public static boolean onlyTowerLookingUp = true;
 
-    @RegisterSubModule(name = "Min Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
-    public static int minPitch = -90;
+    @RegisterSubModule(name = "Tower Min Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
+    public static int towerMinPitch = -90;
 
-    @RegisterSubModule(name = "Max Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
-    public static int maxPitch = 0;
+    @RegisterSubModule(name = "Tower Max Pitch", parent = "Tower Pitch Range", description = "-90 is looking straight up", min = -90, max = 90)
+    public static int towerMaxPitch = 0;
 
     @RegisterSubModule(name = "Visuals")
     public static SubCategory visuals = new SubCategory();
@@ -101,7 +114,7 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Bypass")
     public static SubCategory bypass = new SubCategory();
 
-    // todo: crouch ticks option, only while looking down / backwards option
+    // todo: crouch ticks option
     @RegisterSubModule(name = "Crouch On Edge", parent = "Bypass")
     public static boolean crouchOnEdge = false;
     @RegisterSubModule(name = "Crouch In Air", parent = "Crouch On Edge")
@@ -110,20 +123,19 @@ public class Scaffold extends Module {
     @RegisterSubModule(name = "Manual Place", parent = "Bypass", description = "Manually click to place")
     public static boolean manualPlace = false;
 
-    @RegisterSubModule(name = "Only Place Best", parent = "Bypass", description = "Only places when looking at best target block")
-    public static boolean onlyPlaceBest = true;
-
-    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Bypass")
-    public static boolean noDuplicateRot = true;
-
-    @RegisterSubModule(name = "Rotation Mode", parent = "Bypass")
+    @RegisterSubModule(name = "Rotate", parent = "Bypass", description = "Only places when looking at best target block")
+    public static boolean rotate = true;
+    @RegisterSubModule(name = "Rotation Mode", parent = "Rotate")
     public static BridgingMode bridgingMode = BridgingMode.God;
+    @RegisterSubModule(name = "Only Place Best", parent = "Rotate", description = "Only places when looking at best target block")
+    public static boolean onlyPlaceBest = true;
+    @RegisterSubModule(name = "No Duplicate Rot", description = "Bypasses grims DuplicateRotPlace check", parent = "Rotate")
+    public static boolean noDuplicateRot = true;
 
     public enum BridgingMode {
         God,
         Telly,
-        Derp,
-        Manual
+        Derp
     }
 
     @RegisterSubModule(name = "Only When Jumping", description = "Only telly bridge if space held down", parent = "Rotation Mode", modeParentString = "Telly")
@@ -276,8 +288,6 @@ public class Scaffold extends Module {
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
         if (!shouldScaffold()) return;
 
-        if (shouldTower() && towerMovement()) setShouldTower();
-
         if (InventoryUtil.isValidBlock() && crouchDownOnly && uncrouchAuto) {
             KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(false);
         }
@@ -290,12 +300,10 @@ public class Scaffold extends Module {
             return;
         }
 
+        if (shouldTower() && towerMovement()) setShouldTower();
+
         if (crouchOnEdge) {
-            if (C.p().onGround) {
-                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(true);
-                overridingSneak = true;
-            }
-            else if (crouchInAir) {
+            if (C.p().onGround || crouchInAir) {
                 KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(true);
                 overridingSneak = true;
             }
@@ -310,10 +318,9 @@ public class Scaffold extends Module {
 
     @SubscribeEvent
     public static void onRightClick(ClickMouseEvent.Right event) {
-        if (!manualPlace) return;
-        if (!shouldScaffold) return;
+        if (!shouldScaffold() || !InventoryUtil.isValidBlock()) return;
 
-        if (shouldPlaceBlock()) {
+        if (WorldUtil.isOverAir()) {
             event.setCancelled(true);
             tryPlace = true;
         }
@@ -323,7 +330,9 @@ public class Scaffold extends Module {
         MovingObjectPosition rayTrace = WorldUtil.rayTrace(blockReach, PlayerUtil.currentRotation());
 
         if (rayTrace == null || rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
-        if (onlyPlaceBest && (targetBlock == null || !rayTrace.getBlockPos().offset(rayTrace.sideHit).equals(targetBlock.pos.offset(targetBlock.direction)))) return;
+        if (rotate && onlyPlaceBest && (targetBlock == null || !rayTrace.getBlockPos().offset(rayTrace.sideHit).equals(targetBlock.pos.offset(targetBlock.direction)))) return;
+        if (!rotate && shouldKeepY() && rayTrace.sideHit == EnumFacing.UP) return;
+        if (rayTrace.getBlockPos().offset(rayTrace.sideHit).getY() > C.p().posY) return;
         if (shouldTelly() && tellyPlaceDelayCounter < tellyMode.getTellyPlaceDelay() + Math.max(0, tellyMode.getRotationTicks()-1)) return;
 
         if (C.mc.playerController.onPlayerRightClick(C.p(), C.w(), C.p().getHeldItem(), rayTrace.getBlockPos(), rayTrace.sideHit, rayTrace.hitVec)) {
@@ -342,11 +351,14 @@ public class Scaffold extends Module {
     }
 
     private static boolean shouldScaffold() {
-        return !crouchDownOnly || Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode());
+        return (!crouchDownOnly || Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()))
+                && (!rightClickOnly || C.mc.gameSettings.keyBindUseItem.isKeyDown())
+                && (!pitchRange || (C.p().rotationPitch <= maxPitch && C.p().rotationPitch >= minPitch))
+                && (!movingBackwards || Keyboard.isKeyDown(C.mc.gameSettings.keyBindBack.getKeyCode()));
     }
 
     private static boolean shouldTelly() {
-        return bridgingMode == BridgingMode.Telly && (!spaceDownOnly || C.mc.gameSettings.keyBindJump.isKeyDown());
+        return rotate && bridgingMode == BridgingMode.Telly && (!spaceDownOnly || C.mc.gameSettings.keyBindJump.isKeyDown());
     }
 
     private static boolean shouldPlaceBlock() {
@@ -355,7 +367,7 @@ public class Scaffold extends Module {
     }
 
     private static boolean shouldRotate() {
-        return bridgingMode != BridgingMode.Manual && (bridgingMode != BridgingMode.Derp || shouldPlaceBlock());
+        return rotate && (bridgingMode != BridgingMode.Derp || shouldPlaceBlock());
     }
 
     // 1 second time travel hack
@@ -428,7 +440,6 @@ public class Scaffold extends Module {
                 || tellyMode.getTellyForwardTicks() == 0;
     }
 
-    // todo: mess.
     private static boolean shouldTower = false;
 
     private static boolean shouldKeepY() {
@@ -447,7 +458,7 @@ public class Scaffold extends Module {
     private static void setShouldTower() {
         shouldTower = (!onlyOffGround || !C.p().onGround)
                 && (!onlyIfSpaceDown || C.mc.gameSettings.keyBindJump.isKeyDown())
-                && (!onlyTowerLookingUp || C.p().rotationPitch <= maxPitch && C.p().rotationPitch >= minPitch);
+                && (!onlyTowerLookingUp || C.p().rotationPitch <= towerMaxPitch && C.p().rotationPitch >= towerMinPitch);
     }
 
     /// returns true when the player can stop towering if they want to
@@ -519,9 +530,8 @@ public class Scaffold extends Module {
     }
 
     // todo: take next block into account.
+    //  use the same sorta thing as killaura rotations, this is an fps killer.
     // maybe doing the block searching in here would be smarter but idk
-
-    // todo: use the same sorta thing as killaura rotations, this is an fps killer.
     private static void rotate(Vec3 playerPosition, BlockTarget blockTarget, RotationEvent event) {
         MovingObjectPosition blockHitResult = WorldUtil.rayTrace(blockReach, playerPosition, PlayerUtil.lastRotation());
 
@@ -631,10 +641,8 @@ public class Scaffold extends Module {
             if (autoF5) {
                 C.mc.gameSettings.thirdPersonView = previousPerspective;
             }
-            if (overridingSneak) {
-                KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
-                overridingSneak = false;
-            }
+            overridingSneak = false;
+            KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
         }
     }
 
@@ -645,7 +653,7 @@ public class Scaffold extends Module {
 
     @Override
     public String arrayListExtraInfo() {
-        return bridgingMode.name();
+        return rotate ? bridgingMode.name() : "Safewalk";
     }
 
     // no records :( java 8

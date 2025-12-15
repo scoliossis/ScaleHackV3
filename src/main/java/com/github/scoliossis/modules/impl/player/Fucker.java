@@ -186,6 +186,7 @@ public class Fucker extends Module {
     private static BlockPos bedHead = null;
     private static BlockPos bedFoot = null;
 
+    // todo: move this
     private static void findOwnBed() {
         if (C.p().capabilities.allowFlying) return;
 

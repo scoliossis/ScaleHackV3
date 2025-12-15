@@ -2,6 +2,7 @@ package com.github.scoliossis.modules;
 
 import com.github.scoliossis.Main;
 import com.github.scoliossis.screens.ClickGUI.ClickGUIScreen;
+import com.github.scoliossis.screens.ClickGUI.ModuleRenderer;
 import com.github.scoliossis.utils.client.C;
 import com.github.scoliossis.utils.client.KeybindHandler;
 import com.github.scoliossis.utils.minecraft.ChatUtil;
@@ -115,7 +116,7 @@ public class ModuleManager {
     public static List<Module> getModulesByCategory(Category category, List<Module> modules) {
         return modules.stream()
                 .filter(e -> e.getAnnotation().category().equals(category))
-                .sorted(Comparator.comparingInt(module -> FontUtil.getStringWidth(module.getAnnotation().name(), 10)))
+                .sorted(Comparator.comparingInt(module -> FontUtil.getStringWidth(ModuleRenderer.moduleName(module), 10)))
                 .collect(Collectors.toList());
     }
 
@@ -227,6 +228,7 @@ public class ModuleManager {
 
         if (!modulesJSON.containsKey(module.getAnnotation().name())) {
             System.out.println("Warning: " + module.getAnnotation().name() + " module not found, defaulting to " + module.getAnnotation().enabledByDefault());
+            module.setEnabled(module.getAnnotation().enabledByDefault());
         }
         else {
             LinkedTreeMap<String, Object> subModules = modulesJSON.get(module.getAnnotation().name());
@@ -242,6 +244,7 @@ public class ModuleManager {
                 if (subModule.getField().getType() == SubCategory.class) continue;
 
                 if (!subModules.containsKey(subModule.getAnnotation().name())) {
+                    // todo: fix defaulting values
                     System.out.println("Module has no config: " + subModule.getAnnotation().name() + " submodule of " + module.getAnnotation().name() + " not found, defaulting to " + subModule.get());
                     continue;
                 }

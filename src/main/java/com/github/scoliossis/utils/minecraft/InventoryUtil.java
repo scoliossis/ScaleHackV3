@@ -64,23 +64,10 @@ public class InventoryUtil {
 
         Class<?> clazz = block.getClass();
 
-        if (clazz == null) {
-            ChatUtil.chat("clazz == null");
-            return false;
-        }
-        if (clazz.getDeclaredMethods() == null) {
-            ChatUtil.chat("clazz.getDeclaredMethods() == null");
-            return false;
-        }
-        if (Arrays.stream(clazz.getDeclaredMethods()) == null) {
-            ChatUtil.chat("Arrays.stream(clazz.getDeclaredMethods()) == null");
-            return false;
-        }
-
         // shoutout to 112batman! just using the getMethod function and returning true if it errors is SLOW
         while(Arrays.stream(clazz.getDeclaredMethods()).noneMatch(m -> m.getName().equals("onBlockActivated"))) {
             Class<?> superClazz = clazz.getSuperclass();
-            if(superClazz == Block.class) return false;
+            if(superClazz == null || superClazz == Block.class) return false;
             clazz = superClazz;
         }
         return true;

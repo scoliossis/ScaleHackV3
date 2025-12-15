@@ -6,10 +6,7 @@ import com.github.scoliossis.modules.Category;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
-import com.github.scoliossis.utils.minecraft.InventoryUtil;
-import com.github.scoliossis.utils.minecraft.PlayerUtil;
-import com.github.scoliossis.utils.minecraft.TargetUtil;
-import com.github.scoliossis.utils.minecraft.TimerUtil;
+import com.github.scoliossis.utils.minecraft.*;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemSword;
 
@@ -28,15 +25,31 @@ public class TickBase extends Module {
     @RegisterSubModule(name = "Swords Only")
     public static boolean swordsOnly = true;
 
-    @RegisterSubModule(name = "Target Range", min = 1, max = 8)
+    @RegisterSubModule(name = "Mode")
+    public static Mode mode = Mode.Timer;
+
+    public enum Mode {
+        Timer,
+        Blink
+    }
+
+    @RegisterSubModule(name = "Target Range", min = 1, max = 8, parent = "Mode", modeParentString = {"Timer"})
     public static double targetRange = 4;
-    @RegisterSubModule(name = "Max Ticks", min = 2, max = 20)
+    @RegisterSubModule(name = "Max Ticks", min = 2, max = 20, parent = "Mode", modeParentString = {"Timer"})
     public static int maxTicks = 7;
+
+    @RegisterSubModule(name = "Max Blink Ticks", min = 1, max = 20, parent = "Mode", modeParentString = {"Blink"})
+    public static int maxBlinkTicks = 10;
+    @RegisterSubModule(name = "Start Blink Range", min = 2, max = 8, parent = "Mode", modeParentString = {"Blink"})
+    public static double startBlinkRange = 5;
+    @RegisterSubModule(name = "End Blink Range", min = 1, max = 8, parent = "Mode", modeParentString = {"Blink"})
+    public static double endBlinkRange = 3;
 
     private static float currentTimer = 1;
     private static int remainingBalance = 0;
-
     private static boolean balancing = false;
+
+    private static int blinkTicks = -1;
 
     @SubscribeEvent
     public static void onPlayerUpdate(PlayerUpdateEvent event) {
@@ -56,20 +69,52 @@ public class TickBase extends Module {
             return;
         }
 
-        List<EntityLivingBase> targets = TargetUtil.getPossibleTargets(20, throughWalls, false);
+        List<EntityLivingBase> targets = TargetUtil.getPossibleTargets(20, throughWalls, true);
 
-        if (targets.isEmpty() || (swordsOnly && !(InventoryUtil.getHeldItem() instanceof ItemSword))) return;
+        if (targets.isEmpty() || (swordsOnly && !(InventoryUtil.getHeldItem() instanceof ItemSword))) {
+            if (blinkTicks != -1) {
+                BlinkUtil.popBlink(true, false);
+                blinkTicks = -1;
+            }
+            return;
+        }
 
         targets.sort(Comparator.comparingDouble(TargetUtil::getDistanceToEntity));
         EntityLivingBase closestTarget = targets.get(0);
+        boolean movingTowards = PlayerUtil.movingTowardsEntity(closestTarget);
+
         double distance = TargetUtil.getDistanceToEntity(closestTarget);
         int ticksUntilInRange = PlayerUtil.ticksUntilInRange(closestTarget, targetRange);
 
-        if (ticksUntilInRange > 0 && distance > targetRange && ticksUntilInRange <= maxTicks) {
-            remainingBalance = ticksUntilInRange;
-            currentTimer = 1f/ticksUntilInRange;
-            TimerUtil.pushTimer(currentTimer);
+        switch (mode) {
+            case Blink:
+                if (blinkTicks != -1) {
+                    if (blinkTicks >= maxBlinkTicks || distance <= endBlinkRange || !movingTowards) {
+                        BlinkUtil.popBlink(true, false);
+                        blinkTicks = -1;
+                        return;
+                    }
+
+                    blinkTicks++;
+                }
+                else if (distance > endBlinkRange && movingTowards && canBlink()) {
+                    blinkTicks = 0;
+                    BlinkUtil.pushBlink(true, false);
+                }
+
+                break;
+            case Timer:
+                if (movingTowards && ticksUntilInRange > 0 && distance > targetRange && ticksUntilInRange <= maxTicks) {
+                    remainingBalance = ticksUntilInRange;
+                    currentTimer = 1f/ticksUntilInRange;
+                    TimerUtil.pushTimer(currentTimer);
+                }
+                break;
         }
+    }
+
+    private static boolean canBlink() {
+        return !AutoBlock.isBlocking() || AutoBlock.autoblockMode != AutoBlock.AutoBlockMode.Blink;
     }
 
     @Override
@@ -84,6 +129,16 @@ public class TickBase extends Module {
             remainingBalance = 0;
             balancing = false;
         }
+
+        if (blinkTicks != -1) {
+            BlinkUtil.popBlink(true, false);
+            blinkTicks = -1;
+        }
+    }
+
+    @Override
+    public String arrayListExtraInfo() {
+        return (mode == Mode.Blink ? startBlinkRange : maxTicks) + "";
     }
 
     @Override

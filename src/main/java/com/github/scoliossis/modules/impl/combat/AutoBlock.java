@@ -144,22 +144,23 @@ public class AutoBlock extends Module {
 
     public static void tickBlocking() {
         if (autoblockMode == AutoBlockMode.Blink) {
+            boolean shouldBlock = !legitBlink || Math.random() <= blockRatio;
             switch (blinkTick) {
                 case 0:
-                    if (!setBlocking(true, true)) return;
+                    if (!setBlocking(true, shouldBlock)) return;
 
                     BlinkUtil.popBlink(true, false);
 
                     if (blinkPre) {
-                        isBlinking = !legitBlink || Math.random() <= blockRatio;
-                        BlinkUtil.pushBlink(isBlinking, false);
+                        isBlinking = true;
+                        BlinkUtil.pushBlink(true, false);
                     }
                     else isBlinking = false;
                     break;
                 case 1:
                     if (!blinkPre) {
-                        isBlinking = !legitBlink || Math.random() <= blockRatio;
-                        BlinkUtil.pushBlink(isBlinking, false);
+                        isBlinking = true;
+                        BlinkUtil.pushBlink(true, false);
                     }
 
                     setBlocking(true, false);

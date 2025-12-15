@@ -16,19 +16,13 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
 
+// todo: copy minecraft rendering stuff.
 public class FontUtil {
     private static Fonts currentFont;
 
     private static final HashMap<Integer, FontTexture> fontTextures = new HashMap<>();
 
-    private final static BufferedImage DUMMY_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-    private final static Graphics2D DUMMY_GRAPHICS = setAntiAliasing(DUMMY_IMAGE.createGraphics());
-
-    @AllArgsConstructor
-    private static class FontID {
-        public int size;
-        public int modifiers;
-    }
+    private final static Graphics2D DUMMY_GRAPHICS = setAntiAliasing(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics());
 
     @AllArgsConstructor
     private static class FontTexture {

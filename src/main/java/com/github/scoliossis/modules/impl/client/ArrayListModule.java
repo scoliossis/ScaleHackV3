@@ -16,7 +16,8 @@ import java.util.List;
 @RegisterModule(
         name = "Array List",
         description = "\"What's Happening?\"",
-        category = Category.CLIENT
+        category = Category.CLIENT,
+        enabledByDefault = true
 )
 public class ArrayListModule extends Module {
     @RegisterSubModule(name = "Colour")
@@ -74,7 +75,7 @@ public class ArrayListModule extends Module {
     public static int fontSize = 10;
 
     @RegisterSubModule(name = "gap Y", parent = "Other", min = 0, max = 10, increment = 1)
-    public static int gapY = 5;
+    public static int gapY = 0;
 
     @SubscribeEvent
     public static void onModuleStateChangedEvent(ModuleStateChangeEvent event) {
