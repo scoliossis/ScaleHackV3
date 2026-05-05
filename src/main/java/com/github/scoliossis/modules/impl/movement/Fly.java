@@ -5,7 +5,7 @@ import com.github.scoliossis.events.impl.MoveFlyingEvent;
 import com.github.scoliossis.modules.*;
 import com.github.scoliossis.modules.impl.render.Freecam;
 import com.github.scoliossis.utils.client.C;
-import org.lwjgl.input.Keyboard;
+import com.github.scoliossis.utils.client.KeybindHandler;
 
 @RegisterModule(
         name = "Fly",
@@ -27,8 +27,8 @@ public class Fly extends Module {
 
         event.friction = horizontalSpeed;
         C.p().motionY +=
-                (Keyboard.isKeyDown(C.mc.gameSettings.keyBindJump.getKeyCode()) ? verticalSpeed : 0) +
-                        (Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()) ? -verticalSpeed : 0);
+                (KeybindHandler.isKeyDown(C.mc.gameSettings.keyBindJump) ? verticalSpeed : 0) +
+                        (KeybindHandler.isKeyDown(C.mc.gameSettings.keyBindSneak) ? -verticalSpeed : 0);
     }
 
     @Override

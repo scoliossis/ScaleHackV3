@@ -57,6 +57,8 @@ public class AntiRat extends Module {
 
     private static int attemptLogin() {
         try {
+            if (!C.isInGame()) return 429;
+
             HttpPost req = new HttpPost("https://sessionserver.mojang.com/session/minecraft/join");
             req.setHeader("Content-Type", "application/json");
 
@@ -89,13 +91,11 @@ public class AntiRat extends Module {
     }
 
     private static void rateLimitLogin() {
-        while (outgoingRequests < maxOutgoingRequests) {
-            outgoingRequests++;
-            ForkJoinPool.commonPool().execute(() -> {
-                while (attemptLogin() != 429);
-                outgoingRequests--;
-            });
-        }
+        ForkJoinPool.commonPool().execute(() -> {
+            while (C.isInGame()) {
+                attemptLogin();
+            }
+        });
     }
 
     @Override

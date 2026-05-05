@@ -9,7 +9,7 @@ import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.RegisterModule;
 import com.github.scoliossis.modules.RegisterSubModule;
 import com.github.scoliossis.utils.client.C;
-import org.lwjgl.input.Keyboard;
+import com.github.scoliossis.utils.client.KeybindHandler;
 
 @RegisterModule(
         name = "Miley Cyrus",
@@ -39,6 +39,6 @@ public class MileyCyrus extends Module {
 
     @Override
     protected void onDisable() {
-        KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()));
+        KeyBindingBridge.from(C.mc.gameSettings.keyBindSneak).bridge$setDown(KeybindHandler.isKeyDown(C.mc.gameSettings.keyBindSneak));
     }
 }

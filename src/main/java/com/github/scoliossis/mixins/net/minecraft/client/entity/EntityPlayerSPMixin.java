@@ -10,13 +10,13 @@ import com.github.scoliossis.modules.impl.movement.Sneak;
 import com.github.scoliossis.modules.impl.movement.Sprint;
 import com.github.scoliossis.modules.impl.render.Animations;
 import com.github.scoliossis.utils.client.C;
+import com.github.scoliossis.utils.client.KeybindHandler;
 import com.github.scoliossis.utils.minecraft.PlayerUtil;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovementInput;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
-import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -67,7 +67,7 @@ public abstract class EntityPlayerSPMixin {
     @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;sneak:Z"))
     public boolean editPlayerSneaking(MovementInput instance) {
         // the value of this only matters if you're flying
-        if (!C.p().onGround) return Keyboard.isKeyDown(C.mc.gameSettings.keyBindSneak.getKeyCode()) && C.mc.currentScreen == null;
+        if (!C.p().onGround) return KeybindHandler.isKeyDown(C.mc.gameSettings.keyBindSneak) && C.mc.currentScreen == null;
         // overwrite isSneaking on ground to make sure sprinting ticks arnt reset!
         return C.p().movementInput.sneak && !ModuleManager.isEnabled(Sneak.class);
     }

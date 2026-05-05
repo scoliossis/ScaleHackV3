@@ -1,11 +1,13 @@
 package com.github.scoliossis.utils.minecraft;
 
+import com.github.scoliossis.bridge.net.minecraft.DataWatchedBridge;
 import com.github.scoliossis.bridge.net.minecraft.client.entity.AbstractClientPlayerBridge;
 import com.github.scoliossis.modules.impl.client.Targets;
 import com.github.scoliossis.utils.client.C;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.entity.DataWatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -125,5 +127,10 @@ public class TargetUtil {
 
         // after all that, we still fail.
         return null;
+    }
+
+    public static float getAbsorption(EntityLivingBase entity) {
+        DataWatcher.WatchableObject absorptionTag = DataWatchedBridge.from(entity.getDataWatcher()).bridge$getWatchedObject(17);
+        return absorptionTag.getObject() instanceof Float ? (float)absorptionTag.getObject() : 0;
     }
 }

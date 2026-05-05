@@ -129,7 +129,7 @@ public class ESP extends Module {
         Render3dUtil.rotateToPlayer(false);
 
         float healthPercent = Math.min(entity.getHealth() / entity.getMaxHealth(), 1);
-        float extraHealthPercent = entity.getAbsorptionAmount() / entity.getMaxHealth();
+        float extraHealthPercent = TargetUtil.getAbsorption(entity) / entity.getMaxHealth();
 
         Color backgroundColour = new Color(22, 22, 22);
         Color healthBarColour = RenderUtil.getProgressColour(healthPercent);

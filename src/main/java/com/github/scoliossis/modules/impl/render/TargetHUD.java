@@ -88,7 +88,7 @@ public class TargetHUD extends Module {
                     EasingUtil.addAnimation("thOut", popOutTime, true, easeOutFunction);
                 }
 
-                float healthNumber = target.entity.getHealth() + target.entity.getAbsorptionAmount();
+                float healthNumber = target.entity.getHealth() + TargetUtil.getAbsorption(target.entity);
                 float healthPercentage = healthNumber / target.entity.getMaxHealth();
 
                 double distance = TargetUtil.getDistanceToEntity(target.entity);

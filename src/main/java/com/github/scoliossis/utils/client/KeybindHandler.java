@@ -4,7 +4,9 @@ import com.github.scoliossis.events.SubscribeEvent;
 import com.github.scoliossis.events.impl.KeyPressedEvent;
 import com.github.scoliossis.modules.Module;
 import com.github.scoliossis.modules.impl.client.Notifications;
+import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.util.HashMap;
 import java.util.List;
@@ -67,5 +69,13 @@ public class KeybindHandler {
 
     public static String getCharacter(int keyCode) {
         return Keyboard.getKeyName(keyCode);
+    }
+
+    // https://github.com/scoliossis/ScaleHackOpenSrc/issues/1
+    // shoutout to legitphase for pushing the fix on the opensrc one when i was too lazy <3 https://github.com/scoliossis/ScaleHackOpenSrc/commit/c8ac3e097ed41bfa489160db7bf16f86071067da
+    public static boolean isKeyDown(KeyBinding keyBinding) {
+        return keyBinding.getKeyCode() < 0
+                ? Mouse.isButtonDown(keyBinding.getKeyCode() + 100)
+                : Keyboard.isKeyDown(keyBinding.getKeyCode());
     }
 }

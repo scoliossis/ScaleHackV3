@@ -68,7 +68,7 @@ public class Nametags extends Module {
             String entityName = entity.getDisplayName().getFormattedText();
             int fontSize = 50;
 
-            float healthNumber = entity.getHealth() + entity.getAbsorptionAmount();
+            float healthNumber = entity.getHealth() + TargetUtil.getAbsorption(entity);
             float healthPercentage = healthNumber / entity.getMaxHealth();
             String healthString = String.format("%.1f", healthNumber) + " ";
 
