@@ -1,7 +1,9 @@
 <h1 align="center"><a href="https://github.com/scoliossis">scoliossis</a>/<a href="https://github.com/scoliossis/ScaleHackV3">ScaleHackV3</a></h1>
+<h3 align="center">
+A 2025 Minecraft 1.8.9 Forge mod which allows you to do stuff Hypixel's new prediction-based anticheat shouldn't allow
+</h3>
 <h2 align="center">
-   <a href="https://discord.gg/XWXVvdUGV8">Discord</a> | 
-   <a href="https://www.youtube.com/watch?v=JMErXxIYHsE">Showcase</a> | 
+   <a href="https://discord.gg/XWXVvdUGV8">My Discord</a> | 
    <a href="https://github.com/scoliossis/ScaleHackV3?tab=readme-ov-file#setup-in-intellij">Dev Setup</a> | 
    <a href="https://github.com/scoliossis/ScaleHackV3?tab=readme-ov-file#rebranding">Rebranding</a> | 
    <a href="https://github.com/scoliossis/ScaleHackV3?tab=readme-ov-file#usage">Example Module</a>
@@ -10,11 +12,9 @@
    <img src="https://github.com/scoliossis/ScaleHackV3/blob/master/repo/gui.png?raw=true" alt="gui" />
 </div>
 
-I tried my best to give everything cute animations but Im sure people will still complain. Design is hard, make a pr with visuals <3
-
-Feel free to create forks of the project, I won't be using much of the code myself, I don't need credit for any code used
-
-I hope people new to Java can learn from this project, I tried my best to keep my code intuitive
+### Feel free to create forks of the project, I won't be using much of the code myself, I don't need credit for any code used. 
+### I hope people new to Java can learn from this project; I tried my best to keep my code intuitive.
+### Please don't complain about the visuals, I really like them.
 
 ---
 
